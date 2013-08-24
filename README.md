@@ -181,12 +181,12 @@ CVector can be replaced with ke::Vector. ke::Vector does not provide an iterator
 method names have been changed, as CVector more closely models std::vector, however the classes are
 pretty similar. Any missing methods could be added quite easily.
 
-### CString (sh\_string.h)
+### String (sh\_string.h)
 
-CString can be replaced with ke::AString, however some methods like trim() are not available yet.
-One notable difference is that AString caches the length of the string, whereas CString does not.
-That means AString is a larger data structure (by 4 bytes, on 32-bit), but is not prone to O(n^2)
-operations like CString. This more closely matches the functionality of std::string.
+String can be replaced with ke::AString, however some methods like trim() are not available yet.
+One notable difference is that AString caches the length of the string, whereas SH::String does
+not. That means AString is a larger data structure (by 4 bytes, on 32-bit), but is not prone to
+O(n^2) operations like String. This more closely matches the functionality of std::string.
 
 ### List (sh\_list.h)
 
