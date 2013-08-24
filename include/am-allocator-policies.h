@@ -38,7 +38,7 @@ namespace ke {
 // The default system allocator policy will crash on out-of-memory.
 class SystemAllocatorPolicy
 {
-  protected:
+  public:
     void reportOutOfMemory() {
       fprintf(stderr, "OUT OF MEMORY\n");
       abort();
