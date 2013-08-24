@@ -60,7 +60,7 @@ class Vector : public AllocPolicy
     other.reset();
   }
 
-  bool append(const T& item) {
+  bool append(const T &item) {
     if (!growIfNeeded(1))
       return false;
     new (&data_[nitems_]) T(item);
