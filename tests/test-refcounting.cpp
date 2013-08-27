@@ -27,47 +27,58 @@
 // ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 // POSSIBILITY OF SUCH DAMAGE.
 
-#ifndef _include_amtl_moveable_h_
-#define _include_amtl_moveable_h_
+#include <am-utility.h>
+#include <am-refcounting.h>
+#include "runner.h"
 
-namespace ke {
+using namespace ke;
 
-// This is a feature in C++11, but since AM projects do not have access to
-// C++11 yet, we provide templates to implement move semantics. A class can
-// provide a constructor for (ke::Moveable<T> t) which containers will try
-// to use.
-//
-// When implementing a constructor that takes a Moveable, the object being
-// moved should be left in a state that is safe, since its destructor will
-// be called even though it has been moved.
+static size_t sDtors = 0;
 
-template <typename T>
-struct Moveable
+class Counted : public Refcounted<Counted>
 {
  public:
-  explicit Moveable(T &t)
-   : t_(t)
+  ~Counted() {
+    sDtors++;
+  }
+};
+
+static inline PassRef<Counted>
+PassThrough(const Ref<Counted> &obj)
+{
+  return obj;
+}
+
+class TestRefcounting : public Test
+{
+ public:
+  TestRefcounting()
+   : Test("Refcounting")
   {
   }
 
-  T *operator ->() {
-    return &t_;
+  bool Run() KE_OVERRIDE
+  {
+    {
+      Ref<Counted> obj(Newborn<Counted>(new Counted()));
+    }
+    if (!check(sDtors == 1, "Ref/Newborn counted properly"))
+      return false;
+
+    {
+      Ref<Counted> obj(Newborn<Counted>(new Counted()));
+      Ref<Counted> obj2 = PassThrough(obj);
+      Ref<Counted> obj3 = PassThrough(obj);
+      if (!check(sDtors == 1, "destructor not called early"))
+        return false;
+      Ref<Counted> obj4 = PassThrough(PassThrough(PassThrough(obj)));
+      if (!check(sDtors == 1, "destructor not called early"))
+        return false;
+    }
+    if (!check(sDtors == 2, "PassRef/Ref counted properly"))
+      return false;
+
+    return true;
   }
-  operator T &() {
-    return t_;
-  }
+} sTestRefcounting;
 
- private:
-  T &t_;
-};
-
-template <typename T>
-static inline Moveable<T>
-Move(T &t)
-{
-  return Moveable<T>(t);
-}
-
-} // namespace ke
-
-#endif // _include_amtl_moveable_h_

@@ -27,47 +27,105 @@
 // ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 // POSSIBILITY OF SUCH DAMAGE.
 
-#ifndef _include_amtl_moveable_h_
-#define _include_amtl_moveable_h_
+#ifndef _include_amtl_runner_h_
+#define _include_amtl_runner_h_
+
+#include <stdio.h>
+#include <stdarg.h>
 
 namespace ke {
 
-// This is a feature in C++11, but since AM projects do not have access to
-// C++11 yet, we provide templates to implement move semantics. A class can
-// provide a constructor for (ke::Moveable<T> t) which containers will try
-// to use.
-//
-// When implementing a constructor that takes a Moveable, the object being
-// moved should be left in a state that is safe, since its destructor will
-// be called even though it has been moved.
-
-template <typename T>
-struct Moveable
+class Test
 {
  public:
-  explicit Moveable(T &t)
-   : t_(t)
+  Test(const char *name)
+   : name_(name),
+     next_(head)
   {
+    head = this;
   }
 
-  T *operator ->() {
-    return &t_;
+  virtual bool Run() = 0;
+
+  const char *name() const {
+    return name_;
   }
-  operator T &() {
-    return t_;
+  Test *next() const {
+    return next_;
+  }
+
+  static inline Test *first() {
+    return head;
   }
 
  private:
-  T &t_;
+  static Test *head;
+
+ private:
+  const char *name_;
+  Test *next_;
 };
 
-template <typename T>
-static inline Moveable<T>
-Move(T &t)
+static inline bool
+check(bool condition, const char *fmt, ...)
 {
-  return Moveable<T>(t);
+  FILE *fp = condition ? stdout : stderr;
+  if (condition)
+    fprintf(fp, " -- Ok: ");
+  else
+    fprintf(fp, " -- Failure: ");
+  va_list ap;
+  va_start(ap, fmt);
+  vfprintf(fp, fmt, ap);
+  va_end(ap);
+  fprintf(fp, "\n");
+  return condition;
 }
 
-} // namespace ke
+class FallibleMalloc
+{
+ public:
+  FallibleMalloc()
+   : shouldOutOfMemory_(false),
+     ooms_(0),
+     overflows_(0)
+  {
+  }
 
-#endif // _include_amtl_moveable_h_
+  void *malloc(size_t amount) {
+    if (shouldOutOfMemory_) {
+      reportOutOfMemory();
+      return NULL;
+    }
+    return ::malloc(amount);
+  }
+  void free(void *p) {
+    return ::free(p);
+  }
+  void reportOutOfMemory() {
+    ooms_++;
+  }
+  void reportAllocationOverflow() {
+    overflows_++;
+  }
+
+  void setOutOfMemory(bool oom) {
+    shouldOutOfMemory_ = oom;
+  }
+  size_t ooms() const {
+    return ooms_;
+  }
+  size_t overflows() const {
+    return overflows_;
+  }
+
+ private:
+  bool shouldOutOfMemory_;
+  size_t ooms_;
+  size_t overflows_;
+};
+
+}
+
+#endif // _include_amtl_runner_h_
+

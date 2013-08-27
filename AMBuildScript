@@ -1,0 +1,159 @@
+# vim: set ts=2 sw=2 tw=99 noet ft=python:
+import os
+import sys
+from ambuild.command import SymlinkCommand
+
+class KE:
+	def __init__(self):
+		self.compiler = Cpp.Compiler()
+
+		if AMBuild.mode == 'config':
+			#Detect compilers
+			self.compiler.DetectAll(AMBuild)
+
+			#Set up defines
+			cxx = self.compiler.cxx
+			if isinstance(cxx, Cpp.CompatGCC):
+				if isinstance(cxx, Cpp.GCC):
+					self.vendor = 'gcc'
+				elif isinstance(cxx, Cpp.Clang):
+					self.vendor = 'clang'
+				self.compiler.AddToListVar('CFLAGS', '-pipe')
+				self.compiler.AddToListVar('CFLAGS', '-Wall')
+				self.compiler.AddToListVar('CFLAGS', '-Werror')
+
+				if AMBuild.options.arch == 'x86':
+					self.compiler.AddToListVar('CFLAGS', '-m32')
+					self.compiler.AddToListVar('POSTLINKFLAGS', '-m32')
+				elif AMBuild.options.arch == 'x64':
+					self.compiler.AddToListVar('CFLAGS', '-m64')
+					self.compiler.AddToListVar('POSTLINKFLAGS', '-m64')
+				elif AMBuild.options.arch:
+					raise Exception('Unknown architecture: {0}'.format(AMBuild.options.arch))
+
+				# Disable some stuff we don't use, that gives us better binary
+        # compatibility on Linux.
+				self.compiler.AddToListVar('CXXFLAGS', '-fno-exceptions')
+				self.compiler.AddToListVar('CXXFLAGS', '-fno-rtti')
+				self.compiler.AddToListVar('CXXFLAGS', '-fno-threadsafe-statics')
+
+				# We don't really care about these.
+				self.compiler.AddToListVar('CXXFLAGS', '-Wno-non-virtual-dtor')
+				self.compiler.AddToListVar('CXXFLAGS', '-Wno-overloaded-virtual')
+
+				# The compiler is too aggressive about what what should be a valid offsetof.
+				self.compiler.AddToListVar('CXXFLAGS', '-Wno-invalid-offsetof')
+
+				# This would otherwise forbid ((x = y) == NULL) in clang apparently.
+				if self.vendor == 'clang' and cxx.majorVersion > 1:
+					self.compiler.AddToListVar('CXXFLAGS', '-Wno-null-arithmetic')
+				if self.vendor == 'clang' and \
+				   cxx.majorVersion >= 3 and \
+				   cxx.minorVersion >= 3:
+					self.compiler.AddToListVar('CXXFLAGS', '-Wno-unused-private-field')
+
+				if (self.vendor == 'gcc' and cxx.majorVersion >= 4 and cxx.minorVersion >= 7) or \
+						(self.vendor == 'clang' and cxx.majorVersion >= 3):
+					self.compiler.AddToListVar('CXXFLAGS', '-Wno-delete-non-virtual-dtor')
+
+				self.compiler.AddToListVar('POSTLINKFLAGS', '-lpthread')
+				self.compiler.AddToListVar('POSTLINKFLAGS', '-lrt')
+			elif isinstance(cxx, Cpp.MSVC):
+				self.vendor = 'msvc'
+				if AMBuild.options.debug == '1':
+					self.compiler.AddToListVar('CFLAGS', '/MTd')
+					self.compiler.AddToListVar('POSTLINKFLAGS', '/NODEFAULTLIB:libcmt')
+				else:
+					self.compiler.AddToListVar('CFLAGS', '/MT')
+				self.compiler.AddToListVar('CDEFINES', 'WIN32')
+				self.compiler.AddToListVar('CDEFINES', '_CRT_SECURE_NO_DEPRECATE')
+				self.compiler.AddToListVar('CDEFINES', '_CRT_SECURE_NO_WARNINGS')
+				self.compiler.AddToListVar('CDEFINES', '_CRT_NONSTDC_NO_DEPRECATE')
+				self.compiler.AddToListVar('CXXFLAGS', '/EHsc')
+				self.compiler.AddToListVar('CXXFLAGS', '/GR-')
+				self.compiler.AddToListVar('CFLAGS', '/W3')
+				self.compiler.AddToListVar('CFLAGS', '/nologo')
+				self.compiler.AddToListVar('CFLAGS', '/Zi')
+				self.compiler.AddToListVar('CXXFLAGS', '/TP')
+				self.compiler.AddToListVar('POSTLINKFLAGS', '/DEBUG')
+
+				self.compiler.AddToListVar('POSTLINKFLAGS', 'kernel32.lib')
+				self.compiler.AddToListVar('POSTLINKFLAGS', 'user32.lib')
+				self.compiler.AddToListVar('POSTLINKFLAGS', 'gdi32.lib')
+				self.compiler.AddToListVar('POSTLINKFLAGS', 'winspool.lib')
+				self.compiler.AddToListVar('POSTLINKFLAGS', 'comdlg32.lib')
+				self.compiler.AddToListVar('POSTLINKFLAGS', 'advapi32.lib')
+				self.compiler.AddToListVar('POSTLINKFLAGS', 'shell32.lib')
+				self.compiler.AddToListVar('POSTLINKFLAGS', 'ole32.lib')
+				self.compiler.AddToListVar('POSTLINKFLAGS', 'oleaut32.lib')
+				self.compiler.AddToListVar('POSTLINKFLAGS', 'uuid.lib')
+				self.compiler.AddToListVar('POSTLINKFLAGS', 'odbc32.lib')
+				self.compiler.AddToListVar('POSTLINKFLAGS', 'odbccp32.lib')
+
+			#Optimization
+			if AMBuild.options.opt == '1':
+				self.compiler.AddToListVar('CDEFINES', 'NDEBUG')
+				if self.vendor == 'gcc' or self.vendor == 'clang':
+					self.compiler.AddToListVar('CFLAGS', '-O3')
+				elif self.vendor == 'msvc':
+					self.compiler.AddToListVar('CFLAGS', '/Ox')
+					self.compiler.AddToListVar('POSTLINKFLAGS', '/OPT:ICF')
+					self.compiler.AddToListVar('POSTLINKFLAGS', '/OPT:REF')
+
+			#Debugging
+			if AMBuild.options.debug == '1':
+				if self.vendor == 'gcc' or self.vendor == 'clang':
+					self.compiler.AddToListVar('CFLAGS', '-g3')
+					self.compiler.AddToListVar('CFLAGS', '-O0')
+				elif self.vendor == 'msvc':
+					self.compiler.AddToListVar('CFLAGS', '/Od')
+					self.compiler.AddToListVar('CFLAGS', '/RTC1')
+
+			#Platform-specifics
+			if AMBuild.target['platform'] == 'linux':
+				if self.vendor == 'gcc':
+					self.compiler.AddToListVar('POSTLINKFLAGS', '-static-libgcc')
+				if self.vendor == 'clang':
+					self.compiler.AddToListVar('POSTLINKFLAGS', '-lgcc_eh')
+			elif AMBuild.target['platform'] == 'darwin':
+				self.compiler.AddToListVar('POSTLINKFLAGS', '-mmacosx-version-min=10.5')
+				if AMBuild.options.arch == 'x86':
+					self.compiler.AddToListVar('POSTLINKFLAGS', ['-arch', 'i386'])
+				elif AMBuild.options.arch == 'x64':
+					self.compiler.AddToListVar('POSTLINKFLAGS', ['-arch', 'x86_64'])
+				self.compiler.AddToListVar('POSTLINKFLAGS', '-lstdc++')
+
+			#Finish up
+			self.compiler.ToConfig(AMBuild, 'compiler')
+			AMBuild.cache.CacheVariable('vendor', self.vendor)
+			self.targetMap = { }
+			AMBuild.cache.CacheVariable('targetMap', self.targetMap)
+		else:
+			self.compiler.FromConfig(AMBuild, 'compiler')
+			self.targetMap = AMBuild.cache['targetMap']
+
+	def DefaultCompiler(self):
+		return self.compiler.Clone()
+
+	def JobMatters(self, jobname):
+		file = sys._getframe().f_code.co_filename
+		if AMBuild.mode == 'config':
+			self.targetMap[jobname] = file
+			return True
+		if len(AMBuild.args) == 0:
+			return True
+		if not jobname in AMBuild.args:
+			return False
+
+ke = KE()
+globals = {
+	'KE': ke
+}
+
+FileList = [
+		['tests', 'AMBuild.tests'],
+	]
+
+for parts in FileList:
+	AMBuild.Include(os.path.join(*parts), globals)
+

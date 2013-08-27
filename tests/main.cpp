@@ -27,47 +27,42 @@
 // ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 // POSSIBILITY OF SUCH DAMAGE.
 
-#ifndef _include_amtl_moveable_h_
-#define _include_amtl_moveable_h_
+#include <stddef.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include "runner.h"
 
-namespace ke {
+using namespace ke;
 
-// This is a feature in C++11, but since AM projects do not have access to
-// C++11 yet, we provide templates to implement move semantics. A class can
-// provide a constructor for (ke::Moveable<T> t) which containers will try
-// to use.
-//
-// When implementing a constructor that takes a Moveable, the object being
-// moved should be left in a state that is safe, since its destructor will
-// be called even though it has been moved.
+Test *Test::head = NULL;
 
-template <typename T>
-struct Moveable
+int main(int argc, char **argv)
 {
- public:
-  explicit Moveable(T &t)
-   : t_(t)
-  {
+  Test *test = Test::first();
+  while (test) {
+    fprintf(stdout, "Testing %s... \n", test->name());
+    if (!test->Run()) {
+      fprintf(stdout, "TEST:%s FAIL\n", test->name());
+      break;
+    }
+    fprintf(stdout, "TEST:%s OK\n", test->name());
+    test = test->next();
   }
-
-  T *operator ->() {
-    return &t_;
-  }
-  operator T &() {
-    return t_;
-  }
-
- private:
-  T &t_;
-};
-
-template <typename T>
-static inline Moveable<T>
-Move(T &t)
-{
-  return Moveable<T>(t);
 }
 
-} // namespace ke
+#if defined(__GNUC__)
+extern "C" void __cxa_pure_virtual()
+{
+  abort();
+}
 
-#endif // _include_amtl_moveable_h_
+void *operator new(size_t amount)
+{
+  return malloc(amount);
+}
+
+void operator delete(void *p)
+{
+  free(p);
+}
+#endif
