@@ -30,6 +30,7 @@ job = AMBuild.AddJob('testrun')
 binary = Cpp.ExecutableBuilder('testrun', AMBuild, job, compiler)
 files = [
 	'main.cpp',
+	'test-hashmap.cpp',
 	'test-inlinelist.cpp',
 	'test-linkedlist.cpp',
 	'test-vector.cpp',
