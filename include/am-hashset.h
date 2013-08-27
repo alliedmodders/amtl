@@ -37,56 +37,18 @@ namespace ke {
 // Template parameters:
 //
 // K - Key type.
-// V - Value type.
 // HashPolicy - A struct with a hash and comparator function for each lookup type:
-//     static uint32_t hash(const Type &value);
-//     static bool matches(const Type &value, const K &key);
+//    static uint32_t hash(const Type &value);
+//    static bool matches(const Type &value, const K &key);
 //
-// All types that match a given key, must compute the same hash.
-//
-// Note that like HashTable, a HashMap is not usable until init() has been called.
+// Like HashMap and HashTable, init() must be called to construct the set.
 template <typename K,
-          typename V,
           typename HashPolicy,
           typename AllocPolicy = SystemAllocatorPolicy>
-class HashMap : public AllocPolicy
+class HashSet : public AllocPolicy
 {
- private:
-  struct Entry
-  {
-    K key;
-    V value;
-
-    Entry()
-    {
-    }
-    Entry(Moveable<Entry> other)
-      : key(Moveable<K>(other->key)),
-        value(Moveable<V>(other->value))
-    {
-    }
-
-    Entry(const K &aKey, const V &aValue)
-     : key(aKey),
-       value(aValue)
-    { }
-    Entry(const K &aKey, Moveable<V> aValue)
-     : key(aKey),
-       value(aValue)
-    { }
-    Entry(Moveable<K> aKey, const V &aValue)
-     : key(aKey),
-       value(aValue)
-    { }
-    Entry(Moveable<K> aKey, Moveable<V> aValue)
-     : key(aKey),
-       value(aValue)
-    { }
-  };
-
-  struct Policy
-  {
-    typedef Entry Payload;
+  struct Policy {
+    typedef K Payload;
 
     template <typename Lookup>
     static uint32_t hash(const Lookup &key) {
@@ -95,14 +57,14 @@ class HashMap : public AllocPolicy
 
     template <typename Lookup>
     static bool matches(const Lookup &key, const Payload &payload) {
-      return HashPolicy::matches(key, payload.key);
+      return HashPolicy::matches(key, payload);
     }
   };
 
   typedef HashTable<Policy, AllocPolicy> Internal;
 
  public:
-  HashMap(AllocPolicy ap = AllocPolicy())
+  HashSet(AllocPolicy ap = AllocPolicy())
     : table_(ap)
   {
   }
@@ -114,7 +76,6 @@ class HashMap : public AllocPolicy
 
   typedef typename Internal::Result Result;
   typedef typename Internal::Insert Insert;
-  typedef typename Internal::iterator iterator;
 
   template <typename Lookup>
   Result find(const Lookup &key) {
@@ -137,17 +98,11 @@ class HashMap : public AllocPolicy
 
   // The map must not have been mutated in between findForAdd() and add().
   // The Insert object is still valid after add() returns, however.
-  bool add(Insert &i, const K &key, const V &value) {
-    return table_.add(i, Entry(key, value));
+  bool add(Insert &i, const K &key) {
+    return table_.add(i, key);
   }
-  bool add(Insert &i, Moveable<K> key, const V &value) {
-    return table_.add(i, Entry(key, value));
-  }
-  bool add(Insert &i, const K &key, Moveable<V> value) {
-    return table_.add(i, Entry(key, value));
-  }
-  bool add(Insert &i, Moveable<K> key, Moveable<V> value) {
-    return table_.add(i, Entry(key, value));
+  bool add(Insert &i, Moveable<K> key) {
+    return table_.add(i, key);
   }
 
   // This can be used to avoid compiler constructed temporaries, since AMTL
@@ -157,16 +112,8 @@ class HashMap : public AllocPolicy
     return table_.add(i);
   }
 
-  iterator iter() {
-    return iterator(&table_);
-  }
-
   void clear() {
     table_.clear();
-  }
-
-  size_t elements() const {
-    return table_.elements();
   }
 
   size_t estimateMemoryUse() const {
@@ -177,17 +124,6 @@ class HashMap : public AllocPolicy
   Internal table_;
 };
 
-template <typename T>
-struct PointerPolicy
-{
-  static inline uint32_t hash(T *p) {
-    return HashPointer(p);
-  }
-  static inline bool matches(T *p1, T *p2) {
-    return p1 == p2;
-  }
-};
-
 }
 
-#endif // _include_amtl_hashmap_h_
+#endif // _include_amtl_hashset_h_

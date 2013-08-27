@@ -33,7 +33,9 @@
 #include <new>
 #include <limits.h>
 #include <stdlib.h>
+#include "am-allocator-policies.h"
 #include "am-utility.h"
+#include "am-moveable.h"
 
 namespace ke {
 
@@ -49,8 +51,16 @@ namespace detail {
     static const uint32_t kRemovedHash = 1;
   
    public:
-    void setHash(uint32_t hash, const T &t) {
+    void setHash(uint32_t hash) {
       hash_ = hash;
+    }
+    void construct() {
+      new (&t_) T();
+    }
+    void construct(const T &t) {
+      new (&t_) T(t);
+    }
+    void construct(Moveable<T> t) {
       new (&t_) T(t);
     }
     uint32_t hash() const {
@@ -256,7 +266,8 @@ class HashTable : public AllocPolicy
       Entry &oldEntry = oldTable[i];
       if (oldEntry.isLive()) {
         Insert p = insertUnique(oldEntry.hash());
-        p.entry().setHash(p.hash(), oldEntry.payload());
+        p.entry().setHash(p.hash());
+        p.entry().construct(Moveable<Payload>(oldEntry.payload()));
       }
       oldEntry.destruct();
     }
@@ -289,8 +300,8 @@ class HashTable : public AllocPolicy
       if (e->free())
         break;
       if (e->isLive() &&
-        e->sameHash(hash) &&
-        HashPolicy::matches(key, e->payload()))
+          e->sameHash(hash) &&
+          HashPolicy::matches(key, e->payload()))
       {
         return Result(e);
       }
@@ -317,7 +328,7 @@ class HashTable : public AllocPolicy
     return Insert(e, hash);
   }
 
-  bool internalAdd(Insert &i, const Payload &payload) {
+  bool internalAdd(Insert &i) {
     assert(!i.found());
 
     // If the entry is deleted, just re-use the slot.
@@ -344,8 +355,8 @@ class HashTable : public AllocPolicy
         i = insertUnique(i.hash());
     }
 
-    i.entry().setHash(i.hash(), payload);
     nelements_++;
+    i.entry().setHash(i.hash());
     return true;
   }
 
@@ -422,10 +433,22 @@ class HashTable : public AllocPolicy
   // The table must not have been mutated in between findForAdd() and add().
   // The Insert object is still valid after add() returns, however.
   bool add(Insert &i, const Payload &payload) {
-    return internalAdd(i, payload);
+    if (!internalAdd(i))
+      return false;
+    i.entry().construct(payload);
+    return true;
+  }
+  bool add(Insert &i, Moveable<Payload> payload) {
+    if (!internalAdd(i))
+      return false;
+    i.entry().construct(payload);
+    return true;
   }
   bool add(Insert &i) {
-    return internalAdd(i, Payload());
+    if (!internalAdd(i))
+      return false;
+    i.entry().construct();
+    return true;
   }
 
   bool checkDensity() {
@@ -442,6 +465,10 @@ class HashTable : public AllocPolicy
     }
     ndeleted_ = 0;
     nelements_ = 0;
+  }
+
+  size_t elements() const {
+    return nelements_;
   }
 
   size_t estimateMemoryUse() const {
@@ -471,7 +498,10 @@ class HashTable : public AllocPolicy
       table_->removeEntry(*i_);
     }
 
-    const Payload &operator *() const {
+    Payload *operator ->() const {
+      return &i_->payload();
+    }
+    Payload &operator *() const {
       return i_->payload();
     }
 
@@ -564,12 +594,12 @@ static inline uint32_t
 HashInt64(int64_t key)
 {
   key = (~key) + (key << 18); // key = (key << 18) - key - 1;
-  key = key ^ (uint64(key) >> 31);
+  key = key ^ (uint64_t(key) >> 31);
   key = key * 21; // key = (key + (key << 2)) + (key << 4);
-  key = key ^ (uint64(key) >> 11);
+  key = key ^ (uint64_t(key) >> 11);
   key = key + (key << 6);
-  key = key ^ (uint64(key) >> 22);
-  return uint32(key);
+  key = key ^ (uint64_t(key) >> 22);
+  return uint32_t(key);
 }
 
 template <size_t Size>

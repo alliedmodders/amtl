@@ -59,6 +59,30 @@ This provides some common helper functions pretty much lumped together:
 * Integer alignment (useful for allocators or code generators).
 * KE\_DELETE and KE\_OVERRIDE which map to delete and override keywords if C++11 is available.
 
+### Moveable (am-moveable.h)
+
+Moveable<T> is a helper to emulate C++11 move semantics (rvalue references). A class can implement
+a move constructor like so:
+
+    class X
+    {
+     public:
+      X(Moveable<X> other)
+
+And a moveable value can be given like:
+
+    vector.append(Moveable<X>(value));
+
+Containers within AMTL all support move semantics; however, not all containers are moveable yet.
+If move semantics are critical for correctness or performance, it is wise to disallow copy
+construction entirely:
+
+    class X
+    {
+     ...
+     private:
+      X(const X &other) KE_DELETE;
+
 ### Thread Utilities (am-thread-utils.h)
 
 Thread utils provides access to common sychronization primitives: mutexes, condition variables,
@@ -136,9 +160,14 @@ iterator is abandoned. However, the table must stay alive for as long as the ite
 
 ### HashMap (am-hashmap.h)
 
-ke::HashMap is a key -> value map built upon HashTable. This saves you from having to implement our
-own Policy and provides some more generic accessors. However it is still necessary to implement a
-hash function.
+ke::HashMap is a key -> value map built upon HashTable. This saves you from having to implement all
+of a Policy and provides some more generic accessors. However it is still necessary to implement a
+hash and comparison function.
+
+### HashSet (am-hashset.h)
+
+ke::HashSet is a HashMap that only stores keys. Like HashMap, you must still implement a policy
+with comparison and hash functions.
 
 ### InlineList (am-inlinelist.h)
 
