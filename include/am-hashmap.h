@@ -149,6 +149,9 @@ class HashMap : public AllocPolicy
   bool add(Insert &i, Moveable<K> key, Moveable<V> value) {
     return table_.add(i, Entry(key, value));
   }
+  bool add(Insert &i, Moveable<K> key) {
+    return table_.add(i, Entry(key, V()));
+  }
 
   // This can be used to avoid compiler constructed temporaries, since AMTL
   // does not yet support move semantics. If you use this, the key and value
