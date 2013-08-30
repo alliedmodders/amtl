@@ -40,13 +40,15 @@ class TestWorkerModel : public IRunnable
  public:
   TestWorkerModel()
    : terminate_(false),
-     result_(0)
+     result_(0),
+     started_(false)
   {
   }
 
   void Run() {
     {
       AutoLock lock(main());
+      started_ = true;
       main()->Notify();
     }
 
@@ -87,6 +89,10 @@ class TestWorkerModel : public IRunnable
     return result_;
   }
 
+  bool started() {
+    return started_;
+  }
+
   void send(int value) {
     AutoLock lock(&wakeup_);
     items_.append(value);
@@ -99,6 +105,7 @@ class TestWorkerModel : public IRunnable
   LinkedList<int> items_;
   bool terminate_;
   int result_;
+  bool started_;
 };
 
 class TestThreading : public Test
@@ -112,13 +119,14 @@ class TestThreading : public Test
   bool testWorkerModel()
   {
     TestWorkerModel test;
+
     ke::AutoPtr<Thread> thread(new Thread(&test, "TestWorkerModel"));
     if (!check(thread->Succeeded(), "thread launched"))
       return false;
 
     {
       AutoLock lock(test.main());
-      if (!check(test.main()->Wait(5000) == Wait_Signaled, "thread started within five seconds"))
+      if (!check(test.started() || test.main()->Wait(5000) == Wait_Signaled, "thread started within five seconds"))
         return false;
     }
 
