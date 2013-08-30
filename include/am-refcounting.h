@@ -1,4 +1,4 @@
-// vim: set sts=8 ts=2 sw=2 tw=99 et:
+// vim: set sts=8 ts=4 sw=4 tw=99 et:
 //
 // Copyright (C) 2013, David Anderson and AlliedModders LLC
 // All rights reserved.
@@ -31,6 +31,7 @@
 #define _include_amtl_refcounting_h_
 
 #include <am-utility.h>
+#include <am-moveable.h>
 
 namespace ke {
 
@@ -188,6 +189,11 @@ class Ref
       : thing_(other.thing_)
     {
         AddRef();
+    }
+    Ref(Moveable<Ref> other)
+      : thing_(other.thing_)
+    {
+        other.thing_ = NULL;
     }
     template <typename S>
     Ref(const Ref<S> &other)
