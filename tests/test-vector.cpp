@@ -125,6 +125,35 @@ class TestVector : public Test
     if (!check(vector.length() == 3, "vector length is 3"))
       return false;
 
+    vector.insert(0, 88);
+    vector.insert(0, 99);
+    vector.insert(4, 111);
+    if (!check(vector[0] == 99, "[0] should be 99"))
+      return false;
+    if (!check(vector[1] == 88, "[1] should be 88"))
+      return false;
+    if (!check(vector[2] == 1, "[2] should be 1"))
+      return false;
+    if (!check(vector[3] == 2, "[3] should be 2"))
+      return false;
+    if (!check(vector[4] == 111, "[4] should be 111"))
+      return false;
+    if (!check(vector[5] == 3, "[5] should be 3"))
+      return false;
+    if (!check(vector.length() == 6, "length should be 6"))
+      return false;
+
+    vector.remove(5);
+    if (!check(vector[4] == 111, "[4] should still be 111"))
+      return false;
+    vector.remove(0);
+    if (!check(vector[0] == 88, "[0] should be 88"))
+      return false;
+    if (!check(vector[3] == 111, "[3] should be 111"))
+      return false;
+    if (!check(vector.length() == 4, "length should be 4"))
+      return false;
+
     while (!vector.empty())
       vector.pop();
 

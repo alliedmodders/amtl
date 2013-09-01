@@ -117,6 +117,13 @@ class TestInlineList : public Test
       iter++;
       if (!check(iter == list.end(), "iterator should have ended"))
         return false;
+
+      iter = list.begin();
+      while (iter != list.end())
+        iter = list.erase(iter);
+
+      if (!check(list.begin() == list.end(), "list should be empty"))
+        return false;
     }
 
     return true;

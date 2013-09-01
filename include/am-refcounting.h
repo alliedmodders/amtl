@@ -58,6 +58,13 @@ class Newborn
     mutable T *thing_;
 };
 
+template <typename T>
+static inline Newborn<T>
+NoAddRef(T *t)
+{
+    return Newborn<T>(t);
+}
+
 // When returning a value, we'd rather not be needlessly changing the refcount,
 // so we have a special type to use for returns.
 template <typename T>
@@ -191,9 +198,9 @@ class Ref
         AddRef();
     }
     Ref(Moveable<Ref> other)
-      : thing_(other.thing_)
+      : thing_(other->thing_)
     {
-        other.thing_ = NULL;
+        other->thing_ = NULL;
     }
     template <typename S>
     Ref(const Ref<S> &other)
@@ -258,6 +265,13 @@ class Ref
         Release();
         thing_ = other.thing_;
         AddRef();
+        return *this;
+    }
+
+    Ref &operator =(Moveable<Ref> other) {
+        Release();
+        thing_ = other->thing_;
+        other->thing_ = NULL;
         return *this;
     }
 

@@ -45,6 +45,7 @@ class AString
    : length_(0)
   {
   }
+
   explicit AString(const char *str) {
     set(str, strlen(str));
   }
@@ -80,6 +81,12 @@ class AString
     }
     return *this;
   }
+  AString &operator =(Moveable<AString> other) {
+    chars_ = other->chars_.take();
+    length_ = other->length_;
+    other->length_ = 0;
+    return *this;
+  }
 
   int compare(const char *str) const {
     return strcmp(chars(), str);
@@ -97,17 +104,29 @@ class AString
     return chars()[index];
   }
 
+  void setVoid() {
+    chars_ = NULL;
+    length_ = kInvalidLength;
+  }
+
+  bool isVoid() const {
+    return length_ == kInvalidLength;
+  }
+
   size_t length() const {
+    assert(!isVoid());
     return length_;
   }
 
   const char *chars() const {
     if (!chars_)
-      return "";
+      return isVoid() ? NULL : "";
     return chars_;
   }
 
  private:
+  static const size_t kInvalidLength = (size_t)-1;
+
   void set(const char *str, size_t length) {
     chars_ = new char[length + 1];
     length_ = length;
