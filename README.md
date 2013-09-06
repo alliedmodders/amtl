@@ -96,16 +96,17 @@ and RefcountedThreadsafe. Both must be inherited recursively, for example:
 
     class MyObject : public Refcounted<MyObject>
   
-The object is instantiated with a reference count of 1. A few RAII objects are provided for
-automatically retaining and releasing references:
+The object is instantiated with a reference count of 0, meaning it is illegal to call Release()
+without first calling AddRef.
+
+A few RAII objects are provided for automatically retaining and releasing references:
 
 * Ref<T>. Adds one reference upon construction and releases one reference on destruction.
 * PassRef<T>. Same as Ref<T>, except, when passed into a Ref<T> or into a PassRef<T>, the contained
   reference is NULL'd, rather than performing an unnecessary extra AddRef()+Release(). PassRef<T>
   is intended only for return values.
-* Newborn<T>. If a newly allocated Refcounted object is stored into a Ref<T>, it will have one
-  extra reference. When allocating new refcounted objects, they should be immediately wrapped in a
-  Newborn<T> to prevent this.
+* AdoptRef(T). If an object is returned with an implicit AddRef, not using Ref or PassRef, then
+  it is necessary to AdoptRef() when assigning into a Ref or PassRef.
 
 RefcountedThreadsafe provides the same accessors as Refcounted. However, the reference counting is
 performed using atomic operations, so that two threads racing do not accidentally result in a wrong

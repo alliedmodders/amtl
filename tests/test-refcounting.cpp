@@ -43,6 +43,10 @@ class Counted : public Refcounted<Counted>
   }
 };
 
+class SubCounted : public Counted
+{
+};
+
 static inline PassRef<Counted>
 PassThrough(const Ref<Counted> &obj)
 {
@@ -60,22 +64,44 @@ class TestRefcounting : public Test
   bool Run() KE_OVERRIDE
   {
     {
-      Ref<Counted> obj(Newborn<Counted>(new Counted()));
+      Ref<Counted> obj(new Counted());
     }
     if (!check(sDtors == 1, "Ref/Newborn counted properly"))
       return false;
+    {
+      PassRef<Counted> obj(new Counted());
+    }
+    if (!check(sDtors == 2, "Ref/Newborn counted properly"))
+      return false;
+    {
+      Counted *counted = new Counted();
+      counted->AddRef();
+      Ref<Counted> obj(AdoptRef(counted));
+    }
+    if (!check(sDtors == 3, "Ref/Newborn counted properly"))
+      return false;
+
+    // Check that subclass assignment works.
+    {
+      Ref<Counted> obj(new SubCounted());
+      Ref<Counted> obj2(PassThrough(new SubCounted()));
+    }
+    if (!check(sDtors == 5, "Ref/Newborn counted properly"))
+      return false;
+
+    sDtors = 0;
 
     {
-      Ref<Counted> obj(Newborn<Counted>(new Counted()));
+      Ref<Counted> obj(new Counted());
       Ref<Counted> obj2 = PassThrough(obj);
       Ref<Counted> obj3 = PassThrough(obj);
-      if (!check(sDtors == 1, "destructor not called early"))
+      if (!check(sDtors == 0, "destructor not called early"))
         return false;
       Ref<Counted> obj4 = PassThrough(PassThrough(PassThrough(obj)));
-      if (!check(sDtors == 1, "destructor not called early"))
+      if (!check(sDtors == 0, "destructor not called early"))
         return false;
     }
-    if (!check(sDtors == 2, "PassRef/Ref counted properly"))
+    if (!check(sDtors == 1, "PassRef/Ref counted properly"))
       return false;
 
     return true;
