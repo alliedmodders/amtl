@@ -159,6 +159,14 @@ class Vector : public AllocPolicy
     return growIfNeeded(desired - length());
   }
 
+  Vector &operator =(Moveable<Vector<T, AllocPolicy> > other) {
+    data_ = other->data_;
+    nitems_ = other->nitems_;
+    maxsize_ = other->maxsize_;
+    other->reset();
+    return *this;
+  }
+
  private:
   // These are disallowed because they basically violate the failure handling
   // model for AllocPolicies and are also likely to have abysmal performance.
