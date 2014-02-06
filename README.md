@@ -22,7 +22,7 @@ systems code. It is the spiritual succesor to the SourceHook template library.
   introduce safer pointer management into its codebases, and to allow certain components to safely
   handle malloc failures when desired.
 
-* No linkage. EVerything is contained within headers so that tools don't need to link additional
+* No linkage. Everything is contained within headers so that tools don't need to link additional
   C++ files. This could be a drawback, for example, it could increase build time or codesize
   bloat. We may evaluate this decision in the future, but for now, it fits into our "lightweight"
   theme of usability.
@@ -200,6 +200,11 @@ Vector.
 The String API is still rather in flux. Currently, a simple std::string-like class is provided
 called AString (short for ASCII String).
 
+### FixedArray (am-fixedarray.h)
+
+FixedArray&lt;T, AP&gt; is a stripped-down version of Vector that is constructed with a fixed
+length. The length is passed via the constructor; a compile-time length variant is planned.
+
 # Replacing SourceHook Includes
 
 AMTL is a spiritual successor to the SourceHook template library, used in many AlliedModders
@@ -225,11 +230,11 @@ example, push\_back() becomes append() and push\_front() becomes prepend(), and 
 boolean.
 
 Consider using ke::InlineList if your list contains already-allocated objects, and those objects
-are members of at most one list, LinkedList will call malloc() and free() for each node.
+are members of at most one list. LinkedList is inefficient as it will call malloc() and free() for
+each node.
 
 The implementation of SourceHook::List and ke::LinkedList are basically identical underneath the
-hood, however, copy construction and assignment are disallowed in the AMTL variant. This is because
-they violate the memory model and also have very poor performance impliciations.
+hood, however, copy construction and assignment are disallowed in the AMTL variant.
 
 ### THash<K, V> (sh\_tinyhash.h)
 
