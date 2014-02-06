@@ -303,7 +303,7 @@ class StorageBuffer
 #endif
 
 #if defined(KE_CXX11)
-# define KE_DELETE delete
+# define KE_DELETE = delete
 # define KE_OVERRIDE override
 #else
 # define KE_DELETE
