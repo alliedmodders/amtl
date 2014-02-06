@@ -36,10 +36,10 @@
 namespace ke {
 
 template <typename T, typename AllocPolicy = SystemAllocatorPolicy>
-class FixedList : public AllocPolicy
+class FixedArray : public AllocPolicy
 {
  public:
-  FixedList(size_t length, AllocPolicy = AllocPolicy()) {
+  FixedArray(size_t length, AllocPolicy = AllocPolicy()) {
     length_ = length;
     data_ = (T *)this->malloc(sizeof(T) * length_);
     if (!data_)
@@ -48,7 +48,7 @@ class FixedList : public AllocPolicy
     for (size_t i = 0; i < length_; i++)
       new (&data_[i]) T();
   }
-  ~FixedList() {
+  ~FixedArray() {
     for (size_t i = 0; i < length_; i++)
       data_[i].~T();
     this->free(data_);
@@ -86,8 +86,8 @@ class FixedList : public AllocPolicy
   }
 
  private:
-  FixedList(const FixedList &other) KE_DELETE;
-  FixedList &operator =(const FixedList &other) KE_DELETE;
+  FixedArray(const FixedArray &other) KE_DELETE;
+  FixedArray &operator =(const FixedArray &other) KE_DELETE;
 
  private:
   size_t length_;
