@@ -186,11 +186,17 @@ class Vector : public AllocPolicy
   }
 
   bool moveUp(size_t at) {
-    if (!append(Moveable<T>(data_[nitems_ - 1])))
+    // Note: we don't use append() here. Passing an elemnt as a Moveable into
+    // insert() or append() can break, since the underlying storage could be
+    // reallocated, invalidating the Moveable reference. Instead, we inline
+    // the logic to append() to ensure growIfNeeded occurs before any
+    // references are taken.
+    if (!growIfNeeded(1))
       return false;
+    new (&data_[nitems_]) T(Moveable<T>(data_[nitems_ - 1]));
     nitems_++;
     for (size_t i = nitems_ - 2; i > at; i--)
-      data_[i] = T(Moveable<T>(data_[i - 1]));
+      data_[i] = Moveable<T>(data_[i - 1]);
     return true;
   }
 
