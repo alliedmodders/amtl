@@ -186,7 +186,7 @@ class Vector : public AllocPolicy
   }
 
   bool moveUp(size_t at) {
-    // Note: we don't use append() here. Passing an elemnt as a Moveable into
+    // Note: we don't use append() here. Passing an element as a Moveable into
     // insert() or append() can break, since the underlying storage could be
     // reallocated, invalidating the Moveable reference. Instead, we inline
     // the logic to append() to ensure growIfNeeded occurs before any
