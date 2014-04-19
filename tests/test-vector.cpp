@@ -261,7 +261,7 @@ class TestVector : public Test
       vector.insert(0, Move(x));
     }
     for (size_t i = 0; i < vector.length(); i++) {
-      if (vector[i].moved())
+      if (!check(vector[i].moved() == false, "vector element was illegally moved"))
         return false;
     }
     return true;
