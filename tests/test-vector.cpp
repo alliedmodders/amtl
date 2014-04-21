@@ -79,6 +79,9 @@ class MovingThing
     if (moved_)
       sMovedDtors++;
   }
+  bool moved() const {
+    return moved_;
+  }
 
  private:
   MovingThing(const MovingThing &other) KE_DELETE;
@@ -246,6 +249,24 @@ class TestVector : public Test
     return true;
   }
 
+  bool testMoveDuringInsert()
+  {
+    Vector<MovingThing> vector;
+    for (size_t i = 1; i <= 8; i++) {
+      MovingThing x;
+      vector.append(Move(x));
+    }
+    {
+      MovingThing x;
+      vector.insert(0, Move(x));
+    }
+    for (size_t i = 0; i < vector.length(); i++) {
+      if (!check(vector[i].moved() == false, "vector element was illegally moved"))
+        return false;
+    }
+    return true;
+  }
+
   bool Run() KE_OVERRIDE
   {
     if (!testInts())
@@ -255,6 +276,8 @@ class TestVector : public Test
     if (!testMoving())
       return false;
     if (!testFallibleMalloc())
+      return false;
+    if (!testMoveDuringInsert())
       return false;
     return true;
   }
