@@ -33,6 +33,7 @@
 using namespace ke;
 
 static ThreadLocal<int> sThreadVar;
+static ThreadLocal<void *> sThreadVarPointer;
 
 class VarThread : public IRunnable
 {
@@ -82,6 +83,11 @@ class TestThreadLocalThreaded : public Test
     if (!check(run.succeeded(), "thread completed correctly"))
       return false;
     if (!check(sThreadVar == 10, "value did not change on main thread"))
+      return false;
+
+    // Check that pointers are allowed in T.
+    sThreadVarPointer = &run;
+    if (!check(sThreadVarPointer == &run, "pointer value sets properly"))
       return false;
 
     return true;

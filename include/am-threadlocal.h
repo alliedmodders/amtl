@@ -139,7 +139,7 @@ class ThreadLocal
 
  private:
   T internalGet() const {
-    return static_cast<T>(reinterpret_cast<uintptr_t>(pthread_getspecific(key_)));
+    return (T)reinterpret_cast<uintptr_t>(pthread_getspecific(key_));
   }
   void internalSet(const T &t) {
     pthread_setspecific(key_, reinterpret_cast<void *>(t));
