@@ -35,6 +35,8 @@ files = [
 	'test-linkedlist.cpp',
 	'test-vector.cpp',
 	'test-refcounting.cpp',
+	'test-threadlocal-threaded.cpp',
+	'test-threadlocal-unthreaded.cpp',
 	'test-threadutils.cpp',
 ]
 
