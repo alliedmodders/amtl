@@ -34,9 +34,8 @@
 
 namespace ke {
 
-// Encapsulates a per-thread value. In single-threaded mode (KE_SINGLE_THREADED),
-// this is a no-op container wrapper. Thread local values are generally used in
-// static or singleton scopes.
+// Stores a per-thread value. In single-threaded mode (KE_SINGLE_THREADED),
+// this is a no-op container wrapper.
 //
 // T must be castable to uintptr_t.
 //
@@ -48,6 +47,11 @@ namespace ke {
 // The number of thread local slots available to processes is limited (on
 // Linux, it is generally 1024). It is best to use ThreadLocal sparingly to
 // play nicely with other libraries.
+//
+// ThreadLocal will free the underlying thread-local storage slot in its
+// destructor, but it is not an AutoPtr. It does not delete pointers. Since
+// one thread's value is only observable from that thread, make sure to free
+// the contained resource (if necessary) before the thread exits.
 template <typename T>
 class ThreadLocal
 {
