@@ -1,4 +1,4 @@
-# vim: set ts=2 sw=2 tw=99 noet ft=python: 
+# vim: set ts=8 sts=2 sw=2 tw=99 et ft=python: 
 # 
 # Copyright (C) 2004-2012 David Anderson
 # 
@@ -17,29 +17,26 @@
 # SourcePawn. If not, see http://www.gnu.org/licenses/.
 #
 import os
-import os.path
-import ambuild.osutil as osutil
 
-compiler = KE.DefaultCompiler()
-compiler.AddToListVar('CXXINCLUDES', os.path.join(AMBuild.sourceFolder, 'include'))
-
-if compiler.cc.name == 'msvc':
-	compiler.AddToListVar('POSTLINKFLAGS', '/SUBSYSTEM:CONSOLE')
-
-job = AMBuild.AddJob('testrun')
-binary = Cpp.ExecutableBuilder('testrun', AMBuild, job, compiler)
-files = [
-	'main.cpp',
-	'test-hashmap.cpp',
-	'test-inlinelist.cpp',
-	'test-linkedlist.cpp',
-	'test-vector.cpp',
-	'test-refcounting.cpp',
-	'test-threadlocal-threaded.cpp',
-	'test-threadlocal-unthreaded.cpp',
-	'test-threadutils.cpp',
+binary = KE.Program(builder, 'testrunner')
+compiler = binary.compiler
+compiler.includes += [
+  os.path.join(builder.sourcePath, 'include'),
 ]
 
-binary.AddSourceFiles('tests', files)
-binary.SendToJob()
+if compiler.cxx.behavior == 'msvc':
+  compiler.linkflags.append('/SUBSYSTEM:CONSOLE')
 
+binary.sources += [
+  'main.cpp',
+  'test-hashmap.cpp',
+  'test-inlinelist.cpp',
+  'test-linkedlist.cpp',
+  'test-vector.cpp',
+  'test-refcounting.cpp',
+  'test-threadlocal-threaded.cpp',
+  'test-threadlocal-unthreaded.cpp',
+  'test-threadutils.cpp',
+]
+
+builder.Add(binary)
