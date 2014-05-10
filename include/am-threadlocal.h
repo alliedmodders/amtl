@@ -73,12 +73,12 @@ class ThreadLocal
     return get() == other;
   }
   bool operator !=(const T &other) const {
-    return get() == other;
+    return get() != other;
   }
 
  private:
-  ThreadLocal(const ThreadLocal &other);
-  ThreadLocal &operator =(const ThreadLocal &other);
+  ThreadLocal(const ThreadLocal &other) KE_DELETE;
+  ThreadLocal &operator =(const ThreadLocal &other) KE_DELETE;
 
 #if !defined(KE_SINGLE_THREADED)
  private:
