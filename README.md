@@ -89,6 +89,12 @@ Thread utils provides access to common sychronization primitives: mutexes, condi
 and threads. It also provides RAII objects for acquiring and releasing locks. More information is
 available at the top of am-thread-utils.h.
 
+In addition, there is a `ThreadLocal` container available in am-threadlocal.h. By default it acts
+as a per-thread storage container, using operating system primitives. The container can hold a
+single value that is castable to `uintptr_t`. It can also be used in single-threaded systems via
+`KE_SINGLE_THREADED`, at which point there is no TLS overhead. This is useful for systems where
+threading is optional.
+
 ### Reference Counting (am-refcounting.h)
 
 Two classes are available to help other classes implement reference counting. They are Refcounted
