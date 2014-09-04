@@ -106,23 +106,13 @@ class AString
     return chars()[index];
   }
 
-  void setVoid() {
-    chars_ = NULL;
-    length_ = kInvalidLength;
-  }
-
-  bool isVoid() const {
-    return length_ == kInvalidLength;
-  }
-
   size_t length() const {
-    assert(!isVoid());
     return length_;
   }
 
   const char *chars() const {
     if (!chars_)
-      return isVoid() ? NULL : "";
+      return "";
     return chars_;
   }
 
