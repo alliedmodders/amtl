@@ -272,6 +272,9 @@ class Ref
     bool operator !() const {
         return !thing_;
     }
+    operator T &() {
+        return *thing_;
+    }
 
     template <typename S>
     Ref &operator =(S *thing) {
@@ -307,6 +310,16 @@ class Ref
         thing_ = other->thing_;
         other->thing_ = NULL;
         return *this;
+    }
+
+    T **byref() {
+        return &thing_;
+    }
+    T * const *byref_const() {
+        return &thing_;
+    }
+    void **address() {
+        return reinterpret_cast<void **>(&thing_);
     }
 
   private:
