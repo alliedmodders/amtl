@@ -167,7 +167,8 @@ class Vector : public AllocPolicy
     } else if (newLength > length()) {
       if (!ensure(newLength))
         return false;
-      for (size_t i = 0; i < newLength - length(); i++)
+      size_t count = newLength - length();
+      for (size_t i = 0; i < count; i++)
         infallibleAppend(T());
     }
     return true;
