@@ -36,6 +36,8 @@
 #include <stdint.h>
 #if defined(_MSC_VER)
 # include <intrin.h>
+#else
+# include <inttypes.h>
 #endif
 #include <am-moveable.h>
 
@@ -384,8 +386,8 @@ class StackLinked
 # define KE_U64_FMT             "%I64u"
 #elif defined(__GNUC__)
 # define KE_SIZET_FMT           "%zu"
-# define KE_I64_FMT             "%lld"
-# define KE_U64_FMT             "%llu"
+# define KE_I64_FMT             "%" PRId64
+# define KE_U64_FMT             "%" PRIu64
 #else
 # error "Implement format specifier string"
 #endif
