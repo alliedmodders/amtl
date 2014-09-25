@@ -118,6 +118,9 @@ class AutoPtr
         t_ = t;
         return t_;
     }
+    T **address() {
+      return &t_;
+    }
     T *operator =(Moveable<AutoPtr<T> > other) {
         delete t_;
         t_ = other->t_;
