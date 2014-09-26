@@ -30,6 +30,7 @@
 #include <am-utility.h>
 #include <am-refcounting.h>
 #include "runner.h"
+#include <stdlib.h>
 
 using namespace ke;
 
@@ -46,6 +47,14 @@ class Counted : public Refcounted<Counted>
 class SubCounted : public Counted
 {
 };
+
+void
+TypeChecks_DoNotCall()
+{
+  Ref<Counted> counted;
+  if (counted)
+    abort();
+}
 
 static inline PassRef<Counted>
 PassThrough(const Ref<Counted> &obj)

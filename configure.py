@@ -17,4 +17,5 @@ run.options.add_option('--enable-debug', action='store_const', const='1', dest='
                        help='Enable debugging symbols')
 run.options.add_option('--enable-optimize', action='store_const', const='1', dest='opt',
                        help='Enable optimization')
+run.options.add_option('--std', type=str, default=None, help='Override C++ standard')
 run.Configure()

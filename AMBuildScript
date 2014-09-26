@@ -11,6 +11,9 @@ class KEConfig(object):
     cxx = cfg.cxx
 
     if cxx.behavior == 'gcc':
+      std = getattr(builder.options, 'std', None)
+      if std is not None:
+          cfg.cxxflags += ['-std={0}'.format(std)]
       cfg.defines += [
         'stricmp=strcasecmp',
         '_stricmp=strcasecmp',
