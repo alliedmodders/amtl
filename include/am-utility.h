@@ -158,14 +158,8 @@ class AutoArray
     T *take() {
         return ReturnAndVoid(t_);
     }
-    T *operator *() const {
+    T &operator *() const {
         return t_;
-    }
-    T &operator [](size_t index) {
-      return t_[index];
-    }
-    const T &operator [](size_t index) const {
-      return t_[index];
     }
     operator T *() const {
         return t_;
