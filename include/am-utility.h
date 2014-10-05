@@ -401,6 +401,14 @@ class StackLinked
 # define KE_CRITICAL_LIKELY(x)  x
 #endif
 
+#if defined(_WIN32)
+# define KE_IMPORT __declspec(dllimport)
+# define KE_EXPORT __declspec(dllexport)
+#else
+# define KE_IMPORT
+# define KE_EXPORT __attribute__((visibility("default")))
+#endif
+
 }
 
 #endif // _include_amtl_utility_h_
