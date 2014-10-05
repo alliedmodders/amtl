@@ -32,6 +32,7 @@
 
 #include <stdio.h>
 #include <stdarg.h>
+#include <am-cxx.h>
 
 namespace ke {
 

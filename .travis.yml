@@ -20,6 +20,18 @@ script:
   - ./tests/testrunner/testrunner
   - cd ..
 
+  - mkdir build-gcc45-opt && cd build-clang-opt
+  - CC="gcc-4.5" CXX="g++-4.5" python ../configure.py --enable-optimize
+  - ambuild
+  - ./tests/testrunner/testrunner
+  - cd ..
+
+  - mkdir build-gcc45-debug && cd build-clang-debug
+  - CC="gcc-4.5" CXX="g++-4.5" python ../configure.py --enable-debug
+  - ambuild
+  - ./tests/testrunner/testrunner
+  - cd ..
+
   - mkdir build-gcc46-opt && cd build-clang-opt
   - CC="gcc-4.6" CXX="g++-4.6" python ../configure.py --enable-optimize
   - ambuild

@@ -32,6 +32,7 @@
 
 #include <stddef.h>
 #include <assert.h>
+#include <am-cxx.h>
 
 namespace ke {
 
