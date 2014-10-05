@@ -210,6 +210,49 @@ class Refcounted
     uintptr_t refcount_;
 };
 
+// This can be used for classes which will inherit from VirtualRefcounted.
+class IRefcounted
+{
+ public:
+  virtual ~IRefcounted() {}
+  virtual void AddRef() = 0;
+  virtual void Release() = 0;
+};
+
+// Classes may be multiply-inherited may wish to derive from this Refcounted
+// instead.
+class VirtualRefcounted : public IRefcounted
+{
+ public:
+  VirtualRefcounted() : refcount_(0)
+  {
+#if !defined(NDEBUG)
+    destroying_ = false;
+#endif
+  }
+  virtual ~VirtualRefcounted()
+  {}
+  void AddRef() KE_OVERRIDE {
+    assert(!destroying_);
+    refcount_++;
+  }
+  void Release() KE_OVERRIDE {
+    assert(refcount_ > 0);
+    if (--refcount_ == 0) {
+#if !defined(NDEBUG)
+      destroying_ = true;
+#endif
+      delete this;
+    }
+  }
+
+ private:
+  uintptr_t refcount_;
+#if !defined(NDEBUG)
+  bool destroying_;
+#endif
+};
+
 // Simple class for automatic refcounting.
 template <typename T>
 class Ref
