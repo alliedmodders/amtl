@@ -55,8 +55,6 @@ static const size_t kKB = 1024;
 static const size_t kMB = 1024 * kKB;
 static const size_t kGB = 1024 * kMB;
 
-typedef uint8_t * Address;
-
 template <typename T> T
 ReturnAndVoid(T &t)
 {
@@ -295,11 +293,11 @@ IsAligned(T addr, size_t alignment)
     return !(uintptr_t(addr) & (alignment - 1));
 }
 
-static inline Address
-AlignedBase(Address addr, size_t alignment)
+static inline void *
+AlignedBase(void *addr, size_t alignment)
 {
     assert(IsPowerOfTwo(alignment));
-    return Address(uintptr_t(addr) & ~(alignment - 1));
+    return reinterpret_cast<void *>(uintptr_t(addr) & ~(alignment - 1));
 }
 
 template <typename T> static inline T
