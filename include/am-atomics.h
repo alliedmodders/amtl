@@ -105,12 +105,12 @@ struct AtomicOps<8>
 };
 
 
-class AtomicRefCount
+class AtomicRefcount
 {
   typedef AtomicOps<sizeof(uintptr_t)> Ops;
 
  public:
-  AtomicRefCount(uintptr_t value)
+  AtomicRefcount(uintptr_t value)
    : value_(value)
   {
   }

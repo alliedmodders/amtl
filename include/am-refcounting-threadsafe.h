@@ -63,7 +63,40 @@ class RefcountedThreadsafe
     }
 
   private:
-    AtomicRefCount refcount_;
+    AtomicRefcount refcount_;
+};
+
+// Classes may be multiply-inherited may wish to derive from this Refcounted
+// instead.
+class VirtualRefcountedThreadsafe : public IRefcounted
+{
+ public:
+  VirtualRefcountedThreadsafe() : refcount_(0)
+  {
+#if !defined(NDEBUG)
+    destroying_ = false;
+#endif
+  }
+  virtual ~VirtualRefcountedThreadsafe()
+  {}
+  void AddRef() KE_OVERRIDE {
+    assert(!destroying_);
+    refcount_.increment();
+  }
+  void Release() KE_OVERRIDE {
+    if (!refcount_.decrement()) {
+#if !defined(NDEBUG)
+      destroying_ = true;
+#endif
+      delete this;
+    }
+  }
+
+ private:
+  AtomicRefcount refcount_;
+#if !defined(NDEBUG)
+  bool destroying_;
+#endif
 };
 
 } // namespace ke
