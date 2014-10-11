@@ -43,8 +43,10 @@ extern "C" {
 }
 # pragma intrinsic(_InterlockedIncrement)
 # pragma intrinsic(_InterlockedDecrement)
-# pragma intrinsic(_InterlockedIncrement64)
-# pragma intrinsic(_InterlockedDecrement64)
+# if defined(_WIN64)
+#  pragma intrinsic(_InterlockedIncrement64)
+#  pragma intrinsic(_InterlockedDecrement64)
+# endif
 #endif
 
 template <size_t Width>
@@ -105,7 +107,7 @@ struct AtomicOps<8>
 };
 
 
-class AtomicRefcount
+class KE_LINK AtomicRefcount
 {
   typedef AtomicOps<sizeof(uintptr_t)> Ops;
 

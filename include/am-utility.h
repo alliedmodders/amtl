@@ -401,6 +401,14 @@ class StackLinked
 # define KE_EXPORT __attribute__((visibility("default")))
 #endif
 
+#if defined(KE_EXPORTING)
+# define KE_LINK KE_EXPORT
+#elif defined(KE_IMPORTING)
+# define KE_LINK KE_IMPORT
+#else
+# define KE_LINK
+#endif
+
 }
 
 #endif // _include_amtl_utility_h_

@@ -39,7 +39,7 @@ namespace ke {
 // identical, except changing the reference count is guaranteed to be atomic
 // with respect to other threads changing the reference count.
 template <typename T>
-class RefcountedThreadsafe
+class KE_LINK RefcountedThreadsafe
 {
   public:
     RefcountedThreadsafe()

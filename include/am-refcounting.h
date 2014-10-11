@@ -185,7 +185,7 @@ class PassRef
 // must either be assigned to a Ref or PassRef (NOT an AdoptRef/AlreadyRefed),
 // or must be deleted using |delete|.
 template <typename T>
-class Refcounted
+class KE_LINK Refcounted
 {
   public:
     Refcounted()
@@ -211,7 +211,7 @@ class Refcounted
 };
 
 // This can be used for classes which will inherit from VirtualRefcounted.
-class IRefcounted
+class KE_LINK IRefcounted
 {
  public:
   virtual ~IRefcounted() {}
@@ -221,7 +221,7 @@ class IRefcounted
 
 // Classes may be multiply-inherited may wish to derive from this Refcounted
 // instead.
-class VirtualRefcounted : public IRefcounted
+class KE_LINK VirtualRefcounted : public IRefcounted
 {
  public:
   VirtualRefcounted() : refcount_(0)
