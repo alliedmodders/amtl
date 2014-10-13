@@ -67,6 +67,10 @@ class AlreadyRefed
             thing_->Release();
     }
 
+    T *operator ->() const {
+        return thing_;
+    }
+
     T *release() const {
         return ReturnAndVoid(thing_);
     }
