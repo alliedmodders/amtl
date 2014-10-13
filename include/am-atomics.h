@@ -40,13 +40,45 @@ extern "C" {
   long __cdecl _InterlockedDecrement(long volatile *dest);
   long __cdecl _InterlockedIncrement64(long long volatile *dest);
   long __cdecl _InterlockedDecrement64(long long volatile *dest);
+  long __cdecl _InterlockedCompareExchangePointer(
+     void * volatile *Destination,
+     void * Exchange,
+     void * Comparand
+  );
 }
 # pragma intrinsic(_InterlockedIncrement)
 # pragma intrinsic(_InterlockedDecrement)
+# pragma intrinsic(_InterlockedCompareExchangePointer)
 # if defined(_WIN64)
 #  pragma intrinsic(_InterlockedIncrement64)
 #  pragma intrinsic(_InterlockedDecrement64)
 # endif
+#endif
+
+#if defined(__GNUC__)
+# if defined(i386) || defined(__x86_64__)
+#  if defined(__clang__)
+    static inline void YieldProcessor() { asm("pause"); }
+#  else
+#   define YieldProcessor() __builtin_ia32_pause()
+#  endif
+#else
+#  define YieldProcessor()
+# endif
+#endif
+
+#if defined(_MSC_VER)
+static inline void *
+CompareAndSwapPtr(void *volatile *Destination, void *Exchange, void *Comparand)
+{
+  return _InterlockedCompareExchangePointer(Destination, Exchange, Comparand);
+}
+#else
+static inline void *
+CompareAndSwapPtr(void *volatile *dest, void *newval, void *oldval)
+{
+  return __sync_val_compare_and_swap(dest, oldval, newval);
+}
 #endif
 
 template <size_t Width>
@@ -105,7 +137,6 @@ struct AtomicOps<8>
   }
 #endif
 };
-
 
 class KE_LINK AtomicRefcount
 {

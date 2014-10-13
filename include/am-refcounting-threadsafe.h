@@ -99,6 +99,94 @@ class VirtualRefcountedThreadsafe : public IRefcounted
 #endif
 };
 
+// This is a specialized version of Ref<> that is safe to read and write from
+// multiple threads. It is not recommended for general use, since it imposes
+// a CAS spin-lock on every read/write.
+//
+// Normally, assigning Ref<> to Ref<> has a race condition where in between
+// the read and incref, another thread can assign, decref, and ultimately
+// destroy the left-hand side. This prevents such a scenario by making reads
+// atomic with respect to the incref operation.
+//
+// Pointers stored in an AtomicRef<> must be at least sizeof(void *) aligned.
+template <typename T>
+class AtomicRef
+{
+ public:
+  AtomicRef()
+   : thing_(NULL)
+  {}
+  AtomicRef(T *thing)
+   : thing_(thing)
+  {
+    assert(IsAligned(thing, sizeof(void *)));
+  }
+  ~AtomicRef() {
+    Release(thing_);
+  }
+
+  // Atomically retrieve and add a reference to the contained value.
+  AlreadyRefed<T> get() {
+    T *value = lock();
+    if (value)
+      value->AddRef();
+    unlock(value);
+    return AdoptRef(value);
+  }
+
+  // Atomically incref the new value and replace the old value.
+  void operator =(T *other) {
+    T *value = lock();
+    if (other)
+      other->AddRef();
+    unlock(other);
+    if (value)
+      value->Release();
+  }
+
+ private:
+  AtomicRef(const AtomicRef &other) KE_DELETE;
+  void operator =(const AtomicRef &other) KE_DELETE;
+
+ private:
+  // We represent a locked state with a tag bit.
+  void *tagged(void *ptr) {
+    return reinterpret_cast<void *>(uintptr_t(ptr) | 1);
+  }
+  void *untagged(void *ptr) {
+    return reinterpret_cast<void *>(uintptr_t(ptr) & ~uintptr_t(1));
+  }
+
+  T *lock() {
+    // Spin until we can replace an untagged ptr with the tagged version.
+    void *oldval = untagged(thing_);
+    while (CompareAndSwapPtr(&thing_, tagged(oldval), oldval) != oldval) {
+      YieldProcessor();
+      oldval = untagged(thing_);
+    }
+    return reinterpret_cast<T *>(oldval);
+  }
+  void unlock(T *ptr) {
+    // Nothing should have mutated the value, and the new value should be
+    // untagged.
+    assert(thing_ == tagged(thing_));
+    assert(ptr == untagged(ptr));
+    thing_ = ptr;
+  }
+
+  void AddRef(void *ptr) {
+    if (ptr)
+      reinterpret_cast<T *>(ptr)->AddRef();
+  }
+  void Release(void *ptr) {
+    if (ptr)
+      reinterpret_cast<T *>(ptr)->AddRef();
+  }
+
+ private:
+  void * volatile thing_;
+};
+
 } // namespace ke
 
 #endif // _include_amtl_ts_refcounting_h_

@@ -67,6 +67,19 @@ class AlreadyRefed
             thing_->Release();
     }
 
+    bool operator !() const {
+        return !thing_;
+    }
+    T *operator ->() const {
+        return thing_;
+    }
+    bool operator ==(T *other) const {
+        return thing_ == other;
+    }
+    bool operator !=(T *other) const {
+        return thing_ != other;
+    }
+
     T *release() const {
         return ReturnAndVoid(thing_);
     }

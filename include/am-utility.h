@@ -409,6 +409,29 @@ class StackLinked
 # define KE_LINK
 #endif
 
-}
+#define KE_DEFINE_ENUM_OPERATORS(EnumName)                                          \
+  static inline EnumName operator |(const EnumName &left, const EnumName &right) {  \
+    return EnumName(uint32_t(left) | uint32_t(right));                              \
+  }                                                                                 \
+  static inline EnumName operator &(const EnumName &left, const EnumName &right) {  \
+    return EnumName(uint32_t(left) & uint32_t(right));                              \
+  }                                                                                 \
+  static inline EnumName operator ^(const EnumName &left, const EnumName &right) {  \
+    return EnumName(uint32_t(left) ^ uint32_t(right));                              \
+  }                                                                                 \
+  static inline EnumName operator ~(const EnumName &flags) {                        \
+    return EnumName(~uint32_t(flags));                                              \
+  }                                                                                 \
+  static inline EnumName & operator |=(EnumName &left, const EnumName &right) {     \
+    return left = left | right;                                                     \
+  }                                                                                 \
+  static inline EnumName & operator &=(EnumName &left, const EnumName &right) {     \
+    return left = left & right;                                                     \
+  }                                                                                 \
+  static inline EnumName & operator ^=(EnumName &left, const EnumName &right) {     \
+    return left = left ^ right;                                                     \
+  }
+
+} // namespace ke
 
 #endif // _include_amtl_utility_h_
