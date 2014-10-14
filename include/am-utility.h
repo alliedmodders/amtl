@@ -409,6 +409,12 @@ class StackLinked
 # define KE_LINK
 #endif
 
+#if defined(KE_CXX11)
+# define KE_EXPLICIT explicit
+#else
+# define KE_EXPLICIT
+#endif
+
 #define KE_DEFINE_ENUM_OPERATORS(EnumName)                                          \
   static inline EnumName operator |(const EnumName &left, const EnumName &right) {  \
     return EnumName(uint32_t(left) | uint32_t(right));                              \
@@ -430,6 +436,9 @@ class StackLinked
   }                                                                                 \
   static inline EnumName & operator ^=(EnumName &left, const EnumName &right) {     \
     return left = left ^ right;                                                     \
+  }                                                                                 \
+  static inline bool operator !(const EnumName &obj) {                              \
+    return uint32_t(obj) == 0;                                                      \
   }
 
 } // namespace ke
