@@ -120,9 +120,13 @@ class AtomicRef
    : thing_(thing)
   {
     assert(IsAligned(thing, sizeof(void *)));
+    if (thing)
+      thing->AddRef();
   }
   ~AtomicRef() {
-    Release(thing_);
+    assert(thing_ == untagged(thing_));
+    if (thing_)
+      reinterpret_cast<T *>(thing_)->Release();
   }
 
   // Atomically retrieve and add a reference to the contained value.
@@ -172,15 +176,6 @@ class AtomicRef
     assert(thing_ == tagged(thing_));
     assert(ptr == untagged(ptr));
     thing_ = ptr;
-  }
-
-  void AddRef(void *ptr) {
-    if (ptr)
-      reinterpret_cast<T *>(ptr)->AddRef();
-  }
-  void Release(void *ptr) {
-    if (ptr)
-      reinterpret_cast<T *>(ptr)->AddRef();
   }
 
  private:
