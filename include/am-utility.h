@@ -102,6 +102,9 @@ class AutoPtr
     T *take() {
         return ReturnAndVoid(t_);
     }
+    void forget() {
+        t_ = NULL;
+    }
     T *operator *() const {
         return t_;
     }
@@ -155,6 +158,9 @@ class AutoArray
     }
     T *take() {
         return ReturnAndVoid(t_);
+    }
+    void forget() {
+        t_ = NULL;
     }
     T &operator *() const {
         return t_;
