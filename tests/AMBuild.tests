@@ -37,6 +37,7 @@ binary.sources += [
   'test-threadlocal-threaded.cpp',
   'test-threadlocal-unthreaded.cpp',
   'test-threadutils.cpp',
+  'test-deque.cpp',
 ]
 
 builder.Add(binary)

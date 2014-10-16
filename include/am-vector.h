@@ -242,10 +242,7 @@ class Vector : public AllocPolicy
     T* newdata = (T*)this->malloc(sizeof(T) * new_maxsize);
     if (newdata == NULL)
       return false;
-    for (size_t i = 0; i < nitems_; i++) {
-      new (&newdata[i]) T(Moveable<T>(data_[i]));
-      data_[i].~T();
-    }
+    MoveRange<T>(newdata, data_, nitems_);
     this->free(data_);
 
     data_ = newdata;
