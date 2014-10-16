@@ -124,6 +124,25 @@ class TestDeque : public Test
         return false;
     }
 
+    // Check that we can still add.
+    if (!check(dq.append(5), "append 5"))
+      return false;
+    if (!check(dq.popFrontCopy() == 5, "popFrontCopy == 5"))
+      return false;
+    if (!check(dq.append(6), "append 6"))
+      return false;
+    if (!check(dq.popBackCopy() == 6, "popBackCopy == 6"))
+      return false;
+
+    if (!check(dq.prepend(7), "prepend 7"))
+      return false;
+    if (!check(dq.popBackCopy() == 7, "popBackCopy == 7"))
+      return false;
+    if (!check(dq.prepend(8), "prepend 8"))
+      return false;
+    if (!check(dq.popFrontCopy() == 8, "popFrontCopy == 8"))
+      return false;
+
     return true;
   }
 
