@@ -68,6 +68,16 @@ Move(T &t)
   return Moveable<T>(t);
 }
 
+template <typename T>
+static inline void
+MoveRange(T *dest, T *src, size_t length)
+{
+  for (size_t i = 0; i < length; i++) {
+    new (&dest[i]) T(Moveable<T>(src[i]));
+    src[i].~T();
+  }
+}
+
 } // namespace ke
 
 #endif // _include_amtl_moveable_h_
