@@ -40,7 +40,7 @@ extern "C" {
   long __cdecl _InterlockedDecrement(long volatile *dest);
   long __cdecl _InterlockedIncrement64(long long volatile *dest);
   long __cdecl _InterlockedDecrement64(long long volatile *dest);
-  long __cdecl _InterlockedCompareExchangePointer(
+  void * __cdecl _InterlockedCompareExchangePointer(
      void * volatile *Destination,
      void * Exchange,
      void * Comparand
@@ -66,8 +66,12 @@ extern "C" {
     static inline void YieldProcessor() { asm("pause"); }
 #   endif
 #  endif
-#else
+# else
 #  define YieldProcessor()
+# endif
+#elif defined(_MSC_VER)
+# if !defined(YieldProcessor)
+#  define YieldProcessor _mm_pause
 # endif
 #endif
 
