@@ -164,6 +164,7 @@ class Vector : public AllocPolicy
   }
 
   Vector &operator =(Vector &&other) {
+    zap();
     data_ = other.data_;
     nitems_ = other.nitems_;
     maxsize_ = other.maxsize_;
@@ -225,10 +226,7 @@ class Vector : public AllocPolicy
     T* newdata = (T*)this->malloc(sizeof(T) * new_maxsize);
     if (newdata == nullptr)
       return false;
-    for (size_t i = 0; i < nitems_; i++) {
-      new (&newdata[i]) T(ke::Move(data_[i]));
-      data_[i].~T();
-    }
+    MoveRange<T>(newdata, data_, nitems_);
     this->free(data_);
 
     data_ = newdata;
