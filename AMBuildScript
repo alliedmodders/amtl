@@ -12,8 +12,8 @@ class KEConfig(object):
 
     if cfg.version < 'clang-3.0' or cfg.version < 'apple-clang-3.0':
       raise Exception('AMTL requires clang 3.0 or higher.')
-    if cfg.version < 'gcc-4.3':
-      raise Exception('AMTL requires GCC 4.3 or higher.')
+    if cfg.version < 'gcc-4.5':
+      raise Exception('AMTL requires GCC 4.5 or higher.')
     if cfg.version < 'msvc-1600':
       raise Exception('AMTL requires Visual Studio 2010 (CL 16.00) or higher.')
 

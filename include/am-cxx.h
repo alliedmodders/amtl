@@ -69,7 +69,7 @@
    ((__clang_major__ > (x)) || (__clang_major__ == x && __clang_minor__ >= y))
 
 # if KE_CLANG_AT_LEAST(2, 9)
-#  define KE_CXX_HAS_REFREF
+#  define KE_CXX_HAS_RVAL_REFS 30
 #  define KE_CXX_HAS_DELETE
 #  define KE_CXX_HAS_STATIC_ASSERT
 #  define KE_CXX_HAS_DOUBLE_GT
@@ -89,7 +89,7 @@
 # define KE_GCC_AT_LEAST(x, y) ((__GNUC__ > (x)) || (__GNUC__ == x && __GNUC_MINOR__ >= y))
 
 # if KE_GCC_AT_LEAST(4, 3)
-#  define KE_CXX_HAS_REFREF
+#  define KE_CXX_HAS_RVAL_REFS 10
 #  define KE_CXX_HAS_STATIC_ASSERT
 #  define KE_CXX_HAS_DOUBLE_GT
 # endif
@@ -99,11 +99,15 @@
 # endif
 # if KE_GCC_AT_LEAST(4, 5)
 #  define KE_CXX_HAS_EXPLICIT_BOOL
+#  undef KE_CXX_HAS_RVAL_REFS
+#  define KE_CXX_HAS_RVAL_REFS 21
 # endif
 # if KE_GCC_AT_LEAST(4, 6)
 #  define KE_CXX_HAS_NULLPTR
 #  define KE_CXX_HAS_NOEXCEPT
 #  define KE_CXX_HAS_CONSTEXPR
+#  undef KE_CXX_HAS_RVAL_REFS
+#  define KE_CXX_HAS_RVAL_REFS 30
 # endif
 # if KE_GCC_AT_LEAST(4, 7)
 #  define KE_CXX_HAS_OVERRIDE
@@ -111,12 +115,14 @@
 
 #elif defined(_MSC_VER)
 # if _MSC_VER >= 1600
-#  define KE_CXX_HAS_REFREF
+#  define KE_CXX_HAS_RVAL_REFS 20
 #  define KE_CXX_HAS_STATIC_ASSERT
 #  define KE_CXX_HAS_DOUBLE_GT
 #  define KE_CXX_HAS_NULLPTR
 # endif
 # if _MSC_VER >= 1700
+#  undef KE_CXX_HAS_RVAL_REFS
+#  define KE_CXX_HAS_RVAL_REFS 21
 #  define KE_CXX_HAS_OVERRIDE
 #  define KE_CXX_HAS_ENUM_CLASS
 # endif
@@ -127,6 +133,8 @@
 # if _MSC_FULL_VER >= 180030723
 #  define KE_CXX_HAS_CONSTEXPR
 # endif
+#else
+# error Unrecognized compiler.
 #endif
 
 // Done with compiler feature detection.
@@ -161,8 +169,8 @@
 # define KE_STATIC_ASSERT(cond) extern int static_assert_f(int a[(cond) ? 1 : -1])
 #endif
 
-#if !defined(KE_CXX_HAS_REFREF)
-# error AMTL requires rvalue reference types
+#if !defined(KE_CXX_HAS_RVAL_REFS) || KE_CXX_HAS_RVAL_REFS < 21
+# error AMTL requires rvalue reference 2.1 support (N2844+)
 #endif
 #if !defined(KE_CXX_HAS_DOUBLE_GT)
 # error AMTL requires support for >> in template names
