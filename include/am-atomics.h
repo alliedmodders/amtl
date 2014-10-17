@@ -38,17 +38,31 @@ namespace ke {
 extern "C" {
   long __cdecl _InterlockedIncrement(long volatile *dest);
   long __cdecl _InterlockedDecrement(long volatile *dest);
-  long __cdecl _InterlockedIncrement64(long long volatile *dest);
-  long __cdecl _InterlockedDecrement64(long long volatile *dest);
+  long long __cdecl _InterlockedIncrement64(long long volatile *dest);
+  long long __cdecl _InterlockedDecrement64(long long volatile *dest);
+  long __cdecl _InterlockedCompareExchange(long volatile *dest, long exchange, long comparand);
+# if _MSC_VER > 1600 || (_MSC_VER == 1600 && !defined(_M_IX86))
   void * __cdecl _InterlockedCompareExchangePointer(
      void * volatile *Destination,
      void * Exchange,
      void * Comparand
   );
+#else
+  static inline void * _InterlockedCompareExchangePointer(
+     void * volatile *Destination,
+     void * Exchange,
+     void * Comparand)
+  {
+    return (void *)_InterlockedCompareExchange((long volatile *)Destination, (long)Exchange, (long)Comparand);
+  }
+#endif
 }
 # pragma intrinsic(_InterlockedIncrement)
 # pragma intrinsic(_InterlockedDecrement)
-# pragma intrinsic(_InterlockedCompareExchangePointer)
+# pragma intrinsic(_InterlockedCompareExchange)
+# if _MSC_VER > 1600 || (_MSC_VER == 1600 && !defined(_M_IX86))
+#  pragma intrinsic(_InterlockedCompareExchangePointer)
+# endif
 # if defined(_WIN64)
 #  pragma intrinsic(_InterlockedIncrement64)
 #  pragma intrinsic(_InterlockedDecrement64)

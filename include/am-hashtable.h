@@ -380,7 +380,7 @@ class HashTable : public AllocPolicy
     this->free(table_);
   }
 
-  bool init(uint32_t capacity = 0) {
+  bool init(size_t capacity = 0) {
     if (capacity < kMinCapacity) {
       capacity = kMinCapacity;
     } else if (capacity > kMaxCapacity) {
@@ -388,10 +388,10 @@ class HashTable : public AllocPolicy
       return false;
     }
 
-    minCapacity_ = capacity;
+    minCapacity_ = uint32_t(capacity);
 
     assert(IsPowerOfTwo(capacity));
-    capacity_ = capacity;
+    capacity_ = uint32_t(capacity);
 
     table_ = createTable(capacity_);
     if (!table_)
@@ -600,7 +600,7 @@ template <>
 inline uint32_t
 HashInteger<4>(uintptr_t value)
 {
-  return HashInt32(value);
+  return HashInt32(uint32_t(value));
 }
 
 template <>

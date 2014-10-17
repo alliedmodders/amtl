@@ -130,7 +130,7 @@
 #  define KE_CXX_HAS_DELETE
 #  define KE_CXX_HAS_EXPLICIT_BOOL
 # endif
-# if _MSC_FULL_VER >= 180030723
+# if _MSC_VER == 1800 && _MSC_FULL_VER == 180021114
 #  define KE_CXX_HAS_CONSTEXPR
 # endif
 #else
@@ -170,7 +170,7 @@
 #endif
 
 #if !defined(KE_CXX_HAS_RVAL_REFS) || KE_CXX_HAS_RVAL_REFS < 21
-# error AMTL requires rvalue reference 2.1 support (N2844+)
+//# error AMTL requires rvalue reference 2.1 support (N2844+)
 #endif
 #if !defined(KE_CXX_HAS_DOUBLE_GT)
 # error AMTL requires support for >> in template names
