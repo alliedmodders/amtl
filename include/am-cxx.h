@@ -29,10 +29,6 @@
 #ifndef _include_amtl_cxx_support_h_
 #define _include_amtl_cxx_support_h_
 
-#if __cplusplus < 201103L
-# error AMTL requires C++11 mode.
-#endif
-
 #if defined(__clang__)
 # if !(defined(__clang_major__) && defined(__clang_minor__))
 #  define KE_CLANG_MAJOR 1
@@ -67,43 +63,49 @@
 #   define KE_CLANG_MINOR __clang_minor__
 #  endif
 # endif
-  // Done with horrible clang version detection.
-# if __clang_major__ > 2 || (__clang_major__ == 2 && __clang_minor__ >= 9)
+
+// Done with horrible clang version detection.
+# define KE_CLANG_AT_LEAST(x, y) \
+   ((__clang_major__ > (x)) || (__clang_major__ == x && __clang_minor__ >= y))
+
+# if KE_CLANG_AT_LEAST(2, 9)
 #  define KE_CXX_HAS_REFREF
 #  define KE_CXX_HAS_DELETE
 #  define KE_CXX_HAS_STATIC_ASSERT
 #  define KE_CXX_HAS_DOUBLE_GT
 #  define KE_CXX_HAS_ENUM_CLASS
 # endif
-# if __clang_major__ >= 3
+# if KE_CLANG_AT_LEAST(3, 0)
 #  define KE_CXX_HAS_OVERRIDE
 #  define KE_CXX_HAS_EXPLICIT_BOOL
 #  define KE_CXX_HAS_NULLPTR
 #  define KE_CXX_HAS_NOEXCEPT
 # endif
-# if __clang_major__ > 3 || (__clang_major__ == 3 && __clang_minor__ == 1)
+# if KE_CLANG_AT_LEAST(3, 1)
 #  define KE_CXX_HAS_CONSTEXPR
 # endif
 
 #elif defined(__GNUC__)
-# if __GNUC__ > 4 || (__GNUC__ == 4 && __GNUC_MINOR__ >= 3)
+# define KE_GCC_AT_LEAST(x, y) ((__GNUC__ > (x)) || (__GNUC__ == x && __GNUC_MINOR__ >= y))
+
+# if KE_GCC_AT_LEAST(4, 3)
 #  define KE_CXX_HAS_REFREF
 #  define KE_CXX_HAS_STATIC_ASSERT
 #  define KE_CXX_HAS_DOUBLE_GT
 # endif
-# if __GNUC__ > 4 || (__GNUC__ == 4 && __GNUC_MINOR__ >= 4)
+# if KE_GCC_AT_LEAST(4, 4)
 #  define KE_CXX_HAS_DELETE
 #  define KE_CXX_HAS_ENUM_CLASS
 # endif
-# if __GNUC__ > 4 || (__GNUC__ == 4 && __GNUC_MINOR__ >= 5)
+# if KE_GCC_AT_LEAST(4, 5)
 #  define KE_CXX_HAS_EXPLICIT_BOOL
 # endif
-# if __GNUC__ > 4 || (__GNUC__ == 4 && __GNUC_MINOR__ >= 6)
+# if KE_GCC_AT_LEAST(4, 6)
 #  define KE_CXX_HAS_NULLPTR
 #  define KE_CXX_HAS_NOEXCEPT
 #  define KE_CXX_HAS_CONSTEXPR
 # endif
-# if __GNUC__ > 4 || (__GNUC__ == 4 && __GNUC_MINOR__ >= 7)
+# if KE_GCC_AT_LEAST(4, 7)
 #  define KE_CXX_HAS_OVERRIDE
 # endif
 
