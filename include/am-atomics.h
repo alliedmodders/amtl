@@ -60,7 +60,11 @@ extern "C" {
 #  if defined(__clang__)
     static inline void YieldProcessor() { asm("pause"); }
 #  else
-#   define YieldProcessor() __builtin_ia32_pause()
+#   if KE_GCC_AT_LEAST(4, 7)
+#    define YieldProcessor() __builtin_ia32_pause()
+#   else
+    static inline void YieldProcessor() { asm("pause"); }
+#   endif
 #  endif
 #else
 #  define YieldProcessor()

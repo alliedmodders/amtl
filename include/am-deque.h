@@ -31,6 +31,8 @@
 
 #include <new>
 #include <stdlib.h>
+#include <assert.h>
+#include <am-cxx.h>
 #include <am-allocator-policies.h>
 #include <am-utility.h>
 #include <am-moveable.h>
@@ -50,56 +52,48 @@ class Deque : public AllocPolicy
      last_(0)
   {
   }
-  Deque(Moveable<Deque<T, AllocPolicy> > other) {
+  Deque(Deque &&other)
+   : buffer_(other.buffer_),
+     maxlength_(other.maxlength_),
+     first_(other.first_),
+     last_(other.last_)
+  {
+    other.reset();
+  }
+  ~Deque() {
+    zap();
+  }
+
+  Deque &operator =(Deque &&other) {
+    zap();
     buffer_ = other.buffer_;
     maxlength_ = other.maxlength_;
     first_ = other.first_;
     last_ = other.last_;
-
-    other.buffer_ = NULL;
-    other.maxlength_ = 0;
-    other.first_ = 0;
-    other.last_ = 0;
-  }
-  ~Deque() {
-    zap();
+    other.reset();
   }
 
   bool empty() const {
     return first_ == last_;
   }
 
-  bool append(const T &other) {
+  template <typename U>
+  bool append(U &&other) {
     size_t next = ensureCanAppend();
     if (next == kInvalidIndex)
       return false;
-    new (&buffer_[last_]) T(other);
-    last_ = next;
-    return true;
-  }
-  bool append(Moveable<T> other) {
-    size_t next = ensureCanAppend();
-    if (next == kInvalidIndex)
-      return false;
-    new (&buffer_[last_]) T(other);
+    new (&buffer_[last_]) T(ke::Forward<U>(other));
     last_ = next;
     return true;
   }
 
-  bool prepend(const T &other) {
+  template <typename U>
+  bool prepend(U &&other) {
     size_t prev = ensureCanPrepend();
     if (prev == kInvalidIndex)
       return false;
     first_ = prev;
-    new (&buffer_[first_]) T(other);
-    return true;
-  }
-  bool prepend(Moveable<T> other) {
-    size_t prev = ensureCanPrepend();
-    if (prev == kInvalidIndex)
-      return false;
-    first_ = prev;
-    new (&buffer_[first_]) T(other);
+    new (&buffer_[first_]) T(ke::Forward<U>(other));
     return true;
   }
 
@@ -228,6 +222,13 @@ class Deque : public AllocPolicy
     buffer_ = new_buffer;
     maxlength_ = new_maxlength;
     return true;
+  }
+
+  void reset() {
+    buffer_ = NULL;
+    maxlength_ = 0;
+    first_ = 0;
+    last_ = 0;
   }
 
   void zap() {

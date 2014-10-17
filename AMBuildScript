@@ -10,6 +10,13 @@ class KEConfig(object):
     cfg = builder.DetectCompilers()
     cxx = cfg.cxx
 
+    if cfg.version < 'clang-3.0' or cfg.version < 'apple-clang-3.0':
+      raise Exception('AMTL requires clang 3.0 or higher.')
+    if cfg.version < 'gcc-4.6':
+      raise Exception('AMTL requires GCC 4.6 or higher.')
+    if cfg.version < 'msvc-1600':
+      raise Exception('AMTL requires Visual Studio 2010 (CL 16.00) or higher.')
+
     if cxx.behavior == 'gcc':
       std = getattr(builder.options, 'std', None)
       if std is not None:
@@ -27,8 +34,17 @@ class KEConfig(object):
         '-Wall',
         '-Werror',
       ]
+      if cxx.name == 'gcc':
+        if cxx.version >= '4.7':
+          cfg.cxxflags += ['-std=c++11']
+        elif cxx.version >= '4.3':
+          cfg.cxxflags += ['-std=c++0x']
+      else:
+        cfg.cxxflags += ['-std=c++11']
 
-      cfg.linkflags += ['-lpthread', '-lrt']
+      cfg.linkflags += ['-lpthread']
+      if builder.target_platform != 'mac':
+        cfg.linkflags += ['-lrt']
 
       have_gcc = cxx.name == 'gcc'
       have_clang = cxx.name == 'clang'
@@ -113,7 +129,6 @@ class KEConfig(object):
       cfg.cflags += ['-mmacosx-version-min=10.5']
       cfg.linkflags += [
         '-mmacosx-version-min=10.5',
-        '-arch', 'i386',
         '-lstdc++',
         '-stdlib=libstdc++',
       ]

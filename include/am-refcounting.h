@@ -60,7 +60,7 @@ class AlreadyRefed
     {
         // If copy elision for some reason doesn't happen (for example, when
         // returning from AdoptRef), just null out the source ref.
-        other.thing_ = NULL;
+        other.thing_ = nullptr;
     }
     ~AlreadyRefed() {
         if (thing_)
@@ -107,7 +107,7 @@ class PassRef
         AddRef();
     }
     PassRef()
-      : thing_(NULL)
+      : thing_(nullptr)
     {
     }
 
@@ -278,7 +278,7 @@ class Ref
     }
 
     Ref()
-      : thing_(NULL)
+      : thing_(nullptr)
     {
     }
 
@@ -287,10 +287,10 @@ class Ref
     {
         AddRef();
     }
-    Ref(Moveable<Ref> other)
-      : thing_(other->thing_)
+    Ref(Ref &&other)
+      : thing_(other.thing_)
     {
-        other->thing_ = NULL;
+        other.thing_ = nullptr;
     }
     template <typename S>
     Ref(const Ref<S> &other)
@@ -363,10 +363,10 @@ class Ref
         return *this;
     }
 
-    Ref &operator =(Moveable<Ref> other) {
+    Ref &operator =(Ref &&other) {
         Release();
-        thing_ = other->thing_;
-        other->thing_ = NULL;
+        thing_ = other.thing_;
+        other.thing_ = nullptr;
         return *this;
     }
 

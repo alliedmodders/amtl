@@ -66,7 +66,7 @@ class ConditionVariable : public Lockable
 {
  public:
   ConditionVariable() {
-    event_ = CreateEvent(NULL, FALSE, FALSE, NULL);
+    event_ = CreateEvent(nullptr, FALSE, FALSE, nullptr);
   }
   ~ConditionVariable() {
     CloseHandle(event_);
@@ -114,8 +114,8 @@ class ConditionVariable : public Lockable
 class Thread
 {
  public:
-  Thread(IRunnable *run, const char *name = NULL) {
-    thread_ = CreateThread(NULL, 0, Main, run, 0, NULL);
+  Thread(IRunnable *run, const char *name = nullptr) {
+    thread_ = CreateThread(nullptr, 0, Main, run, 0, nullptr);
   }
   ~Thread() {
     if (!thread_)

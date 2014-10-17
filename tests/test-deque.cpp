@@ -146,12 +146,38 @@ class TestDeque : public Test
     return true;
   }
 
+  bool test_move() {
+    Deque<int> dq1;
+
+    if (!check_silent(dq1.append(10), "append 10"))
+      return false;
+
+    {
+      Deque<int> dq2 = ke::Move(dq1);
+      if (!check(dq2.length() == 1, "copied length should be 1"))
+        return false;
+      if (!check(dq2.popFrontCopy() == 10, "copied popFrontCopy should == 2"))
+        return false;
+    }
+
+    if (!check(dq1.length() == 0, "moved length should == 0"))
+      return false;
+
+    // Append so we can make sure that it's not holding a deleted pointer.
+    if (!check_silent(dq1.append(11), "append 11"))
+      return false;
+
+    return true;
+  }
+
   bool Run() KE_OVERRIDE {
     if (!test_basic())
       return false;
     if (!test_prepend_empty())
       return false;
     if (!test_resize())
+      return false;
+    if (!test_move())
       return false;
     return true;
   }

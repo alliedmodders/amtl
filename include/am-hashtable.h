@@ -54,14 +54,9 @@ namespace detail {
     void setHash(uint32_t hash) {
       hash_ = hash;
     }
-    void construct() {
-      new (&t_) T();
-    }
-    void construct(const T &t) {
-      new (&t_) T(t);
-    }
-    void construct(Moveable<T> t) {
-      new (&t_) T(t);
+    template <typename U>
+    void construct(U &&u) {
+      new (&t_) T(ke::Forward<U>(u));
     }
     uint32_t hash() const {
       return hash_;
@@ -151,7 +146,7 @@ class HashTable : public AllocPolicy
 
     Entry *table = (Entry *)this->malloc(capacity * sizeof(Entry));
     if (!table)
-      return NULL;
+      return nullptr;
 
     for (size_t i = 0; i < capacity; i++)
       table[i].initialize();
@@ -267,7 +262,7 @@ class HashTable : public AllocPolicy
       if (oldEntry.isLive()) {
         Insert p = insertUnique(oldEntry.hash());
         p.entry().setHash(p.hash());
-        p.entry().construct(Moveable<Payload>(oldEntry.payload()));
+        p.entry().construct(ke::Move(oldEntry.payload()));
       }
       oldEntry.destruct();
     }
@@ -373,7 +368,7 @@ class HashTable : public AllocPolicy
     capacity_(0),
     nelements_(0),
     ndeleted_(0),
-    table_(NULL),
+    table_(nullptr),
     minCapacity_(kMinCapacity)
   {
   }
@@ -432,16 +427,11 @@ class HashTable : public AllocPolicy
 
   // The table must not have been mutated in between findForAdd() and add().
   // The Insert object is still valid after add() returns, however.
-  bool add(Insert &i, const Payload &payload) {
+  template <typename U>
+  bool add(Insert &i, U &&payload) {
     if (!internalAdd(i))
       return false;
-    i.entry().construct(payload);
-    return true;
-  }
-  bool add(Insert &i, Moveable<Payload> payload) {
-    if (!internalAdd(i))
-      return false;
-    i.entry().construct(payload);
+    i.entry().construct(ke::Forward<U>(payload));
     return true;
   }
   bool add(Insert &i) {

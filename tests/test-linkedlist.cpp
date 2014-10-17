@@ -66,12 +66,12 @@ class MovingThing
   {
     sCtors++;
   }
-  MovingThing(Moveable<MovingThing> other)
+  MovingThing(MovingThing &&other)
   {
-    assert(!other->moved_);
+    assert(!other.moved_);
     sMovingCtors++;
     moved_ = false;
-    other->moved_ = true;
+    other.moved_ = true;
   }
   ~MovingThing()
   {
@@ -228,9 +228,9 @@ class TestLinkedList : public Test
     {
       LinkedList<MovingThing> list;
       MovingThing a, b, c;
-      list.append(Moveable<MovingThing>(a));
-      list.append(Moveable<MovingThing>(b));
-      list.append(Moveable<MovingThing>(c));
+      list.append(ke::Move(a));
+      list.append(ke::Move(b));
+      list.append(ke::Move(c));
     }
 
     if (!check(sCtors == 3, "should get 3 normal constructors"))

@@ -1,6 +1,6 @@
 // vim: set sts=8 ts=2 sw=2 tw=99 et:
 //
-// Copyright (C) 2013, David Anderson and AlliedModders LLC
+// Copyright (C) 2013-2014, David Anderson and AlliedModders LLC
 // All rights reserved.
 // 
 // Redistribution and use in source and binary forms, with or without
@@ -40,10 +40,10 @@
 # include <inttypes.h>
 #endif
 #include <am-moveable.h>
-
-#define KE_32BIT
+#include <am-cxx.h>
 
 #if defined(_MSC_VER)
+// Mac file format warning.
 # pragma warning(disable:4355)
 #endif
 
@@ -63,18 +63,6 @@ ReturnAndVoid(T &t)
     return saved;
 }
 
-#if __cplusplus >= 201103L
-# define KE_CXX11
-#endif
-
-#if defined(KE_CXX11)
-# define KE_DELETE = delete
-# define KE_OVERRIDE override
-#else
-# define KE_DELETE
-# define KE_OVERRIDE
-#endif
-
 // Wrapper that automatically deletes its contents. The pointer can be taken
 // to avoid destruction.
 template <typename T>
@@ -84,17 +72,17 @@ class AutoPtr
 
   public:
     AutoPtr()
-      : t_(NULL)
+      : t_(nullptr)
     {
     }
     explicit AutoPtr(T *t)
       : t_(t)
     {
     }
-    AutoPtr(Moveable<AutoPtr<T> > other)
+    AutoPtr(AutoPtr &&other)
     {
-        t_ = other->t_;
-        other->t_ = NULL;
+        t_ = other.t_;
+        other.t_ = nullptr;
     }
     ~AutoPtr() {
         delete t_;
@@ -103,7 +91,7 @@ class AutoPtr
         return ReturnAndVoid(t_);
     }
     void forget() {
-        t_ = NULL;
+        t_ = nullptr;
     }
     T *operator *() const {
         return t_;
@@ -122,10 +110,10 @@ class AutoPtr
     T **address() {
       return &t_;
     }
-    T *operator =(Moveable<AutoPtr<T> > other) {
+    T *operator =(AutoPtr &&other) {
         delete t_;
-        t_ = other->t_;
-        other->t_ = NULL;
+        t_ = other.t_;
+        other.t_ = nullptr;
         return t_;
     }
     bool operator !() const {
@@ -146,7 +134,7 @@ class AutoArray
 
   public:
     AutoArray()
-      : t_(NULL)
+      : t_(nullptr)
     {
     }
     explicit AutoArray(T *t)
@@ -160,7 +148,7 @@ class AutoArray
         return ReturnAndVoid(t_);
     }
     void forget() {
-        t_ = NULL;
+        t_ = nullptr;
     }
     T &operator *() const {
         return t_;
@@ -281,8 +269,6 @@ IsUintPtrMultiplySafe(size_t a, size_t b)
 }
 
 #define ARRAY_LENGTH(array) (sizeof(array) / sizeof(array[0]))
-#define STATIC_ASSERT(cond) extern int static_assert_f(int a[(cond) ? 1 : -1])
-
 #define IS_ALIGNED(addr, alignment)    (!(uintptr_t(addr) & ((alignment) - 1)))
 
 template <typename T>
@@ -369,18 +355,6 @@ class StackLinked
   T *prev_;
 };
 
-#if __cplusplus >= 201103L
-# define KE_CXX11
-#endif
-
-#if defined(KE_CXX11)
-# define KE_DELETE = delete
-# define KE_OVERRIDE override
-#else
-# define KE_DELETE
-# define KE_OVERRIDE
-#endif
-
 #if defined(_MSC_VER)
 # define KE_SIZET_FMT           "%Iu"
 # define KE_I64_FMT             "%I64d"
@@ -414,38 +388,6 @@ class StackLinked
 #else
 # define KE_LINK
 #endif
-
-#if defined(KE_CXX11)
-# define KE_EXPLICIT explicit
-#else
-# define KE_EXPLICIT
-#endif
-
-#define KE_DEFINE_ENUM_OPERATORS(EnumName)                                          \
-  static inline EnumName operator |(const EnumName &left, const EnumName &right) {  \
-    return EnumName(uint32_t(left) | uint32_t(right));                              \
-  }                                                                                 \
-  static inline EnumName operator &(const EnumName &left, const EnumName &right) {  \
-    return EnumName(uint32_t(left) & uint32_t(right));                              \
-  }                                                                                 \
-  static inline EnumName operator ^(const EnumName &left, const EnumName &right) {  \
-    return EnumName(uint32_t(left) ^ uint32_t(right));                              \
-  }                                                                                 \
-  static inline EnumName operator ~(const EnumName &flags) {                        \
-    return EnumName(~uint32_t(flags));                                              \
-  }                                                                                 \
-  static inline EnumName & operator |=(EnumName &left, const EnumName &right) {     \
-    return left = left | right;                                                     \
-  }                                                                                 \
-  static inline EnumName & operator &=(EnumName &left, const EnumName &right) {     \
-    return left = left & right;                                                     \
-  }                                                                                 \
-  static inline EnumName & operator ^=(EnumName &left, const EnumName &right) {     \
-    return left = left ^ right;                                                     \
-  }                                                                                 \
-  static inline bool operator !(const EnumName &obj) {                              \
-    return uint32_t(obj) == 0;                                                      \
-  }
 
 } // namespace ke
 
