@@ -287,10 +287,10 @@ class Ref
     {
         AddRef();
     }
-    Ref(Moveable<Ref> other)
-      : thing_(other->thing_)
+    Ref(Ref &&other)
+      : thing_(other.thing_)
     {
-        other->thing_ = NULL;
+        other.thing_ = NULL;
     }
     template <typename S>
     Ref(const Ref<S> &other)
@@ -363,10 +363,10 @@ class Ref
         return *this;
     }
 
-    Ref &operator =(Moveable<Ref> other) {
+    Ref &operator =(Ref &&other) {
         Release();
-        thing_ = other->thing_;
-        other->thing_ = NULL;
+        thing_ = other.thing_;
+        other.thing_ = NULL;
         return *this;
     }
 

@@ -58,11 +58,11 @@ class AString
     else
       length_ = 0;
   }
-  AString(Moveable<AString> other)
-    : chars_(other->chars_.take()),
-      length_(other->length_)
+  AString(AString &&other)
+    : chars_(other.chars_.take()),
+      length_(other.length_)
   {
-    other->length_ = 0;
+    other.length_ = 0;
   }
 
   AString &operator =(const char *str) {
@@ -83,10 +83,10 @@ class AString
     }
     return *this;
   }
-  AString &operator =(Moveable<AString> other) {
-    chars_ = other->chars_.take();
-    length_ = other->length_;
-    other->length_ = 0;
+  AString &operator =(AString &&other) {
+    chars_ = other.chars_.take();
+    length_ = other.length_;
+    other.length_ = 0;
     return *this;
   }
 

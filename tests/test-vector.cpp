@@ -66,18 +66,25 @@ class MovingThing
   {
     sCtors++;
   }
-  MovingThing(Moveable<MovingThing> other)
+  MovingThing(MovingThing &&other)
   {
-    assert(!other->moved_);
+    assert(!other.moved_);
     sMovingCtors++;
     moved_ = false;
-    other->moved_ = true;
+    other.moved_ = true;
   }
   ~MovingThing()
   {
     sDtors++;
     if (moved_)
       sMovedDtors++;
+  }
+  MovingThing &operator =(MovingThing &&other) {
+    assert(!other.moved_);
+    sCopyCtors++;
+    moved_ = false;
+    other.moved_ = true;
+    return *this;
   }
   bool moved() const {
     return moved_;
@@ -205,9 +212,9 @@ class TestVector : public Test
     {
       Vector<MovingThing> vector;
       MovingThing a, b, c;
-      vector.append(Moveable<MovingThing>(a));
-      vector.append(Moveable<MovingThing>(b));
-      vector.append(Moveable<MovingThing>(c));
+      vector.append(ke::Move(a));
+      vector.append(ke::Move(b));
+      vector.append(ke::Move(c));
     }
 
     if (!check(sCtors == 3, "should get 3 normal constructors"))

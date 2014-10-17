@@ -49,39 +49,29 @@ class Vector : public AllocPolicy
   {
   }
 
-  Vector(Moveable<Vector<T, AllocPolicy> > other) {
-    data_ = other->data_;
-    nitems_ = other->nitems_;
-    maxsize_ = other->maxsize_;
-    other->reset();
+  Vector(Vector &&other) {
+    data_ = other.data_;
+    nitems_ = other.nitems_;
+    maxsize_ = other.maxsize_;
+    other.reset();
   }
 
   ~Vector() {
     zap();
   }
 
-  bool append(const T &item) {
+  template <typename U>
+  bool append(U &&item) {
     if (!growIfNeeded(1))
       return false;
-    new (&data_[nitems_]) T(item);
+    new (&data_[nitems_]) T(ke::Forward<U>(item));
     nitems_++;
     return true;
   }
-  bool append(Moveable<T> item) {
-    if (!growIfNeeded(1))
-      return false;
-    new (&data_[nitems_]) T(item);
-    nitems_++;
-    return true;
-  }
-  void infallibleAppend(const T &item) {
+  template <typename U>
+  void infallibleAppend(U &&item) {
     assert(growIfNeeded(1));
-    new (&data_[nitems_]) T(item);
-    nitems_++;
-  }
-  void infallibleAppend(Moveable<T> item) {
-    assert(growIfNeeded(1));
-    new (&data_[nitems_]) T(item);
+    new (&data_[nitems_]) T(ke::Forward<U>(item));
     nitems_++;
   }
 
@@ -91,20 +81,13 @@ class Vector : public AllocPolicy
   // invalid indexes are allowed.
   //
   // This is a linear-time operation.
-  bool insert(size_t at, const T &item) {
+  template <typename U>
+  bool insert(size_t at, U &&item) {
     if (at == length())
-      return append(item);
+      return append(ke::Forward<U>(item));
     if (!moveUp(at))
       return false;
-    new (&data_[at]) T(item);
-    return true;
-  }
-  bool insert(size_t at, Moveable<T> item) {
-    if (at == length())
-      return append(item);
-    if (!moveUp(at))
-      return false;
-    new (&data_[at]) T(item);
+    new (&data_[at]) T(ke::Forward<U>(item));
     return true;
   }
 
@@ -112,7 +95,7 @@ class Vector : public AllocPolicy
   // element. This is a linear-time operation.
   void remove(size_t at) {
     for (size_t i = at; i < length() - 1; i++)
-      data_[i] = Moveable<T>(data_[i + 1]);
+      data_[i] = ke::Move(data_[i + 1]);
     pop();
   }
 
@@ -180,11 +163,11 @@ class Vector : public AllocPolicy
     return growIfNeeded(desired - length());
   }
 
-  Vector &operator =(Moveable<Vector<T, AllocPolicy> > other) {
-    data_ = other->data_;
-    nitems_ = other->nitems_;
-    maxsize_ = other->maxsize_;
-    other->reset();
+  Vector &operator =(Vector &&other) {
+    data_ = other.data_;
+    nitems_ = other.nitems_;
+    maxsize_ = other.maxsize_;
+    other.reset();
     return *this;
   }
 
@@ -214,10 +197,10 @@ class Vector : public AllocPolicy
     // references are taken.
     if (!growIfNeeded(1))
       return false;
-    new (&data_[nitems_]) T(Moveable<T>(data_[nitems_ - 1]));
+    new (&data_[nitems_]) T(ke::Move(data_[nitems_ - 1]));
     nitems_++;
     for (size_t i = nitems_ - 2; i > at; i--)
-      data_[i] = Moveable<T>(data_[i - 1]);
+      data_[i] = ke::Move(data_[i - 1]);
     return true;
   }
 
@@ -243,7 +226,7 @@ class Vector : public AllocPolicy
     if (newdata == NULL)
       return false;
     for (size_t i = 0; i < nitems_; i++) {
-      new (&newdata[i]) T(Moveable<T>(data_[i]));
+      new (&newdata[i]) T(ke::Move(data_[i]));
       data_[i].~T();
     }
     this->free(data_);

@@ -27,8 +27,17 @@ class KEConfig(object):
         '-Wall',
         '-Werror',
       ]
+      if cxx.name == 'gcc':
+        if cxx.version >= '4.7':
+          cfg.cxxflags += ['-std=c++11']
+        elif cxx.version >= '4.3':
+          cfg.cxxflags += ['-std=c++0x']
+      else:
+        cfg.cxxflags += ['-std=c++11']
 
-      cfg.linkflags += ['-lpthread', '-lrt']
+      cfg.linkflags += ['-lpthread']
+      if builder.target_platform != 'mac':
+        cfg.linkflags += ['-lrt']
 
       have_gcc = cxx.name == 'gcc'
       have_clang = cxx.name == 'clang'
@@ -113,7 +122,6 @@ class KEConfig(object):
       cfg.cflags += ['-mmacosx-version-min=10.5']
       cfg.linkflags += [
         '-mmacosx-version-min=10.5',
-        '-arch', 'i386',
         '-lstdc++',
         '-stdlib=libstdc++',
       ]
