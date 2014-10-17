@@ -32,6 +32,7 @@
 
 #include <stdio.h>
 #include <stdarg.h>
+#include <am-cxx.h>
 
 namespace ke {
 
@@ -82,6 +83,20 @@ check(bool condition, const char *fmt, ...)
   return condition;
 }
 
+static inline bool
+check_silent(bool condition, const char *fmt, ...)
+{
+  if (condition)
+    return true;
+  fprintf(stderr, " -- Failure: ");
+  va_list ap;
+  va_start(ap, fmt);
+  vfprintf(stderr, fmt, ap);
+  va_end(ap);
+  fprintf(stderr, "\n");
+  return false;
+}
+
 class FallibleMalloc
 {
  public:
@@ -95,7 +110,7 @@ class FallibleMalloc
   void *malloc(size_t amount) {
     if (shouldOutOfMemory_) {
       reportOutOfMemory();
-      return NULL;
+      return nullptr;
     }
     return ::malloc(amount);
   }

@@ -60,11 +60,24 @@ class AlreadyRefed
     {
         // If copy elision for some reason doesn't happen (for example, when
         // returning from AdoptRef), just null out the source ref.
-        other.thing_ = NULL;
+        other.thing_ = nullptr;
     }
     ~AlreadyRefed() {
         if (thing_)
             thing_->Release();
+    }
+
+    bool operator !() const {
+        return !thing_;
+    }
+    T *operator ->() const {
+        return thing_;
+    }
+    bool operator ==(T *other) const {
+        return thing_ == other;
+    }
+    bool operator !=(T *other) const {
+        return thing_ != other;
     }
 
     T *release() const {
@@ -94,7 +107,7 @@ class PassRef
         AddRef();
     }
     PassRef()
-      : thing_(NULL)
+      : thing_(nullptr)
     {
     }
 
@@ -143,6 +156,11 @@ class PassRef
     bool operator !() const {
         return !thing_;
     }
+#if defined(KE_CXX11)
+    explicit operator bool() const {
+        return !!thing_;
+    }
+#endif
 
     T *release() const {
         return ReturnAndVoid(thing_);
@@ -180,7 +198,7 @@ class PassRef
 // must either be assigned to a Ref or PassRef (NOT an AdoptRef/AlreadyRefed),
 // or must be deleted using |delete|.
 template <typename T>
-class Refcounted
+class KE_LINK Refcounted
 {
   public:
     Refcounted()
@@ -205,6 +223,49 @@ class Refcounted
     uintptr_t refcount_;
 };
 
+// This can be used for classes which will inherit from VirtualRefcounted.
+class KE_LINK IRefcounted
+{
+ public:
+  virtual ~IRefcounted() {}
+  virtual void AddRef() = 0;
+  virtual void Release() = 0;
+};
+
+// Classes may be multiply-inherited may wish to derive from this Refcounted
+// instead.
+class KE_LINK VirtualRefcounted : public IRefcounted
+{
+ public:
+  VirtualRefcounted() : refcount_(0)
+  {
+#if !defined(NDEBUG)
+    destroying_ = false;
+#endif
+  }
+  virtual ~VirtualRefcounted()
+  {}
+  void AddRef() KE_OVERRIDE {
+    assert(!destroying_);
+    refcount_++;
+  }
+  void Release() KE_OVERRIDE {
+    assert(refcount_ > 0);
+    if (--refcount_ == 0) {
+#if !defined(NDEBUG)
+      destroying_ = true;
+#endif
+      delete this;
+    }
+  }
+
+ private:
+  uintptr_t refcount_;
+#if !defined(NDEBUG)
+  bool destroying_;
+#endif
+};
+
 // Simple class for automatic refcounting.
 template <typename T>
 class Ref
@@ -217,7 +278,7 @@ class Ref
     }
 
     Ref()
-      : thing_(NULL)
+      : thing_(nullptr)
     {
     }
 
@@ -226,10 +287,10 @@ class Ref
     {
         AddRef();
     }
-    Ref(Moveable<Ref> other)
-      : thing_(other->thing_)
+    Ref(Ref &&other)
+      : thing_(other.thing_)
     {
-        other->thing_ = NULL;
+        other.thing_ = nullptr;
     }
     template <typename S>
     Ref(const Ref<S> &other)
@@ -305,10 +366,10 @@ class Ref
         return *this;
     }
 
-    Ref &operator =(Moveable<Ref> other) {
+    Ref &operator =(Ref &&other) {
         Release();
-        thing_ = other->thing_;
-        other->thing_ = NULL;
+        thing_ = other.thing_;
+        other.thing_ = nullptr;
         return *this;
     }
 

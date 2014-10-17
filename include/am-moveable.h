@@ -30,42 +30,44 @@
 #ifndef _include_amtl_moveable_h_
 #define _include_amtl_moveable_h_
 
+#include <am-type-traits.h>
+
 namespace ke {
 
-// This is a feature in C++11, but since AM projects do not have access to
-// C++11 yet, we provide templates to implement move semantics. A class can
-// provide a constructor for (ke::Moveable<T> t) which containers will try
-// to use.
-//
-// When implementing a constructor that takes a Moveable, the object being
-// moved should be left in a state that is safe, since its destructor will
-// be called even though it has been moved.
+// Previously, we implemented Move semantics without C++11. Now that we use
+// C++11, we imlpement this as STL does for std::move.
+template <typename T>
+static inline typename remove_reference<T>::type &&
+Move(T &&t)
+{
+  return static_cast<typename remove_reference<T>::type &&>(t);
+}
+
+// std::forward replacement. See:
+//   http://thbecker.net/articles/rvalue_references/section_07.html and
+//   http://thbecker.net/articles/rvalue_references/section_08.html
+template <typename T>
+static KE_CONSTEXPR inline T &&
+Forward(typename remove_reference<T>::type &t) KE_NOEXCEPT
+{
+  return static_cast<T &&>(t);
+}
 
 template <typename T>
-struct Moveable
+static KE_CONSTEXPR inline T &&
+Forward(typename remove_reference<T>::type &&t) KE_NOEXCEPT
 {
- public:
-  explicit Moveable(T &t)
-   : t_(t)
-  {
-  }
-
-  T *operator ->() {
-    return &t_;
-  }
-  operator T &() {
-    return t_;
-  }
-
- private:
-  T &t_;
-};
+  return static_cast<T &&>(t);
+}
 
 template <typename T>
-static inline Moveable<T>
-Move(T &t)
+static inline void
+MoveRange(T *dest, T *src, size_t length)
 {
-  return Moveable<T>(t);
+  for (size_t i = 0; i < length; i++) {
+    new (&dest[i]) T(ke::Move(src[i]));
+    src[i].~T();
+  }
 }
 
 } // namespace ke

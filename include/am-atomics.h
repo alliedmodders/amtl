@@ -38,9 +38,51 @@ namespace ke {
 extern "C" {
   long __cdecl _InterlockedIncrement(long volatile *dest);
   long __cdecl _InterlockedDecrement(long volatile *dest);
+  long __cdecl _InterlockedIncrement64(long long volatile *dest);
+  long __cdecl _InterlockedDecrement64(long long volatile *dest);
+  long __cdecl _InterlockedCompareExchangePointer(
+     void * volatile *Destination,
+     void * Exchange,
+     void * Comparand
+  );
 }
 # pragma intrinsic(_InterlockedIncrement)
 # pragma intrinsic(_InterlockedDecrement)
+# pragma intrinsic(_InterlockedCompareExchangePointer)
+# if defined(_WIN64)
+#  pragma intrinsic(_InterlockedIncrement64)
+#  pragma intrinsic(_InterlockedDecrement64)
+# endif
+#endif
+
+#if defined(__GNUC__)
+# if defined(i386) || defined(__x86_64__)
+#  if defined(__clang__)
+    static inline void YieldProcessor() { asm("pause"); }
+#  else
+#   if KE_GCC_AT_LEAST(4, 7)
+#    define YieldProcessor() __builtin_ia32_pause()
+#   else
+    static inline void YieldProcessor() { asm("pause"); }
+#   endif
+#  endif
+#else
+#  define YieldProcessor()
+# endif
+#endif
+
+#if defined(_MSC_VER)
+static inline void *
+CompareAndSwapPtr(void *volatile *Destination, void *Exchange, void *Comparand)
+{
+  return _InterlockedCompareExchangePointer(Destination, Exchange, Comparand);
+}
+#else
+static inline void *
+CompareAndSwapPtr(void *volatile *dest, void *newval, void *oldval)
+{
+  return __sync_val_compare_and_swap(dest, oldval, newval);
+}
 #endif
 
 template <size_t Width>
@@ -50,7 +92,7 @@ template <>
 struct AtomicOps<4>
 {
 #if defined(_MSC_VER)
-  typedef long Type;
+  typedef volatile long Type;
 
   static Type Increment(Type *ptr) {
     return _InterlockedIncrement(ptr);
@@ -59,7 +101,7 @@ struct AtomicOps<4>
     return _InterlockedDecrement(ptr);
   };
 #elif defined(__GNUC__)
-  typedef int Type;
+  typedef volatile int Type;
 
   // x86/x64 notes: When using GCC < 4.8, this will compile to a spinlock.
   // On 4.8+, or when using Clang, we'll get the more optimal "lock addl"
@@ -73,12 +115,39 @@ struct AtomicOps<4>
 #endif
 };
 
-class AtomicRefCount
+template <>
+struct AtomicOps<8>
+{
+#if defined(_MSC_VER)
+  typedef volatile long long Type;
+
+  static Type Increment(Type *ptr) {
+    return _InterlockedIncrement64(ptr);
+  }
+  static Type Decrement(Type *ptr) {
+    return _InterlockedDecrement64(ptr);
+  };
+#elif defined(__GNUC__)
+  typedef volatile int64_t Type;
+
+  // x86/x64 notes: When using GCC < 4.8, this will compile to a spinlock.
+  // On 4.8+, or when using Clang, we'll get the more optimal "lock addl"
+  // variant.
+  static Type Increment(Type *ptr) {
+    return __sync_add_and_fetch(ptr, 1);
+  }
+  static Type Decrement(Type *ptr) {
+    return __sync_sub_and_fetch(ptr, 1);
+  }
+#endif
+};
+
+class KE_LINK AtomicRefcount
 {
   typedef AtomicOps<sizeof(uintptr_t)> Ops;
 
  public:
-  AtomicRefCount(uintptr_t value)
+  AtomicRefcount(uintptr_t value)
    : value_(value)
   {
   }

@@ -26,58 +26,41 @@
 // CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
 // ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 // POSSIBILITY OF SUCH DAMAGE.
+#ifndef _include_amtl_platform_h_
+#define _include_amtl_platform_h_
 
-#include <stddef.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include "runner.h"
+namespace ke {
 
-using namespace ke;
-
-Test *Test::head = nullptr;
-
-int main(int argc, char **argv)
-{
-  Test *test = Test::first();
-  while (test) {
-    if (argc >= 2 && strcmp(argv[1], test->name()) != 0) {
-      test = test->next();
-      continue;
-    }
-    fprintf(stdout, "Testing %s... \n", test->name());
-    if (!test->Run()) {
-      fprintf(stdout, "TEST:%s FAIL\n", test->name());
-      break;
-    }
-    fprintf(stdout, "TEST:%s OK\n", test->name());
-    test = test->next();
-  }
-}
-
-#if defined(__GNUC__)
-extern "C" void __cxa_pure_virtual()
-{
-  abort();
-}
-
-void *operator new(size_t amount)
-{
-  return malloc(amount);
-}
-
-void *operator new[](size_t amount)
-{
-  return malloc(amount);
-}
-
-void operator delete(void *p)
-{
-  free(p);
-}
-
-void operator delete[](void *p)
-{
-  free(p);
-}
+#if defined(__NetBSD__)
+# define KE_NETBSD
+# define KE_BSD
+#elif defined(__FreeBSD__)
+# define KE_FREEBSD
+# define KE_BSD
+#elif defined(__OpenBSD__)
+# define KE_OPENBSD
+# define KE_BSD
+#elif defined(__APPLE__)
+# define KE_MACOSX
+# define KE_MACH
+# define KE_BSD
+#elif defined(__MACH__)
+# define KE_MACH
+# define KE_BSD
+#elif defined(_WIN32)
+# define KE_WINDOWS
+#elif defined(__linux__)
+# define KE_LINUX
+# define KE_POSIX
+#elif defined(__sun__)
+# define KE_SOLARIS
+# define KE_POSIX
 #endif
+
+#if defined(KE_BSD)
+# define KE_POSIX
+#endif
+
+} // ke
+
+#endif // _include_amtl_platform_h_

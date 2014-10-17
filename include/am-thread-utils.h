@@ -199,12 +199,47 @@ class AutoLock
   Lockable *lock_;
 };
 
+class AutoMaybeLock
+{
+ public:
+  AutoMaybeLock(Lockable *lock)
+   : lock_(lock)
+  {
+    if (lock_)
+      lock_->Lock();
+  }
+  ~AutoMaybeLock() {
+    if (lock_)
+      lock_->Unlock();
+  }
+
+ private:
+  Lockable *lock_;
+};
+
+class AutoMaybeUnlock
+{
+ public:
+  AutoMaybeUnlock(Lockable *lock)
+   : lock_(lock)
+  {
+    if (lock_)
+      lock_->Unlock();
+  }
+  ~AutoMaybeUnlock() {
+    if (lock_)
+      lock_->Lock();
+  }
+
+ private:
+  Lockable *lock_;
+};
+
 class AutoTryLock
 {
  public:
-  AutoTryLock(Lockable *lock)
-  {
-    lock_ = lock->TryLock() ? lock : NULL;
+  AutoTryLock(Lockable *lock) {
+    lock_ = lock->TryLock() ? lock : nullptr;
   }
   ~AutoTryLock() {
     if (lock_)

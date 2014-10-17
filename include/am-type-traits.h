@@ -27,57 +27,38 @@
 // ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 // POSSIBILITY OF SUCH DAMAGE.
 
-#include <stddef.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include "runner.h"
+#ifndef _include_amtl_type_traits_h_
+#define _include_amtl_type_traits_h_
 
-using namespace ke;
+#include <am-cxx.h>
 
-Test *Test::head = nullptr;
+namespace ke {
 
-int main(int argc, char **argv)
-{
-  Test *test = Test::first();
-  while (test) {
-    if (argc >= 2 && strcmp(argv[1], test->name()) != 0) {
-      test = test->next();
-      continue;
-    }
-    fprintf(stdout, "Testing %s... \n", test->name());
-    if (!test->Run()) {
-      fprintf(stdout, "TEST:%s FAIL\n", test->name());
-      break;
-    }
-    fprintf(stdout, "TEST:%s OK\n", test->name());
-    test = test->next();
-  }
-}
+// Remove references from types.
+template <typename T>
+struct remove_reference {
+  typedef T type;
+};
+template <typename T>
+struct remove_reference<T &> {
+  typedef T type;
+};
+template <typename T>
+struct remove_reference<T &&> {
+  typedef T type;
+};
 
-#if defined(__GNUC__)
-extern "C" void __cxa_pure_virtual()
-{
-  abort();
-}
+template <typename T, T Value>
+struct integral_constant {
+  static const T value = Value;
+};
 
-void *operator new(size_t amount)
-{
-  return malloc(amount);
-}
+typedef integral_constant<bool, true> true_type;
+typedef integral_constant<bool, false> false_type;
 
-void *operator new[](size_t amount)
-{
-  return malloc(amount);
-}
+template<class T> struct is_lvalue_reference : false_type{};
+template<class T> struct is_lvalue_reference<T&> : true_type {};
 
-void operator delete(void *p)
-{
-  free(p);
-}
+} // namespace ke
 
-void operator delete[](void *p)
-{
-  free(p);
-}
-#endif
+#endif // _include_amtl_type_traits_h_

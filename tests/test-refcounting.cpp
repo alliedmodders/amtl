@@ -29,7 +29,9 @@
 
 #include <am-utility.h>
 #include <am-refcounting.h>
+#include <am-refcounting-threadsafe.h>
 #include "runner.h"
+#include <stdlib.h>
 
 using namespace ke;
 
@@ -46,6 +48,14 @@ class Counted : public Refcounted<Counted>
 class SubCounted : public Counted
 {
 };
+
+void
+TypeChecks_DoNotCall()
+{
+  Ref<Counted> counted;
+  if (counted)
+    abort();
+}
 
 static inline PassRef<Counted>
 PassThrough(const Ref<Counted> &obj)
@@ -102,6 +112,23 @@ class TestRefcounting : public Test
         return false;
     }
     if (!check(sDtors == 1, "PassRef/Ref counted properly"))
+      return false;
+
+    sDtors = 0;
+    {
+      AtomicRef<Counted> obj(new Counted());
+    }
+    if (!check(sDtors == 1, "AtomicRef released properly"))
+      return false;
+
+    sDtors = 0;
+    {
+      AtomicRef<Counted> obj;
+      obj = new Counted();
+      obj = new Counted();
+      obj = nullptr;
+    }
+    if (!check(sDtors == 2, "AtomicRef assignment released properly"))
       return false;
 
     return true;

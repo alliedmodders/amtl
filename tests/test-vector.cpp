@@ -66,18 +66,25 @@ class MovingThing
   {
     sCtors++;
   }
-  MovingThing(Moveable<MovingThing> other)
+  MovingThing(MovingThing &&other)
   {
-    assert(!other->moved_);
+    assert(!other.moved_);
     sMovingCtors++;
     moved_ = false;
-    other->moved_ = true;
+    other.moved_ = true;
   }
   ~MovingThing()
   {
     sDtors++;
     if (moved_)
       sMovedDtors++;
+  }
+  MovingThing &operator =(MovingThing &&other) {
+    assert(!other.moved_);
+    sCopyCtors++;
+    moved_ = false;
+    other.moved_ = true;
+    return *this;
   }
   bool moved() const {
     return moved_;
@@ -205,9 +212,9 @@ class TestVector : public Test
     {
       Vector<MovingThing> vector;
       MovingThing a, b, c;
-      vector.append(Moveable<MovingThing>(a));
-      vector.append(Moveable<MovingThing>(b));
-      vector.append(Moveable<MovingThing>(c));
+      vector.append(ke::Move(a));
+      vector.append(ke::Move(b));
+      vector.append(ke::Move(c));
     }
 
     if (!check(sCtors == 3, "should get 3 normal constructors"))
@@ -267,6 +274,29 @@ class TestVector : public Test
     return true;
   }
 
+  bool testResize()
+  {
+    Vector<bool> vector;
+    vector.append(true);
+    vector.resize(100);
+    if (!check(vector.length() == 100, "vector length should be 100"))
+      return false;
+    if (!check(vector[0] == true, "vector element should be true"))
+      return false;
+    for (size_t i = 1; i < 100; i++) {
+      if (!check(vector[i] == false, "vector element should be false"))
+        return false;
+    }
+    vector.resize(1);
+    if (!check(vector.length() == 1, "vector length should be 1"))
+      return false;
+    for (size_t i = 0; i < 1; i++) {
+      if (!check(vector[i] == true, "vector element should be true"))
+        return false;
+    }
+    return true;
+  }
+
   bool Run() KE_OVERRIDE
   {
     if (!testInts())
@@ -278,6 +308,8 @@ class TestVector : public Test
     if (!testFallibleMalloc())
       return false;
     if (!testMoveDuringInsert())
+      return false;
+    if (!testResize())
       return false;
     return true;
   }

@@ -76,14 +76,6 @@ class FixedArray : public AllocPolicy
     assert(index < length());
     return data_[index];
   }
-  void set(size_t index, const T &t) {
-    assert(index < length());
-    data_[index] = t;
-  }
-  void set(size_t index, ke::Moveable<T> t) {
-    assert(index < length());
-    data_[index] = t;
-  }
 
  private:
   FixedArray(const FixedArray &other) KE_DELETE;
