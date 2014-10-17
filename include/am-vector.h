@@ -43,7 +43,7 @@ class Vector : public AllocPolicy
 {
  public:
   Vector(AllocPolicy = AllocPolicy())
-   : data_(NULL),
+   : data_(nullptr),
      nitems_(0),
      maxsize_(0)
   {
@@ -184,7 +184,7 @@ class Vector : public AllocPolicy
     this->free(data_);
   }
   void reset() {
-    data_ = NULL;
+    data_ = nullptr;
     nitems_ = 0;
     maxsize_ = 0;
   }
@@ -223,7 +223,7 @@ class Vector : public AllocPolicy
     }
 
     T* newdata = (T*)this->malloc(sizeof(T) * new_maxsize);
-    if (newdata == NULL)
+    if (newdata == nullptr)
       return false;
     for (size_t i = 0; i < nitems_; i++) {
       new (&newdata[i]) T(ke::Move(data_[i]));

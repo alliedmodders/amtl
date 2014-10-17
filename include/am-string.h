@@ -69,7 +69,7 @@ class AString
     if (str && str[0]) {
       set(str, strlen(str));
     } else {
-      chars_ = NULL;
+      chars_ = nullptr;
       length_ = 0;
     }
     return *this;
@@ -78,7 +78,7 @@ class AString
     if (other.length_) {
       set(other.chars_, other.length_);
     } else {
-      chars_ = NULL;
+      chars_ = nullptr;
       length_ = 0;
     }
     return *this;

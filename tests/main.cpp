@@ -35,7 +35,7 @@
 
 using namespace ke;
 
-Test *Test::head = NULL;
+Test *Test::head = nullptr;
 
 int main(int argc, char **argv)
 {

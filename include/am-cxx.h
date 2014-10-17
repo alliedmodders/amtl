@@ -166,7 +166,12 @@
 # error AMTL requires support for >> in template names
 #endif
 #if !defined(KE_CXX_HAS_NULLPTR)
-# error AMTL requires nullptr support
+# if defined(__GNUC__) && !defined(__clang__)
+#  define nullptr __null
+#  define KE_CXX_HAS_NULLPTR
+# else
+#  error AMTL requires nullptr support
+# endif
 #endif
 
 #define KE_DEFINE_ENUM_OPERATORS(EnumName)                                          \

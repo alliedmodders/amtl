@@ -126,7 +126,7 @@ class TestRefcounting : public Test
       AtomicRef<Counted> obj;
       obj = new Counted();
       obj = new Counted();
-      obj = NULL;
+      obj = nullptr;
     }
     if (!check(sDtors == 2, "AtomicRef assignment released properly"))
       return false;

@@ -124,7 +124,7 @@ public:
   Node *allocNode(U &&obj) {
     Node *node = (Node *)this->malloc(sizeof(Node));
     if (!node)
-      return NULL;
+      return nullptr;
     new (&node->obj) T(ke::Forward<U>(obj));
     return node;
   }
@@ -145,7 +145,7 @@ public:
 
    public:
     iterator()
-     : this_(NULL)
+     : this_(nullptr)
     {
     }
     iterator(const LinkedList &src)

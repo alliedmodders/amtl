@@ -114,7 +114,7 @@ class AtomicRef
 {
  public:
   AtomicRef()
-   : thing_(NULL)
+   : thing_(nullptr)
   {}
   AtomicRef(T *thing)
    : thing_(thing)

@@ -10,6 +10,13 @@ class KEConfig(object):
     cfg = builder.DetectCompilers()
     cxx = cfg.cxx
 
+    if cfg.version < 'clang-3.0' or cfg.version < 'apple-clang-3.0':
+      raise Exception('AMTL requires clang 3.0 or higher.')
+    if cfg.version < 'gcc-4.6':
+      raise Exception('AMTL requires GCC 4.6 or higher.')
+    if cfg.version < 'msvc-1600':
+      raise Exception('AMTL requires Visual Studio 2010 (CL 16.00) or higher.')
+
     if cxx.behavior == 'gcc':
       std = getattr(builder.options, 'std', None)
       if std is not None:

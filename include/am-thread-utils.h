@@ -239,7 +239,7 @@ class AutoTryLock
 {
  public:
   AutoTryLock(Lockable *lock) {
-    lock_ = lock->TryLock() ? lock : NULL;
+    lock_ = lock->TryLock() ? lock : nullptr;
   }
   ~AutoTryLock() {
     if (lock_)

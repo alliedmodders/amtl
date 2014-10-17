@@ -72,7 +72,7 @@ class AutoPtr
 
   public:
     AutoPtr()
-      : t_(NULL)
+      : t_(nullptr)
     {
     }
     explicit AutoPtr(T *t)
@@ -82,7 +82,7 @@ class AutoPtr
     AutoPtr(AutoPtr &&other)
     {
         t_ = other.t_;
-        other.t_ = NULL;
+        other.t_ = nullptr;
     }
     ~AutoPtr() {
         delete t_;
@@ -91,7 +91,7 @@ class AutoPtr
         return ReturnAndVoid(t_);
     }
     void forget() {
-        t_ = NULL;
+        t_ = nullptr;
     }
     T *operator *() const {
         return t_;
@@ -113,7 +113,7 @@ class AutoPtr
     T *operator =(AutoPtr &&other) {
         delete t_;
         t_ = other.t_;
-        other.t_ = NULL;
+        other.t_ = nullptr;
         return t_;
     }
     bool operator !() const {
@@ -134,7 +134,7 @@ class AutoArray
 
   public:
     AutoArray()
-      : t_(NULL)
+      : t_(nullptr)
     {
     }
     explicit AutoArray(T *t)
@@ -148,7 +148,7 @@ class AutoArray
         return ReturnAndVoid(t_);
     }
     void forget() {
-        t_ = NULL;
+        t_ = nullptr;
     }
     T &operator *() const {
         return t_;

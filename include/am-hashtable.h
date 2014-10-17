@@ -146,7 +146,7 @@ class HashTable : public AllocPolicy
 
     Entry *table = (Entry *)this->malloc(capacity * sizeof(Entry));
     if (!table)
-      return NULL;
+      return nullptr;
 
     for (size_t i = 0; i < capacity; i++)
       table[i].initialize();
@@ -368,7 +368,7 @@ class HashTable : public AllocPolicy
     capacity_(0),
     nelements_(0),
     ndeleted_(0),
-    table_(NULL),
+    table_(nullptr),
     minCapacity_(kMinCapacity)
   {
   }

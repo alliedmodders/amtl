@@ -95,7 +95,7 @@ class FallibleMalloc
   void *malloc(size_t amount) {
     if (shouldOutOfMemory_) {
       reportOutOfMemory();
-      return NULL;
+      return nullptr;
     }
     return ::malloc(amount);
   }
