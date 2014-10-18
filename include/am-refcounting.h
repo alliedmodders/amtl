@@ -223,6 +223,15 @@ class KE_LINK Refcounted
     uintptr_t refcount_;
 };
 
+// Use this to forward to ke::Refcounted<X>, when implementing IRefcounted.
+#define KE_IMPL_REFCOUNTING(classname)                                        \
+   void AddRef() {                                                            \
+     return ke::Refcounted<classname>::AddRef();                              \
+   }                                                                          \
+   void Release() {                                                           \
+     return ke::Refcounted<classname>::Release();                             \
+   }
+
 // This can be used for classes which will inherit from VirtualRefcounted.
 class KE_LINK IRefcounted
 {
