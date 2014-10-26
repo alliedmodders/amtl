@@ -111,14 +111,14 @@ class PassRef
     {
     }
 
-    PassRef(const AlreadyRefed<T *> &other)
+    PassRef(const AlreadyRefed<T> &other)
       : thing_(other.release())
     {
         // Don't addref, newborn means already addref'd.
     }
 
     template <typename S>
-    PassRef(const AlreadyRefed<S *> &other)
+    PassRef(const AlreadyRefed<S> &other)
       : thing_(other.release())
     {
         // Don't addref, newborn means already addref'd.
