@@ -343,6 +343,10 @@ class Ref
         return !thing_;
     }
 
+    AlreadyRefed<T> take() {
+        return AlreadyRefed<T>(ReturnAndVoid(thing_));
+    }
+
     template <typename S>
     Ref &operator =(S *thing) {
         Release();

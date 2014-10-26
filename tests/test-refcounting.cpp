@@ -131,6 +131,18 @@ class TestRefcounting : public Test
     if (!check(sDtors == 2, "AtomicRef assignment released properly"))
       return false;
 
+    sDtors = 0;
+    {
+      Ref<Counted> obj(new Counted());
+      AlreadyRefed<Counted> xfer = obj.take();
+      if (!check(!obj, "obj should have its ref taken"))
+        return false;
+      if (!check(!!xfer, "xfer should have received the ref"))
+        return false;
+    }
+    if (!check(sDtors == 1, "reference transfer should have resulted in one dtor"))
+      return false;
+
     return true;
   }
 } sTestRefcounting;
