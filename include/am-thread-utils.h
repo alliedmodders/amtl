@@ -201,6 +201,8 @@ class AutoLock
 
 class AutoMaybeLock
 {
+  friend class AutoMaybeUnlock;
+
  public:
   AutoMaybeLock(Lockable *lock)
    : lock_(lock)
@@ -211,6 +213,31 @@ class AutoMaybeLock
   ~AutoMaybeLock() {
     if (lock_)
       lock_->Unlock();
+  }
+
+  // Unlock and void the locked object. After calling this, the region covered
+  // by the AutoMaybeLocked is not guaranteed to be locked! This is useful for
+  // patterns like:
+  //
+  //   AutoMaybeLock lock(x);
+  //   {
+  //     ...
+  //     return helper(&lock);
+  //   }
+  //
+  // helper_while_locked(AutoMaybeLock *mlock) {
+  //   ...
+  //   mlock->unlock();
+  //   callback
+  // }
+  //
+  // In this situation, we can avoid using AutoMaybeUnlock which would re-lock
+  // only to unlock again immediately.
+  void unlock() {
+    if (lock_) {
+      lock_->Unlock();
+      lock_ = nullptr;
+    }
   }
 
  private:
