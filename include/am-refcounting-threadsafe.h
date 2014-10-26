@@ -66,6 +66,15 @@ class KE_LINK RefcountedThreadsafe
     AtomicRefcount refcount_;
 };
 
+// Use this to forward to ke::Refcounted<X>, when implementing IRefcounted.
+#define KE_IMPL_REFCOUNTING_TS(classname)                                     \
+   void AddRef() {                                                            \
+     ke::RefcountedThreadsafe<classname>::AddRef();                           \
+   }                                                                          \
+   void Release() {                                                           \
+     ke::RefcountedThreadsafe<classname>::Release();                          \
+   }
+
 // Classes may be multiply-inherited may wish to derive from this Refcounted
 // instead.
 class VirtualRefcountedThreadsafe : public IRefcounted
