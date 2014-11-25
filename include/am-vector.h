@@ -163,6 +163,19 @@ class Vector : public AllocPolicy
     return growIfNeeded(desired - length());
   }
 
+  template <typename U>
+  bool extend(U &&other) {
+    if (length() == 0) {
+      *this = Move(other);
+    } else {
+      for (size_t i = 0; i < other.length(); i++) {
+        if (!append(Move(other[i])))
+          return false;
+      }
+    }
+    return true;
+  }
+
   Vector &operator =(Vector &&other) {
     zap();
     data_ = other.data_;
