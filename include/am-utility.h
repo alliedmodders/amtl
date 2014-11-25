@@ -30,6 +30,7 @@
 #ifndef _include_amtl_utility_h_
 #define _include_amtl_utility_h_
 
+#define __STDC_FORMAT_MACROS
 #include <assert.h>
 #include <stddef.h>
 #include <stdlib.h>
@@ -41,6 +42,7 @@
 #endif
 #include <am-moveable.h>
 #include <am-cxx.h>
+#include <am-algorithm.h>
 
 #if defined(_MSC_VER)
 // Mac file format warning.
@@ -90,8 +92,8 @@ class AutoPtr
     T *take() {
         return ReturnAndVoid(t_);
     }
-    void forget() {
-        t_ = nullptr;
+    T *forget() {
+        return ReturnAndVoid(t_);
     }
     T *operator *() const {
         return t_;
@@ -147,8 +149,11 @@ class AutoArray
     T *take() {
         return ReturnAndVoid(t_);
     }
-    void forget() {
-        t_ = nullptr;
+    T *forget() {
+        return ReturnAndVoid(t_);
+    }
+    T **address() {
+      return &t_;
     }
     T &operator *() const {
         return t_;
@@ -286,18 +291,6 @@ AlignedBase(void *addr, size_t alignment)
     return reinterpret_cast<void *>(uintptr_t(addr) & ~(alignment - 1));
 }
 
-template <typename T> static inline T
-Min(const T &t1, const T &t2)
-{
-    return t1 < t2 ? t1 : t2;
-}
-
-template <typename T> static inline T
-Max(const T &t1, const T &t2)
-{
-    return t1 > t2 ? t1 : t2;
-}
-
 template <typename T>
 class StorageBuffer
 {
@@ -336,6 +329,36 @@ class SaveAndSet
 };
 
 template <typename T>
+class Maybe
+{
+ public:
+  Maybe()
+   : initialized_(false)
+  {}
+  ~Maybe() {
+    if (initialized_)
+      t_.address()->~T();
+  }
+
+  void init() {
+    new (t_.address()) T();
+    initialized_ = true;
+  }
+  template <typename U>
+  void init(U &&u) {
+    new (t_.address()) T(Forward<U>(u));
+    initialized_ = true;
+  }
+  bool initialized() const {
+    return initialized_;
+  }
+
+ private:
+  bool initialized_;
+  StorageBuffer<T> t_;
+};
+
+template <typename T>
 class StackLinked
 {
  public:
@@ -350,19 +373,19 @@ class StackLinked
     *prevp_ = prev_;
   }
 
- private:
+ protected:
   T **prevp_;
   T *prev_;
 };
 
 #if defined(_MSC_VER)
-# define KE_SIZET_FMT           "%Iu"
-# define KE_I64_FMT             "%I64d"
-# define KE_U64_FMT             "%I64u"
+# define KE_FMT_SIZET           "Iu"
+# define KE_FMT_I64             "I64d"
+# define KE_FMT_U64             "I64u"
 #elif defined(__GNUC__)
-# define KE_SIZET_FMT           "%zu"
-# define KE_I64_FMT             "%" PRId64
-# define KE_U64_FMT             "%" PRIu64
+# define KE_FMT_SIZET           "zu"
+# define KE_FMT_I64             PRId64
+# define KE_FMT_U64             PRIu64
 #else
 # error "Implement format specifier string"
 #endif
