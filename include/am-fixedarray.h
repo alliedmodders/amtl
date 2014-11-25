@@ -76,6 +76,18 @@ class FixedArray : public AllocPolicy
     assert(index < length());
     return data_[index];
   }
+  T &back() {
+    assert(length() > 0);
+    return data_[length() - 1];
+  }
+  const T &back() const {
+    assert(length() > 0);
+    return data_[length() - 1];
+  }
+
+  T *buffer() const {
+    return data_;
+  }
 
  private:
   FixedArray(const FixedArray &other) KE_DELETE;
