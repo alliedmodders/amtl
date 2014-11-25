@@ -35,7 +35,7 @@
 namespace ke {
 
 // Previously, we implemented Move semantics without C++11. Now that we use
-// C++11, we imlpement this as STL does for std::move.
+// C++11, we implement this as STL does for std::move.
 template <typename T>
 static inline typename remove_reference<T>::type &&
 Move(T &&t)
