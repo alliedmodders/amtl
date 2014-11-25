@@ -27,8 +27,8 @@
 // ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 // POSSIBILITY OF SUCH DAMAGE.
 
-#ifndef _include_amtl_hashmap_h_
-#define _include_amtl_hashmap_h_
+#ifndef _include_amtl_hashset_h_
+#define _include_amtl_hashset_h_
 
 #include <am-hashtable.h>
 
@@ -76,6 +76,7 @@ class HashSet : public AllocPolicy
 
   typedef typename Internal::Result Result;
   typedef typename Internal::Insert Insert;
+  typedef typename Internal::iterator iterator;
 
   template <typename Lookup>
   Result find(const Lookup &key) {
@@ -110,6 +111,9 @@ class HashSet : public AllocPolicy
     return table_.add(i);
   }
 
+  iterator iter() {
+    return iterator(&table_);
+  }
   void clear() {
     table_.clear();
   }
