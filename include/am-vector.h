@@ -139,7 +139,10 @@ class Vector : public AllocPolicy
     return at(length() - 1);
   }
 
-  T *buffer() const {
+  T *buffer() {
+    return data_;
+  }
+  const T *buffer() const {
     return data_;
   }
 

@@ -339,12 +339,25 @@ class Ref
     operator T *() {
         return thing_;
     }
+    operator T *() const {
+        return thing_;
+    }
     bool operator !() const {
         return !thing_;
     }
 
     AlreadyRefed<T> take() {
         return AlreadyRefed<T>(ReturnAndVoid(thing_));
+    }
+    AlreadyRefed<T> forget() {
+        return AlreadyRefed<T>(ReturnAndVoid(thing_));
+    }
+
+    bool operator ==(const Ref &other) {
+        return thing_ == other.thing_;
+    }
+    bool operator !=(const Ref &other) {
+        return thing_ != other.thing_;
     }
 
     template <typename S>

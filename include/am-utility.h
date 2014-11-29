@@ -70,61 +70,65 @@ ReturnAndVoid(T &t)
 template <typename T>
 class AutoPtr
 {
-    T *t_;
+ public:
+ AutoPtr()
+   : t_(nullptr)
+ {
+ }
+ explicit AutoPtr(T *t)
+   : t_(t)
+ {
+ }
+ AutoPtr(AutoPtr &&other)
+ {
+     t_ = other.t_;
+     other.t_ = nullptr;
+ }
+ ~AutoPtr() {
+     delete t_;
+ }
+ T *get() {
+   return t_;
+ }
+ T *take() {
+     return ReturnAndVoid(t_);
+ }
+ T *forget() {
+     return ReturnAndVoid(t_);
+ }
+ T *operator *() const {
+     return t_;
+ }
+ T *operator ->() const {
+     return t_;
+ }
+ operator T *() const {
+     return t_;
+ }
+ T *operator =(T *t) {
+     delete t_;
+     t_ = t;
+     return t_;
+ }
+ T **address() {
+   return &t_;
+ }
+ T *operator =(AutoPtr &&other) {
+     delete t_;
+     t_ = other.t_;
+     other.t_ = nullptr;
+     return t_;
+ }
+ bool operator !() const {
+     return !t_;
+ }
 
-  public:
-    AutoPtr()
-      : t_(nullptr)
-    {
-    }
-    explicit AutoPtr(T *t)
-      : t_(t)
-    {
-    }
-    AutoPtr(AutoPtr &&other)
-    {
-        t_ = other.t_;
-        other.t_ = nullptr;
-    }
-    ~AutoPtr() {
-        delete t_;
-    }
-    T *take() {
-        return ReturnAndVoid(t_);
-    }
-    T *forget() {
-        return ReturnAndVoid(t_);
-    }
-    T *operator *() const {
-        return t_;
-    }
-    T *operator ->() const {
-        return t_;
-    }
-    operator T *() const {
-        return t_;
-    }
-    T *operator =(T *t) {
-        delete t_;
-        t_ = t;
-        return t_;
-    }
-    T **address() {
-      return &t_;
-    }
-    T *operator =(AutoPtr &&other) {
-        delete t_;
-        t_ = other.t_;
-        other.t_ = nullptr;
-        return t_;
-    }
-    bool operator !() const {
-        return !t_;
-    }
+ private:
+  AutoPtr(const AutoPtr &other) KE_DELETE;
+  AutoPtr &operator =(const AutoPtr &other) KE_DELETE;
 
-  private:
-    AutoPtr(const AutoPtr &other) KE_DELETE;
-    AutoPtr &operator =(const AutoPtr &other) KE_DELETE;
+ private:
+  T *t_;
 };
 
 // Wrapper that automatically deletes its contents. The pointer can be taken
