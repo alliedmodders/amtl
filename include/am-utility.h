@@ -174,6 +174,47 @@ class AutoArray
     }
 };
 
+// Wrapper that automatically calls a deleter function on its contents.
+// The pointer can be taken to avoid destruction.
+template <typename T, typename Deleter>
+class AutoDtor {
+    T *t_;
+    Deleter deleter_;
+
+  public:
+    AutoDtor()
+      : t_(NULL)
+    {
+    }
+    explicit AutoDtor(T *t, Deleter deleter)
+      : t_(t)
+      , deleter_(deleter)
+    {
+    }
+    ~AutoDtor() {
+        deleter_(t_);
+    }
+    T *take() {
+        return ReturnAndVoid(t_);
+    }
+    T *operator *() const {
+        return t_;
+    }
+    T *operator ->() const {
+        return t_;
+    }
+    operator T *() const {
+        return t_;
+    }
+    void operator =(T *t) {
+        deleter_(t_);
+        t_ = t;
+    }
+    bool operator !() const {
+        return !t_;
+    }
+};
+
 static inline size_t
 Log2(size_t number)
 {
