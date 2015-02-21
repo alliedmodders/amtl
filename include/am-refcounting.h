@@ -345,6 +345,9 @@ class Ref
     bool operator !() const {
         return !thing_;
     }
+    operator T &() {
+        return *thing_;
+    }
 
     AlreadyRefed<T> take() {
         return AlreadyRefed<T>(ReturnAndVoid(thing_));
@@ -394,6 +397,16 @@ class Ref
         thing_ = other.thing_;
         other.thing_ = nullptr;
         return *this;
+    }
+
+    T **byref() {
+        return &thing_;
+    }
+    T * const *byref_const() {
+        return &thing_;
+    }
+    void **address() {
+        return reinterpret_cast<void **>(&thing_);
     }
 
   private:
