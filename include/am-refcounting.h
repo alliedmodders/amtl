@@ -399,6 +399,9 @@ class Ref
         return *this;
     }
 
+    T *get() const {
+        return thing_;
+    }
     T **byref() {
         return &thing_;
     }
