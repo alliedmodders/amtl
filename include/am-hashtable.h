@@ -54,6 +54,9 @@ namespace detail {
     void setHash(uint32_t hash) {
       hash_ = hash;
     }
+    void construct() {
+      new (&t_) T();
+    }
     template <typename U>
     void construct(U &&u) {
       new (&t_) T(ke::Forward<U>(u));
