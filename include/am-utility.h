@@ -303,6 +303,14 @@ IsUintPtrMultiplySafe(size_t a, size_t b)
     return log2_a + log2_b <= sizeof(size_t) * 8;
 }
 
+// Zero out a non-array pointer.
+template <typename T>
+static inline void
+MemsetZero(T *t)
+{
+  memset(t, 0, sizeof(*t));
+}
+
 #define ARRAY_LENGTH(array) (sizeof(array) / sizeof(array[0]))
 #define IS_ALIGNED(addr, alignment)    (!(uintptr_t(addr) & ((alignment) - 1)))
 
