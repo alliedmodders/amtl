@@ -174,27 +174,53 @@ class AutoArray
     }
 };
 
+#if defined(_MSC_VER)
+template <typename T>
+static uint32_t Log2(T value);
+
+template <>
+static inline uint32_t
+Log2<uint32_t>(uint32_t number)
+{
+  assert(number != 0);
+
+  unsigned long rval;
+  _BitScanReverse(&rval, number);
+  return rval;
+}
+
+template <>
+static inline uint32_t
+Log2<uint64_t>(uint64_t number)
+{
+  assert(number != 0);
+
+  unsigned long rval;
+#if defined(_M_X64)
+  _BitScanReverse64(&rval, number);
+#else
+  if (number > uint32_t(0xFFFFFFFF)) {
+    _BitScanReverse(&rval, uint32_t(number >> 32));
+    rval += 32;
+  } else {
+    _BitScanReverse(&rval, uint32_t(number));
+  }
+#endif
+  return rval;
+}
+#else
 static inline size_t
 Log2(size_t number)
 {
-    assert(number != 0);
+  assert(number != 0);
 
-#ifdef _MSC_VER
-    unsigned long rval;
-# ifdef _M_IX86
-    _BitScanReverse(&rval, number);
-# elif _M_X64
-    _BitScanReverse64(&rval, number);
-# endif
-    return rval;
-#else
-    size_t bit;
-    asm("bsr %1, %0\n"
-        : "=r" (bit)
-        : "rm" (number));
-    return bit;
-#endif
+  size_t bit;
+  asm("bsr %1, %0\n"
+      : "=r" (bit)
+      : "rm" (number));
+  return bit;
 }
+#endif
 
 static inline size_t
 FindRightmostBit(size_t number)
