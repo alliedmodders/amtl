@@ -50,7 +50,12 @@ class AString
   }
 
   explicit AString(const char *str) {
-    set(str, strlen(str));
+    if (str && str[0]) {
+      set(str, strlen(str));
+    } else {
+      chars_ = nullptr;
+      length_ = 0;
+    }
   }
   AString(const char *str, size_t length) {
     set(str, length);
