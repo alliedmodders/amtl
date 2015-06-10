@@ -30,10 +30,13 @@
 #ifndef _include_amtl_string_h_
 #define _include_amtl_string_h_
 
-#include <stdlib.h>
-#include <string.h>
+#include <am-platform.h>
 #include <am-utility.h>
 #include <am-moveable.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <stdarg.h>
 
 namespace ke {
 
@@ -47,7 +50,12 @@ class AString
   }
 
   explicit AString(const char *str) {
-    set(str, strlen(str));
+    if (str && str[0]) {
+      set(str, strlen(str));
+    } else {
+      chars_ = nullptr;
+      length_ = 0;
+    }
   }
   AString(const char *str, size_t length) {
     set(str, length);
@@ -130,6 +138,38 @@ class AString
   AutoArray<char> chars_;
   size_t length_;
 };
+
+static inline size_t
+SafeVsnprintf(char *buffer, size_t maxlength, const char *fmt, va_list ap)
+{
+  if (!maxlength)
+    return 0;
+
+  size_t len =
+#if defined(KE_WINDOWS)
+    _vsnprintf(buffer, maxlength, fmt, ap)
+#else
+    vsnprintf(buffer, maxlength, fmt, ap)
+#endif
+    ;
+
+  if (len >= maxlength) {
+    buffer[maxlength - 1] = '\0';
+    return maxlength - 1;
+  }
+
+  return len;
+}
+
+static inline size_t
+SafeSprintf(char *buffer, size_t maxlength, const char *fmt, ...)
+{
+  va_list ap;
+  va_start(ap, fmt);
+  size_t len = SafeVsnprintf(buffer, maxlength, fmt, ap);
+  va_end(ap);
+  return len;
+}
 
 }
 
