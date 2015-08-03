@@ -356,13 +356,6 @@ class Ref
         return AlreadyRefed<T>(ReturnAndVoid(thing_));
     }
 
-    bool operator ==(const Ref &other) {
-        return thing_ == other.thing_;
-    }
-    bool operator !=(const Ref &other) {
-        return thing_ != other.thing_;
-    }
-
     template <typename S>
     Ref &operator =(S *thing) {
         Release();
