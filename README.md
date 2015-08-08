@@ -154,6 +154,17 @@ HashTables can be iterated. If the table is mutated during iteration outside of 
 provided by the iterator, then the iterator may become corrupted. This is acceptable as long as the
 iterator is abandoned. However, the table must stay alive for as long as the iterator is active.
 
+### Functions and Lambdas (am-function.h)
+
+AMTL provides two replacements for std::function. The first, `Lambda`, serves roughly the same
+purpose and uses similar mechanics. It creates a copy of the underlying callable object (inlining
+the callable if it is small enough), allowing the `Lambda` to be safely copied and used outside
+its originating scope. Like all AMTL containers, `ke::Lambda` supports move semantics.
+
+`Lambda` is not always ideal since it does have to deep-copy the callable object. AMTL provides
+an analog to `std::ref` as `ke::byref`. This simply wraps an l-value reference into an object
+that appears to be an r-value of the same type.
+
 ### HashMap (am-hashmap.h)
 
 ke::HashMap is a key -> value map built upon HashTable. This saves you from having to implement all

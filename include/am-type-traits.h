@@ -59,6 +59,94 @@ typedef integral_constant<bool, false> false_type;
 template<class T> struct is_lvalue_reference : false_type{};
 template<class T> struct is_lvalue_reference<T&> : true_type {};
 
+template <bool Value, typename True, typename False>
+struct conditional {
+  typedef True type;
+};
+
+template <typename True, typename False>
+struct conditional<false, True, False> {
+  typedef False type;
+};
+
+template <typename T>
+struct is_array : false_type{};
+template <typename T>
+struct is_array<T[]> : true_type{};
+template <typename T, size_t N>
+struct is_array<T[N]> : true_type{};
+
+template <typename T>
+struct is_pointer : false_type{};
+template <typename T>
+struct is_pointer<T*> : true_type{};
+
+template <typename T>
+struct rm_rank {
+  typedef T type;
+};
+template <typename T>
+struct rm_rank<T[]> {
+  typedef T type;
+};
+template <typename T, size_t N>
+struct rm_rank<T[N]> {
+  typedef T type;
+};
+
+template <typename T>
+struct remove_volatile {
+  typedef T type;
+};
+template <typename T>
+struct remove_volatile<T volatile> {
+  typedef T type;
+};
+template <typename T>
+struct remove_const {
+  typedef T type;
+};
+template <typename T>
+struct remove_const<T const> {
+  typedef T type;
+};
+template <typename T>
+struct remove_cv {
+  typedef typename remove_volatile<typename remove_const<T>::type>::type type;
+};
+
+template <typename T>
+struct is_function_ptr : false_type{};
+#if defined(_MSC_VER)
+template <typename ReturnType, typename ...ArgTypes>
+struct is_function_ptr<ReturnType (__cdecl *)(ArgTypes...)> : true_type{};
+template <typename ReturnType, typename ...ArgTypes>
+struct is_function_ptr<ReturnType (__cdecl *)(ArgTypes..., ...)> : true_type{};
+#else
+template <typename ReturnType, typename ...ArgTypes>
+struct is_function_ptr<ReturnType (*)(ArgTypes...)> : true_type{};
+template <typename ReturnType, typename ...ArgTypes>
+struct is_function_ptr<ReturnType (*)(ArgTypes..., ...)> : true_type{};
+#endif
+
+template <typename T>
+struct is_function : public is_function_ptr<typename remove_cv<T>::type *>
+{};
+
+template <typename T>
+struct decay {
+  typedef typename remove_reference<T>::type RvalType;
+  typedef typename conditional<
+    is_array<RvalType>::value,
+    typename rm_rank<RvalType>::type*,
+    typename conditional<
+      is_function<RvalType>::value,
+      RvalType*,
+      typename remove_cv<RvalType>::type
+    >::type
+  >::type type;
+};
+
 } // namespace ke
 
 #endif // _include_amtl_type_traits_h_

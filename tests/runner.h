@@ -31,6 +31,7 @@
 #define _include_amtl_runner_h_
 
 #include <stdio.h>
+#include <stdlib.h>
 #include <stdarg.h>
 #include <am-cxx.h>
 

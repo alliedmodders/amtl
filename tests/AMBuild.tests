@@ -29,6 +29,7 @@ if compiler.cxx.behavior == 'msvc':
 
 binary.sources += [
   'main.cpp',
+  'test-callable.cpp',
   'test-hashmap.cpp',
   'test-inlinelist.cpp',
   'test-linkedlist.cpp',
