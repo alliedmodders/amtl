@@ -219,6 +219,80 @@ class Lambda<ReturnType(ArgTypes...)>
   } buffer_;
 };
 
+template <typename Tk>
+class FuncPtr;
+
+template <typename ReturnType, typename ...ArgTypes>
+class FuncPtr<ReturnType(ArgTypes...)>
+{
+  typedef ReturnType(*Invoker)(void*, ArgTypes&&...);
+
+ public:
+  FuncPtr()
+   : ptr_(nullptr)
+  {}
+  FuncPtr(const FuncPtr& other)
+   : ptr_(other.ptr_),
+     invoker_(other.invoker_)
+  {}
+  FuncPtr(ReturnType(*fn)(ArgTypes...)) {
+    assignStatic(fn);
+  }
+  template <typename T>
+  FuncPtr(T* obj) {
+    assignFunctor(obj);
+  }
+
+  FuncPtr& operator =(decltype(nullptr)) {
+    ptr_ = nullptr;
+    invoker_ = nullptr;
+    return *this;
+  }
+  FuncPtr& operator =(const FuncPtr& other) {
+    ptr_ = other.ptr_;
+    invoker_ = other.invoker_;
+    return *this;
+  }
+  FuncPtr& operator =(ReturnType(*fn)(ArgTypes...)) {
+    assignStatic(fn);
+    return *this;
+  }
+  template <typename T>
+  FuncPtr& operator =(T* obj) {
+    assignFunctor(obj);
+    return *this;
+  }
+
+  explicit operator bool() const {
+    return !!ptr_;
+  }
+
+  ReturnType operator()(ArgTypes... argv) const {
+    assert(ptr_ && invoker_);
+    return invoker_(ptr_, ke::Forward<ArgTypes>(argv)...);
+  }
+
+ private:
+  void assignStatic(ReturnType(*fn)(ArgTypes...)) {
+    typedef decltype(fn) FnType;
+    ptr_ = fn;
+    invoker_ = [](void *ptr, ArgTypes&&... argv) {
+      return (reinterpret_cast<FnType>(ptr))(ke::Forward<ArgTypes>(argv)...);
+    };
+  }
+  template <typename T>
+  void assignFunctor(T* obj) {
+    ptr_ = obj;
+    invoker_ = [](void *ptr, ArgTypes&&... argv) {
+      return (reinterpret_cast<T*>(ptr))->operator()(ke::Forward<ArgTypes>(argv)...);
+    };
+  }
+
+ private:
+  void* ptr_;
+  Invoker invoker_;
+};
+
 } // namespace ke
 
 #endif // _include_amtl_function_h_

@@ -28,7 +28,6 @@
 // POSSIBILITY OF SUCH DAMAGE.
 
 #include <am-function.h>
-#include <am-vector.h>
 #include "runner.h"
 
 using namespace ke;
@@ -229,6 +228,28 @@ class TestCallable : public Test
     return true;
   }
 
+  bool testFuncPtr() {
+    FuncPtr<int(int)> ptr = test_old_fn;
+
+    if (!check(ptr(1) == 100, "FuncPtr called static function"))
+      return false;
+
+    auto fn = [](int x) -> int {
+      return x + 2;
+    };
+    ptr = &fn;
+
+    if (!check(ptr(10) == 12, "FuncPtr called lambda"))
+      return false;
+
+    CallableObj obj;
+    ptr = &obj;
+    if (!check(ptr(7) == 41, "FuncPtr called callable object"))
+      return false;
+
+    return true;
+  }
+
   bool Run() override
   {
     if (!testLambdaBasic())
@@ -236,6 +257,8 @@ class TestCallable : public Test
     if (!testInlineStorage())
       return false;
     if (!testMove())
+      return false;
+    if (!testFuncPtr())
       return false;
     return true;
   };
