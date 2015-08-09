@@ -200,7 +200,7 @@ class Lambda<ReturnType(ArgTypes...)>
 
   template <typename T>
   void assign(T&& obj) {
-    typedef ke::decay<T>::type CallableType;
+    typedef typename ke::decay<T>::type CallableType;
     typedef impl::FuncHolder<CallableType, ReturnType, ArgTypes...> ImplType;
 
     if (sizeof(ImplType) <= sizeof(buffer_)) {
@@ -275,7 +275,7 @@ class FuncPtr<ReturnType(ArgTypes...)>
  private:
   void assignStatic(ReturnType(*fn)(ArgTypes...)) {
     typedef decltype(fn) FnType;
-    ptr_ = fn;
+    ptr_ = reinterpret_cast<void*>(fn);
     invoker_ = [](void *ptr, ArgTypes&&... argv) {
       return (reinterpret_cast<FnType>(ptr))(ke::Forward<ArgTypes>(argv)...);
     };
