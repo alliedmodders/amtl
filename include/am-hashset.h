@@ -118,6 +118,10 @@ class HashSet : public AllocPolicy
     table_.clear();
   }
 
+  size_t elements() const {
+    return table_.elements();
+  }
+
   size_t estimateMemoryUse() const {
     return table_.estimateMemoryUse();
   }
