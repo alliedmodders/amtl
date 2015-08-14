@@ -143,6 +143,11 @@ class AutoArray
       : t_(nullptr)
     {
     }
+    AutoArray(AutoArray&& other)
+      : t_(other.t_)
+    {
+      other.t_ = nullptr;
+    }
     explicit AutoArray(T *t)
       : t_(t)
     {
@@ -165,13 +170,25 @@ class AutoArray
     operator T *() const {
         return t_;
     }
-    void operator =(T *t) {
-        delete [] t_;
-        t_ = t;
-    }
     bool operator !() const {
         return !t_;
     }
+
+    AutoArray& operator =(T *t) {
+        delete [] t_;
+        t_ = t;
+        return *this;
+    }
+    AutoArray& operator =(AutoArray&& other) {
+        delete[] t_;
+        t_ = other.t_;
+        other.t_ = nullptr;
+        return *this;
+    }
+
+  private:
+    AutoArray(const AutoArray& other) = delete;
+    AutoArray& operator =(const AutoArray& other) = delete;
 };
 
 #if defined(_MSC_VER)
