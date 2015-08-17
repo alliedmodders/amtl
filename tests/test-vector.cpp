@@ -201,6 +201,15 @@ class TestVector : public Test
     if (!check(sDtors == 6, "should get 6 destructors"))
       return false;
 
+    sDtors = 0;
+    {
+      Vector<BasicThing> vector;
+      vector.append(BasicThing());
+      vector.clear();
+    }
+    if (!check(sDtors == 2, "should get 2 destructors"))
+      return false;
+
     sCtors = 0;
     sCopyCtors = 0;
     sDtors = 0;

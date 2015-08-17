@@ -130,6 +130,7 @@ class Vector : public AllocPolicy
     return at(i);
   }
   void clear() {
+    destruct_live();
     nitems_ = 0;
   }
   const T &back() const {
@@ -195,9 +196,12 @@ class Vector : public AllocPolicy
   Vector &operator =(const Vector<T> &other) KE_DELETE;
 
  private:
-  void zap() {
+  void destruct_live() {
     for (size_t i = 0; i < nitems_; i++)
       data_[i].~T();
+  }
+  void zap() {
+    destruct_live();
     this->free(data_);
   }
   void reset() {
