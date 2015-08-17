@@ -189,6 +189,25 @@ class Vector : public AllocPolicy
     return *this;
   }
 
+  size_t find(const T &item) {
+    size_t iter;
+    for (iter = 0; iter < length(); ++iter)
+      if (at(iter) == item)
+        break;
+    return iter;
+  }
+
+  bool removeItem(const T &item) {
+    size_t element = find(item);
+    if (element == length())
+      return false;
+    remove(element);
+    return true;
+  }
+  void removeItems(const T &item) {
+    while (removeItem(item)){};
+  }
+
  private:
   // These are disallowed because they basically violate the failure handling
   // model for AllocPolicies and are also likely to have abysmal performance.

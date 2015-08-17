@@ -178,6 +178,14 @@ class TestVector : public Test
       vector.append(i);
     if (!check(vector.length() == 128, "vector length should be 128"))
       return false;
+    if (!check(vector.find(129) == vector.length(), "there is no element 129"))
+      return false;
+    if (!check(vector.removeItem(56), "remove number 56"))
+      return false;
+
+    vector.removeItems(57);
+    if (!check(vector.find(57) == vector.length(), "no number 57"))
+      return false;
 
     vector.clear();
     if (!check(vector.empty(), "vector should be empty"))
