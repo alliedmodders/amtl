@@ -171,6 +171,21 @@ SafeSprintf(char *buffer, size_t maxlength, const char *fmt, ...)
   return len;
 }
 
+static inline size_t
+SafeStrcpy(char* dest, size_t maxlength, const char* src)
+{
+  if (!dest || !maxlength)
+    return 0;
+
+  char* iter = dest;
+  size_t count = maxlength;
+  while (*src && --count)
+    *iter++ = *src++;
+  *iter = '\0';
+
+  return iter - dest;
+}
+
 }
 
 #endif // _include_amtl_string_h_
