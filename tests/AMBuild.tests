@@ -21,7 +21,7 @@ import os
 binary = KE.Program(builder, 'testrunner')
 compiler = binary.compiler
 compiler.includes += [
-  os.path.join(builder.sourcePath, 'include'),
+  os.path.join(builder.sourcePath, 'amtl'),
 ]
 
 if compiler.cxx.behavior == 'msvc':
