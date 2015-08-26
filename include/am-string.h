@@ -140,7 +140,7 @@ class AString
 };
 
 static inline size_t
-SafeVsnprintf(char *buffer, size_t maxlength, const char *fmt, va_list ap)
+SafeVsprintf(char *buffer, size_t maxlength, const char *fmt, va_list ap)
 {
   if (!maxlength)
     return 0;
@@ -166,7 +166,7 @@ SafeSprintf(char *buffer, size_t maxlength, const char *fmt, ...)
 {
   va_list ap;
   va_start(ap, fmt);
-  size_t len = SafeVsnprintf(buffer, maxlength, fmt, ap);
+  size_t len = SafeVsprintf(buffer, maxlength, fmt, ap);
   va_end(ap);
   return len;
 }
