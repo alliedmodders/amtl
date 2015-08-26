@@ -102,7 +102,7 @@ class TestHashMap : public Test
     return true;
   }
 
-  bool Run() KE_OVERRIDE
+  bool Run() override
   {
     if (!testBasics())
       return false;

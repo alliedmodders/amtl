@@ -71,7 +71,7 @@ class TestRefcounting : public Test
   {
   }
 
-  bool Run() KE_OVERRIDE
+  bool Run() override
   {
     {
       Ref<Counted> obj(new Counted());

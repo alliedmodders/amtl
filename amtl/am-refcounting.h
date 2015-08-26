@@ -254,11 +254,11 @@ class KE_LINK VirtualRefcounted : public IRefcounted
   }
   virtual ~VirtualRefcounted()
   {}
-  void AddRef() KE_OVERRIDE {
+  void AddRef() override {
     assert(!destroying_);
     refcount_++;
   }
-  void Release() KE_OVERRIDE {
+  void Release() override {
     assert(refcount_ > 0);
     if (--refcount_ == 0) {
 #if !defined(NDEBUG)

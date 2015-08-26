@@ -88,11 +88,11 @@ class VirtualRefcountedThreadsafe : public IRefcounted
   }
   virtual ~VirtualRefcountedThreadsafe()
   {}
-  void AddRef() KE_OVERRIDE {
+  void AddRef() override {
     assert(!destroying_);
     refcount_.increment();
   }
-  void Release() KE_OVERRIDE {
+  void Release() override {
     if (!refcount_.decrement()) {
 #if !defined(NDEBUG)
       destroying_ = true;
@@ -158,8 +158,8 @@ class AtomicRef
   }
 
  private:
-  AtomicRef(const AtomicRef &other) KE_DELETE;
-  void operator =(const AtomicRef &other) KE_DELETE;
+  AtomicRef(const AtomicRef &other) = delete;
+  void operator =(const AtomicRef &other) = delete;
 
  private:
   // We represent a locked state with a tag bit.

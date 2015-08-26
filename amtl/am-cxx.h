@@ -139,16 +139,14 @@
 
 // Done with compiler feature detection.
 
-#if defined(KE_CXX_HAS_OVERRIDE)
-# define KE_OVERRIDE override
-#else
-# define KE_OVERRIDE
+#if !defined(KE_CXX_HAS_OVERRIDE)
+# error "AMTL requires C++11 override"
 #endif
-
-#if defined(KE_CXX_HAS_DELETE)
-# define KE_DELETE = delete
-#else
-# define KE_DELETE
+#if !defined(KE_CXX_HAS_DELETE)
+# error "AMTL requires C++11 method deletion"
+#endif
+#if !defined(KE_CXX_HAS_EXPLICIT_BOOL)
+# error "AMTL requires C++11 explicit bool"
 #endif
 
 #if defined(KE_CXX_HAS_NOEXCEPT)

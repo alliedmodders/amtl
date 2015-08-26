@@ -90,8 +90,8 @@ class FixedArray : public AllocPolicy
   }
 
  private:
-  FixedArray(const FixedArray &other) KE_DELETE;
-  FixedArray &operator =(const FixedArray &other) KE_DELETE;
+  FixedArray(const FixedArray &other) = delete;
+  FixedArray &operator =(const FixedArray &other) = delete;
 
  private:
   size_t length_;

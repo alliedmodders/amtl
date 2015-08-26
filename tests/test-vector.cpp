@@ -91,7 +91,7 @@ class MovingThing
   }
 
  private:
-  MovingThing(const MovingThing &other) KE_DELETE;
+  MovingThing(const MovingThing &other) = delete;
   bool moved_;
 };
 
@@ -306,7 +306,7 @@ class TestVector : public Test
     return true;
   }
 
-  bool Run() KE_OVERRIDE
+  bool Run() override
   {
     if (!testInts())
       return false;

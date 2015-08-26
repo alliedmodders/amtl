@@ -43,7 +43,7 @@ class TestThreadLocalSingleThreaded : public Test
   {
   }
 
-  bool Run() KE_OVERRIDE
+  bool Run() override
   {
     if (!check(sVar == 0, "variable is initialized"))
       return false;

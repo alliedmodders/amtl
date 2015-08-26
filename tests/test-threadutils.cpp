@@ -145,7 +145,7 @@ class TestThreading : public Test
     return true;
   }
 
-  bool Run() KE_OVERRIDE
+  bool Run() override
   {
     if (!testWorkerModel())
       return false;

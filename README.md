@@ -3,12 +3,13 @@ supporting a minimalistic set of abstractions and data structures useful for hig
 systems code. It is the spiritual succesor to the SourceHook template library.
 
 AMBuild currently requires C++11 support. The minimum supported compiler versions are:
- - Microsoft Visual Studio 2010 or higher.
- - GNU GCC 4.5 or higher.
+ - Microsoft Visual Studio 2013 or higher.
+ - GNU GCC 4.7 or higher.
  - Clang 3.0 or higher.
 
-Specifically, it requires `nullptr`, `>>` support in templates, and r-value references v2.0,
-(N2844). The older, deprecated `c++98` branch of AMTL does not require C++11.
+Specifically, it requires `nullptr`, `>>` support in templates, r-value references v2.0,
+(N2844), lambda support, and the override/delete keywords. The older, deprecated `C++98`
+branch of AMTL does not require C++11.
 
 # Goals
 

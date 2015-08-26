@@ -78,8 +78,8 @@ class ThreadLocal
   }
 
  private:
-  ThreadLocal(const ThreadLocal &other) KE_DELETE;
-  ThreadLocal &operator =(const ThreadLocal &other) KE_DELETE;
+  ThreadLocal(const ThreadLocal &other) = delete;
+  ThreadLocal &operator =(const ThreadLocal &other) = delete;
 
 #if !defined(KE_SINGLE_THREADED)
  private:

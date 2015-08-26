@@ -43,7 +43,7 @@ class VarThread : public IRunnable
   {
   }
 
-  void Run() KE_OVERRIDE {
+  void Run() override {
     if (!check(sThreadVar == 0, "value starts as 0 on new thread"))
       return;
 
@@ -70,7 +70,7 @@ class TestThreadLocalThreaded : public Test
   {
   }
 
-  bool Run() KE_OVERRIDE
+  bool Run() override
   {
     sThreadVar = 10;
 

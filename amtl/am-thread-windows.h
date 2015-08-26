@@ -44,14 +44,14 @@ class CriticalSection : public Lockable
     DeleteCriticalSection(&cs_);
   }
 
-  bool DoTryLock() KE_OVERRIDE {
+  bool DoTryLock() override {
     return !!TryEnterCriticalSection(&cs_);
   }
-  void DoLock() KE_OVERRIDE {
+  void DoLock() override {
     EnterCriticalSection(&cs_);
   }
 
-  void DoUnlock() KE_OVERRIDE {
+  void DoUnlock() override {
     LeaveCriticalSection(&cs_);
   }
 
@@ -72,13 +72,13 @@ class ConditionVariable : public Lockable
     CloseHandle(event_);
   }
 
-  bool DoTryLock() KE_OVERRIDE {
+  bool DoTryLock() override {
     return cs_.DoTryLock();
   }
-  void DoLock() KE_OVERRIDE {
+  void DoLock() override {
     cs_.DoLock();
   }
-  void DoUnlock() KE_OVERRIDE {
+  void DoUnlock() override {
     cs_.DoUnlock();
   }
 

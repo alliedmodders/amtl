@@ -57,15 +57,15 @@ class Mutex : public Lockable
     pthread_mutex_destroy(&mutex_);
   }
 
-  bool DoTryLock() KE_OVERRIDE {
+  bool DoTryLock() override {
     return pthread_mutex_trylock(&mutex_) == 0;
   }
 
-  void DoLock() KE_OVERRIDE {
+  void DoLock() override {
     pthread_mutex_lock(&mutex_);
   }
 
-  void DoUnlock() KE_OVERRIDE {
+  void DoUnlock() override {
     pthread_mutex_unlock(&mutex_);
   }
   
@@ -92,13 +92,13 @@ class ConditionVariable : public Lockable
     pthread_cond_destroy(&cv_);
   }
 
-  bool DoTryLock() KE_OVERRIDE {
+  bool DoTryLock() override {
     return mutex_.DoTryLock();
   }
-  void DoLock() KE_OVERRIDE {
+  void DoLock() override {
     mutex_.DoLock();
   }
-  void DoUnlock() KE_OVERRIDE {
+  void DoUnlock() override {
     mutex_.DoUnlock();
   }
 
