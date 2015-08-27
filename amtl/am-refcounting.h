@@ -348,6 +348,9 @@ class Ref
     operator T &() {
         return *thing_;
     }
+    explicit operator bool() const {
+        return !!thing_;
+    }
 
     AlreadyRefed<T> take() {
         return AlreadyRefed<T>(ReturnAndVoid(thing_));
