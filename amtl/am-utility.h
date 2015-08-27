@@ -124,8 +124,8 @@ class AutoPtr
  }
 
  private:
-  AutoPtr(const AutoPtr &other) KE_DELETE;
-  AutoPtr &operator =(const AutoPtr &other) KE_DELETE;
+  AutoPtr(const AutoPtr &other) = delete;
+  AutoPtr &operator =(const AutoPtr &other) = delete;
 
  private:
   T *t_;

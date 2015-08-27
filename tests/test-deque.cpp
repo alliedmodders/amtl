@@ -170,7 +170,7 @@ class TestDeque : public Test
     return true;
   }
 
-  bool Run() KE_OVERRIDE {
+  bool Run() override {
     if (!test_basic())
       return false;
     if (!test_prepend_empty())

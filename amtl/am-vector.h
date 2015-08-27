@@ -192,8 +192,8 @@ class Vector : public AllocPolicy
  private:
   // These are disallowed because they basically violate the failure handling
   // model for AllocPolicies and are also likely to have abysmal performance.
-  Vector(const Vector<T> &other) KE_DELETE;
-  Vector &operator =(const Vector<T> &other) KE_DELETE;
+  Vector(const Vector<T> &other) = delete;
+  Vector &operator =(const Vector<T> &other) = delete;
 
  private:
   void destruct_live() {

@@ -278,8 +278,8 @@ public:
  private:
   // These are disallowed because they basically violate the failure handling
   // model for AllocPolicies and are also likely to have abysmal performance.
-  LinkedList &operator =(const LinkedList<T> &other) KE_DELETE;
-  LinkedList(const LinkedList<T> &other) KE_DELETE;
+  LinkedList &operator =(const LinkedList<T> &other) = delete;
+  LinkedList(const LinkedList<T> &other) = delete;
 };
 
 } // namespace ke

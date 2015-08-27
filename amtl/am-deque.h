@@ -158,8 +158,8 @@ class Deque : public AllocPolicy
   }
 
  private:
-  Deque(const Deque<T> &other) KE_DELETE;
-  Deque &operator =(const Deque<T> &other) KE_DELETE;
+  Deque(const Deque<T> &other) = delete;
+  Deque &operator =(const Deque<T> &other) = delete;
 
   // Return the next value of first_.
   size_t ensureCanPrepend() {

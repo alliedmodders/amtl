@@ -129,7 +129,7 @@ class TestInlineList : public Test
     return true;
   }
 
-  bool Run() KE_OVERRIDE
+  bool Run() override
   {
     if (!testBasic())
       return false;

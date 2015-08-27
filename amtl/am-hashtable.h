@@ -97,8 +97,8 @@ namespace detail {
     }
   
    private:
-    HashTableEntry(const HashTableEntry &other) KE_DELETE;
-    HashTableEntry &operator =(const HashTableEntry &other) KE_DELETE;
+    HashTableEntry(const HashTableEntry &other) = delete;
+    HashTableEntry &operator =(const HashTableEntry &other) = delete;
   };
 }
 
@@ -511,8 +511,8 @@ class HashTable : public AllocPolicy
   };
 
  private:
-  HashTable(const HashTable &other) KE_DELETE;
-  HashTable &operator =(const HashTable &other) KE_DELETE;
+  HashTable(const HashTable &other) = delete;
+  HashTable &operator =(const HashTable &other) = delete;
 
  private:
   uint32_t capacity_;
