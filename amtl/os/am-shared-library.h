@@ -30,6 +30,7 @@
 #define _include_amtl_os_sharedlib_h_
 
 #include <amtl/am-refcounting.h>
+#include <amtl/am-platform.h>
 #if defined(KE_WINDOWS)
 # define WIN32_LEAN_AND_MEAN
 # include <Windows.h>
