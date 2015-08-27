@@ -1,6 +1,6 @@
 // vim: set sts=8 ts=2 sw=2 tw=99 et:
 //
-// Copyright (C) 2013, David Anderson and AlliedModders LLC
+// Copyright (C) 2013-2015, David Anderson and AlliedModders LLC
 // All rights reserved.
 // 
 // Redistribution and use in source and binary forms, with or without
@@ -26,71 +26,44 @@
 // CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
 // ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 // POSSIBILITY OF SUCH DAMAGE.
-#include "runner.h"
-#include <am-platform.h>
-#include <os/am-shared-library.h>
-#include <os/am-path.h>
+#ifndef _include_amtl_os_path_h_
+#define _include_amtl_os_path_h_
 
-using namespace ke;
+#include <amtl/am-platform.h>
+#include <amtl/am-string.h>
 
-class TestSystem : public Test
+namespace ke {
+namespace path {
+
+static inline size_t
+FormatVa(char* dest, size_t maxlength, const char* fmt, va_list ap)
 {
- public:
-  TestSystem()
-   : Test("System")
-  {
-  }
+  size_t len = SafeVsprintf(dest, maxlength, fmt, ap);
 
-  bool Run() override
-  {
-    if (!testSharedLibs())
-      return false;
-    if (!testPaths())
-      return false;
-    return true;
-  }
-
-  bool testSharedLibs()
-  {
-    const char* libname = "unknown-library";
+  for (size_t i = 0; i < len; i++) {
 #if defined(KE_WINDOWS)
-    const char* symbol = "GetProcAddress";
-    libname = "kernel32.dll";
-#elif defined(KE_POSIX)
-    const char* symbol = "malloc";
-# if defined(KE_MACOSX)
-    libname = "libc.dylib";
-# elif defined(KE_LINUX)
-    libname = "libc.so.6";
-# endif
-#endif
-
-    Ref<SharedLib> lib = SharedLib::Open(libname, nullptr, 0);
-    if (!check(lib, "should have opened shared library"))
-      return false;
-    if (!check(!!lib->lookup(symbol), "should have found symbol"))
-      return false;
-    if (!check(!!lib->get<void*>(symbol), "should have found symbol"))
-      return false;
-
-    return true;
-  }
-
-  bool testPaths()
-  {
-#if defined(KE_WINDOWS)
-    const char* bad = "C:/egg.txt";
-    const char* good = "C:\\egg.txt";
+    if (dest[i] == '/')
+      dest[i] = '\\';
 #else
-    const char* bad = "\\egg.txt";
-    const char* good = "/egg.txt";
+    if (dest[i] == '\\')
+      dest[i] = '/';
 #endif
-
-    char buffer[255];
-    path::Format(buffer, sizeof(buffer), "%s", bad);
-    if (!check(strcmp(buffer, good) == 0, "path should be formatted correctly"))
-      return false;
-
-    return true;
   }
-} sTestSystem;
+
+  return len;
+}
+
+static inline size_t
+Format(char* dest, size_t maxlength, const char* fmt, ...)
+{
+  va_list ap;
+  va_start(ap, fmt);
+  size_t len = FormatVa(dest, maxlength, fmt, ap);
+  va_end(ap);
+  return len;
+}
+
+} // namespace path
+} // namespace ke
+
+#endif // _include_amtl_os_path_h_
