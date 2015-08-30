@@ -1,6 +1,6 @@
 // vim: set sts=8 ts=2 sw=2 tw=99 et:
 //
-// Copyright (C) 2013, David Anderson and AlliedModders LLC
+// Copyright (C) 2013-2015, David Anderson and AlliedModders LLC
 // All rights reserved.
 // 
 // Redistribution and use in source and binary forms, with or without
@@ -26,71 +26,47 @@
 // CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
 // ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 // POSSIBILITY OF SUCH DAMAGE.
-#include "runner.h"
-#include <am-platform.h>
-#include <os/am-shared-library.h>
-#include <os/am-path.h>
+#ifndef _include_amtl_os_fsutil_posix_h_
+#define _include_amtl_os_fsutil_posix_h_
 
-using namespace ke;
+#include <sys/stat.h>
+#include <sys/types.h>
 
-class TestSystem : public Test
+namespace ke {
+namespace file {
+
+static inline bool
+PathExists(const char* path)
 {
- public:
-  TestSystem()
-   : Test("System")
-  {
-  }
+  struct stat s;
+  return (stat(path, &s) == 0);
+}
 
-  bool Run() override
-  {
-    if (!testSharedLibs())
-      return false;
-    if (!testPaths())
-      return false;
-    return true;
-  }
+static inline bool
+IsFile(const char* path)
+{
+  struct stat s;
+  if (stat(path, &s) != 0)
+    return false;
+  return S_ISREG(s.st_mode) ? true : false;
+}
 
-  bool testSharedLibs()
-  {
-    const char* libname = "unknown-library";
-#if defined(KE_WINDOWS)
-    const char* symbol = "GetProcAddress";
-    libname = "kernel32.dll";
-#elif defined(KE_POSIX)
-    const char* symbol = "malloc";
-# if defined(KE_MACOSX)
-    libname = "libc.dylib";
-# elif defined(KE_LINUX)
-    libname = "libc.so.6";
-# endif
-#endif
+static inline bool
+IsDirectory(const char* path)
+{
+  struct stat s;
+  if (stat(path, &s) != 0)
+    return false;
+  return S_ISDIR(s.st_mode) ? true : false;
+}
 
-    Ref<SharedLib> lib = SharedLib::Open(libname, nullptr, 0);
-    if (!check(lib, "should have opened shared library"))
-      return false;
-    if (!check(!!lib->lookup(symbol), "should have found symbol"))
-      return false;
-    if (!check(!!lib->get<void*>(symbol), "should have found symbol"))
-      return false;
+static inline bool
+CreateDirectory(const char* path, unsigned mode=0755)
+{
+  return mkdir(path, mode) == 0;
+}
 
-    return true;
-  }
+} // namespace file
+} // namespace ke
 
-  bool testPaths()
-  {
-#if defined(KE_WINDOWS)
-    const char* bad = "C:/egg.txt";
-    const char* good = "C:\\egg.txt";
-#else
-    const char* bad = "\\egg.txt";
-    const char* good = "/egg.txt";
-#endif
-
-    char buffer[255];
-    path::Format(buffer, sizeof(buffer), "%s", bad);
-    if (!check(strcmp(buffer, good) == 0, "path should be formatted correctly"))
-      return false;
-
-    return true;
-  }
-} sTestSystem;
+#endif // _include_amtl_os_fsutil_posix_h_
