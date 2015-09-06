@@ -65,6 +65,9 @@ class SharedLib : public Refcounted<SharedLib>
 #endif
   }
   ~SharedLib() {
+    if (lib_ == nullptr)
+      return;
+
 #if defined(KE_WINDOWS)
     FreeLibrary(lib_);
 #else
