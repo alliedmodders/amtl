@@ -62,7 +62,7 @@ unsigned MoveObj::sNumMoves = 0;
 class CallableObj
 {
  public:
-  int operator()(int x) {
+  int operator()(int x) const {
     return x + 34;
   }
 };
