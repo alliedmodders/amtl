@@ -44,8 +44,8 @@ namespace impl {
    public:
      virtual ~FuncHolderBase()
      {}
-     virtual ReturnType invoke(ArgTypes&&... argv) = 0;
-     virtual FuncHolderBase<ReturnType, ArgTypes...>* clone(void* mem) = 0;
+     virtual ReturnType invoke(ArgTypes&&... argv) const = 0;
+     virtual FuncHolderBase<ReturnType, ArgTypes...>* clone(void* mem) const = 0;
      virtual FuncHolderBase<ReturnType, ArgTypes...>* move(void* mem) = 0;
   };
 
@@ -70,10 +70,10 @@ namespace impl {
 
     virtual ~FuncHolder()
     {}
-    virtual ReturnType invoke(ArgTypes&&... argv) override {
+    virtual ReturnType invoke(ArgTypes&&... argv) const override {
       return obj_(ke::Forward<ArgTypes>(argv)...);
     }
-    virtual BaseType* clone(void* mem) override {
+    virtual BaseType* clone(void* mem) const override {
        if (!mem)
          return new FuncHolder(*this);
        new (mem) FuncHolder(*this);
@@ -149,7 +149,7 @@ class Lambda<ReturnType(ArgTypes...)>
     return !!impl_;
   }
 
-  ReturnType operator()(ArgTypes... argv) {
+  ReturnType operator()(ArgTypes... argv) const {
     assert(impl_);
     return impl_->invoke(ke::Forward<ArgTypes>(argv)...);
   }
