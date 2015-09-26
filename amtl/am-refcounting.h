@@ -30,8 +30,8 @@
 #ifndef _include_amtl_refcounting_h_
 #define _include_amtl_refcounting_h_
 
-#include <am-utility.h>
-#include <am-moveable.h>
+#include <amtl/am-utility.h>
+#include <amtl/am-moveable.h>
 
 namespace ke {
 

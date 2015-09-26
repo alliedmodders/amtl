@@ -30,7 +30,7 @@
 #ifndef _include_amtl_type_traits_h_
 #define _include_amtl_type_traits_h_
 
-#include <am-cxx.h>
+#include <amtl/am-cxx.h>
 #include <stddef.h>
 
 namespace ke {

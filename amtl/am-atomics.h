@@ -30,7 +30,7 @@
 #ifndef _include_amtl_atomics_h_
 #define _include_amtl_atomics_h_
 
-#include <am-utility.h>
+#include <amtl/am-utility.h>
 
 namespace ke {
 

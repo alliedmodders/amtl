@@ -30,7 +30,7 @@
 #ifndef _include_amtl_moveable_h_
 #define _include_amtl_moveable_h_
 
-#include <am-type-traits.h>
+#include <amtl/am-type-traits.h>
 
 namespace ke {
 

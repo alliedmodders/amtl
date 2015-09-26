@@ -30,8 +30,8 @@
 #ifndef _include_amtl_ts_refcounting_h_
 #define _include_amtl_ts_refcounting_h_
 
-#include <am-refcounting.h>
-#include <am-atomics.h>
+#include <amtl/am-refcounting.h>
+#include <amtl/am-atomics.h>
 
 namespace ke {
 

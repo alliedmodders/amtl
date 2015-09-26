@@ -32,10 +32,10 @@
 #include <new>
 #include <stdlib.h>
 #include <assert.h>
-#include <am-cxx.h>
-#include <am-allocator-policies.h>
-#include <am-utility.h>
-#include <am-moveable.h>
+#include <amtl/am-cxx.h>
+#include <amtl/am-allocator-policies.h>
+#include <amtl/am-utility.h>
+#include <amtl/am-moveable.h>
 
 namespace ke {
 
@@ -71,6 +71,7 @@ class Deque : public AllocPolicy
     first_ = other.first_;
     last_ = other.last_;
     other.reset();
+    return *this;
   }
 
   bool empty() const {

@@ -29,7 +29,7 @@
 #ifndef _include_amtl_algorithm_h_
 #define _include_amtl_algorithm_h_
 
-#include <am-moveable.h>
+#include <amtl/am-moveable.h>
 
 namespace ke {
 

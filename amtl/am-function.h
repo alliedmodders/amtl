@@ -29,9 +29,8 @@
 #ifndef _include_amtl_function_h_
 #define _include_amtl_function_h_
 
-#include <functional>
-#include <am-moveable.h>
-#include <am-type-traits.h>
+#include <amtl/am-moveable.h>
+#include <amtl/am-type-traits.h>
 #include <new>
 #include <assert.h>
 

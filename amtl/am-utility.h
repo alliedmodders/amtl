@@ -40,9 +40,9 @@
 #else
 # include <inttypes.h>
 #endif
-#include <am-moveable.h>
-#include <am-cxx.h>
-#include <am-algorithm.h>
+#include <amtl/am-moveable.h>
+#include <amtl/am-cxx.h>
+#include <amtl/am-algorithm.h>
 
 #if defined(_MSC_VER)
 // Mac file format warning.
