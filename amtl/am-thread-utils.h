@@ -37,7 +37,7 @@
 #else
 # include <pthread.h>
 #endif
-#include <am-utility.h>
+#include <amtl/am-utility.h>
 
 // Thread primitives for SourcePawn.
 //

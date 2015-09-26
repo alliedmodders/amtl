@@ -31,6 +31,7 @@
 #define _include_amtl_thread_windows_h_
 
 #include <windows.h>
+#include <amtl/am-function.h>
 
 namespace ke {
 
@@ -117,6 +118,12 @@ class Thread
   Thread(IRunnable *run, const char *name = nullptr) {
     thread_ = CreateThread(nullptr, 0, Main, run, 0, nullptr);
   }
+  Thread(ke::Lambda<void()>&& callback, const char *name = nullptr) {
+    auto ptr = new ke::Lambda<void()>(ke::Move(callback));
+    thread_ = CreateThread(nullptr, 0, MainCallback, ptr, 0, nullptr);
+    if (!thread_)
+      delete ptr;
+  }
   ~Thread() {
     if (!thread_)
       return;
@@ -140,6 +147,12 @@ class Thread
  private:
   static DWORD WINAPI Main(LPVOID arg) {
     ((IRunnable *)arg)->Run();
+    return 0;
+  }
+  static DWORD WINAPI MainCallback(LPVOID arg) {
+    auto ptr = reinterpret_cast<ke::Lambda<void()>*>(arg);
+    (*ptr)();
+    delete ptr;
     return 0;
   }
 

@@ -40,6 +40,7 @@
 #if defined(__APPLE__)
 # include <dlfcn.h>
 #endif
+#include <amtl/am-function.h>
 
 namespace ke {
 
@@ -162,12 +163,22 @@ class Thread
 {
   struct ThreadData {
     IRunnable *run;
+    ke::Lambda<void()> callback;
     char name[17];
   };
  public:
   Thread(IRunnable *run, const char *name = nullptr) {
     ThreadData *data = new ThreadData;
     data->run = run;
+    snprintf(data->name, sizeof(data->name), "%s", name ? name : "");
+
+    initialized_ = (pthread_create(&thread_, nullptr, Main, data) == 0);
+    if (!initialized_)
+      delete data;
+  }
+  Thread(ke::Lambda<void()>&& callback, const char *name = nullptr) {
+    ThreadData *data = new ThreadData;
+    data->callback = callback;
     snprintf(data->name, sizeof(data->name), "%s", name ? name : "");
 
     initialized_ = (pthread_create(&thread_, nullptr, Main, data) == 0);
@@ -204,7 +215,10 @@ class Thread
         fn(data->name);
 #endif
     }
-    data->run->Run();
+    if (data->run)
+      data->run->Run();
+    else
+      data->callback();
     return nullptr;
   }
 
