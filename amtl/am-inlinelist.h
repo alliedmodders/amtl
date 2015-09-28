@@ -32,7 +32,7 @@
 
 #include <stddef.h>
 #include <assert.h>
-#include <am-cxx.h>
+#include <amtl/am-cxx.h>
 
 namespace ke {
 
@@ -45,7 +45,7 @@ class InlineListNode
 {
   friend class InlineList<T>;
 
-  public:
+ public:
   InlineListNode()
    : next_(nullptr),
      prev_(nullptr)
@@ -58,7 +58,19 @@ class InlineListNode
   {
   }
 
-  protected:
+  bool isInList() const {
+    assert(!!next_ == !!prev_);
+    return !!next_;
+  }
+
+  void removeFromParentList() {
+    prev_->next_ = next_;
+    next_->prev_ = prev_;
+    next_ = nullptr;
+    prev_ = nullptr;
+  }
+
+ protected:
   InlineListNode *next_;
   InlineListNode *prev_;
 };

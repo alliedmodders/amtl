@@ -30,9 +30,9 @@
 #ifndef _include_amtl_string_h_
 #define _include_amtl_string_h_
 
-#include <am-platform.h>
-#include <am-utility.h>
-#include <am-moveable.h>
+#include <amtl/am-platform.h>
+#include <amtl/am-utility.h>
+#include <amtl/am-moveable.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>

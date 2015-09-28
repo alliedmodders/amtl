@@ -173,6 +173,9 @@ class AutoArray
     bool operator !() const {
         return !t_;
     }
+    T* get() const {
+      return t_;
+    }
 
     AutoArray& operator =(T *t) {
         delete [] t_;
