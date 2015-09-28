@@ -84,7 +84,7 @@ class SharedLib : public Refcounted<SharedLib>
                                         size_t maxlength = 0)
   {
     Ref<SharedLib> lib = new SharedLib(path);
-    if (!lib) {
+    if (!lib || !lib->valid()) {
       if (!error || !maxlength)
         return nullptr;
 #if defined(KE_WINDOWS)
@@ -108,6 +108,10 @@ class SharedLib : public Refcounted<SharedLib>
   template <typename T>
   T get(const char* symbol) {
     return reinterpret_cast<T>(lookup(symbol));
+  }
+
+  bool valid() const {
+    return !!lib_;
   }
 
  private:
