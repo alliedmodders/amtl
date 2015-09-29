@@ -30,7 +30,7 @@
 #ifndef _include_amtl_hashmap_h_
 #define _include_amtl_hashmap_h_
 
-#include <am-hashtable.h>
+#include <amtl/am-hashtable.h>
 
 namespace ke {
 
