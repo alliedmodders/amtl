@@ -29,7 +29,7 @@
 #ifndef _include_amtl_bits_h_
 #define _include_amtl_bits_h_
 
-#include <am-algorithm.h>
+#include <amtl/am-algorithm.h>
 
 namespace ke {
 
