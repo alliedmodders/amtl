@@ -233,7 +233,7 @@ class Deque : public AllocPolicy
   }
 
   void zap() {
-    if (first_ < last_) {
+    if (first_ <= last_) {
       for (size_t i = first_; i < last_; i++)
         buffer_[i].~T();
     } else {
