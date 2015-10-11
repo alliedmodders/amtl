@@ -401,7 +401,7 @@ class Ref
     T **byref() {
         return &thing_;
     }
-    T * const *byref_const() {
+    T * const *byref_const() const {
         return &thing_;
     }
     void **address() {
