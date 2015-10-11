@@ -133,7 +133,7 @@ class Lambda<ReturnType(ArgTypes...)>
   }
   Lambda& operator =(Lambda&& other) {
     destroy();
-    move(other);
+    move(ke::Move(other));
     return *this;
   }
 
