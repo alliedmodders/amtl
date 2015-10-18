@@ -17,7 +17,7 @@ class KEConfig(object):
     if cfg.version < 'msvc-1600':
       raise Exception('AMTL requires Visual Studio 2010 (CL 16.00) or higher.')
 
-    if cxx.behavior == 'gcc':
+    if cxx.like('gcc'):
       std = getattr(builder.options, 'std', None)
       if std is not None:
           cfg.cxxflags += ['-std={0}'.format(std)]
@@ -98,16 +98,16 @@ class KEConfig(object):
     # Optimization
     if builder.options.opt == '1':
       cfg.defines += ['NDEBUG']
-      if cxx.behavior == 'gcc':
+      if cxx.like('gcc'):
         cfg.cflags += ['-O3']
-      elif cxx.behavior == 'msvc':
+      elif cxx.like('msvc'):
         cfg.cflags += ['/Ox']
         cfg.linkflags += ['/OPT:ICF', '/OPT:REF']
 
     # Debugging
     if builder.options.debug == '1':
       cfg.defines += ['DEBUG', '_DEBUG']
-      if cxx.behavior == 'msvc':
+      if cxx.like('msvc'):
         cfg.cflags += ['/Od', '/RTC1']
         if cxx.version >= 1600:
           cfg.cflags += ['/d2Zi+']

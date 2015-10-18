@@ -25,7 +25,7 @@ compiler.includes += [
   os.path.join(builder.sourcePath),
 ]
 
-if compiler.cxx.behavior == 'msvc':
+if compiler.like('msvc'):
   compiler.linkflags.append('/SUBSYSTEM:CONSOLE')
 if builder.target_platform == 'linux':
   compiler.linkflags.append('-ldl')
