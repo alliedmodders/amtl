@@ -126,6 +126,22 @@ class HashSet : public AllocPolicy
     return table_.estimateMemoryUse();
   }
 
+  // Convenience wrapper for find().found().
+  template <typename Lookup>
+  bool has(const Lookup &key) {
+    Result r = table_.find(key);
+    return r.found();
+  }
+
+  // Convenience wrapper for findForAdd() + add(), if the item is not already
+  // in the set.
+  template <typename UK>
+  void add(UK &&key) {
+    Insert p = table_.findForAdd(key);
+    if (!p.found())
+      table_.add(p, ke::Forward<UK>(key));
+  }
+
  private:
   Internal table_;
 };
