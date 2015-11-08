@@ -97,10 +97,10 @@ without first calling AddRef.
 
 A few RAII objects are provided for automatically retaining and releasing references:
 
-* Ref<T>. Adds one reference upon construction and releases one reference on destruction.
-* PassRef<T>. Same as Ref<T>, except, when passed into a Ref<T> or into a PassRef<T>, the contained
-  reference is NULL'd, rather than performing an unnecessary extra AddRef()+Release(). PassRef<T>
-  is intended only for return values.
+* RefPtr<T>. Adds one reference upon construction and releases one reference on destruction.
+* PassRef<T>. Same as RefPtr<T>, except, when passed into a RefPtr<T> or into a PassRef<T>, the
+  contained reference is NULL'd, rather than performing an unnecessary extra AddRef()+Release().
+  PassRef<T> is intended only for return values.
 * AdoptRef(T). If an object is returned with an implicit AddRef, not using Ref or PassRef, then
   it is necessary to AdoptRef() when assigning into a Ref or PassRef.
 

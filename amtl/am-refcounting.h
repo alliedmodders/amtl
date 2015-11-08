@@ -35,12 +35,12 @@
 
 namespace ke {
 
-template <typename T> class Ref;
+template <typename T> class RefPtr;
 
 // Objects in AMTL inheriting from Refcounted will have an initial refcount
 // of 0. However, in some systems (such as COM), the initial refcount is 1,
 // or functions may return raw pointers that have been AddRef'd. In these
-// cases it would be a mistake to use Ref<> or PassRef<>, since the object
+// cases it would be a mistake to use RefPtr<> or PassRef<>, since the object
 // would leak an extra reference.
 //
 // This container holds a refcounted object without addrefing it. This is
@@ -125,7 +125,7 @@ class PassRef
     }
 
     template <typename S>
-    inline PassRef(const Ref<S> &other);
+    inline PassRef(const RefPtr<S> &other);
 
     PassRef(const PassRef &other)
       : thing_(other.release())
@@ -195,7 +195,7 @@ class PassRef
 // counts start at 0 in AMTL, rather than 1. This avoids the complexity of
 // having to adopt the initial ref upon allocation. However, this also means
 // invoking Release() on a newly allocated object is illegal. Newborn objects
-// must either be assigned to a Ref or PassRef (NOT an AdoptRef/AlreadyRefed),
+// must either be assigned to a RefPtr or PassRef (NOT an AdoptRef/AlreadyRefed),
 // or must be deleted using |delete|.
 template <typename T>
 class KE_LINK Refcounted
@@ -277,55 +277,55 @@ class KE_LINK VirtualRefcounted : public IRefcounted
 
 // Simple class for automatic refcounting.
 template <typename T>
-class Ref
+class RefPtr
 {
   public:
-    Ref(T *thing)
+    RefPtr(T *thing)
       : thing_(thing)
     {
         AddRef();
     }
 
-    Ref()
+    RefPtr()
       : thing_(nullptr)
     {
     }
 
-    Ref(const Ref &other)
+    RefPtr(const RefPtr &other)
       : thing_(other.thing_)
     {
         AddRef();
     }
-    Ref(Ref &&other)
+    RefPtr(RefPtr &&other)
       : thing_(other.thing_)
     {
         other.thing_ = nullptr;
     }
     template <typename S>
-    Ref(const Ref<S> &other)
+    RefPtr(const RefPtr<S> &other)
       : thing_(*other)
     {
         AddRef();
     }
-    Ref(const PassRef<T> &other)
+    RefPtr(const PassRef<T> &other)
       : thing_(other.release())
     {
     }
     template <typename S>
-    Ref(const PassRef<S> &other)
+    RefPtr(const PassRef<S> &other)
       : thing_(other.release())
     {
     }
-    Ref(const AlreadyRefed<T> &other)
+    RefPtr(const AlreadyRefed<T> &other)
       : thing_(other.release())
     {
     }
     template <typename S>
-    Ref(const AlreadyRefed<S> &other)
+    RefPtr(const AlreadyRefed<S> &other)
       : thing_(other.release())
     {
     }
-    ~Ref()
+    ~RefPtr()
     {
         Release();
     }
@@ -360,7 +360,7 @@ class Ref
     }
 
     template <typename S>
-    Ref &operator =(S *thing) {
+    RefPtr &operator =(S *thing) {
         Release();
         thing_ = thing;
         AddRef();
@@ -368,27 +368,27 @@ class Ref
     }
     
     template <typename S>
-    Ref &operator =(const PassRef<S> &other) {
+    RefPtr &operator =(const PassRef<S> &other) {
         Release();
         thing_ = other.release();
         return *this;
     }
 
     template <typename S>
-    Ref &operator =(const AlreadyRefed<S> &other) {
+    RefPtr &operator =(const AlreadyRefed<S> &other) {
         Release();
         thing_ = other.release();
         return *this;
     }
 
-    Ref &operator =(const Ref &other) {
+    RefPtr &operator =(const RefPtr &other) {
         Release();
         thing_ = other.thing_;
         AddRef();
         return *this;
     }
 
-    Ref &operator =(Ref &&other) {
+    RefPtr &operator =(RefPtr &&other) {
         Release();
         thing_ = other.thing_;
         other.thing_ = nullptr;
@@ -423,7 +423,7 @@ class Ref
 };
 
 template <typename T> template <typename S>
-PassRef<T>::PassRef(const Ref<S> &other)
+PassRef<T>::PassRef(const RefPtr<S> &other)
   : thing_(*other)
 {
     AddRef();

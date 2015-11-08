@@ -83,7 +83,7 @@ class SharedLib : public Refcounted<SharedLib>
                                         char* error = nullptr,
                                         size_t maxlength = 0)
   {
-    Ref<SharedLib> lib = new SharedLib(path);
+    RefPtr<SharedLib> lib = new SharedLib(path);
     if (!lib || !lib->valid()) {
       if (!error || !maxlength)
         return nullptr;

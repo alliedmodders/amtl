@@ -52,13 +52,13 @@ class SubCounted : public Counted
 void
 TypeChecks_DoNotCall()
 {
-  Ref<Counted> counted;
+  RefPtr<Counted> counted;
   if (counted)
     abort();
 }
 
 static inline PassRef<Counted>
-PassThrough(const Ref<Counted> &obj)
+PassThrough(const RefPtr<Counted> &obj)
 {
   return obj;
 }
@@ -74,7 +74,7 @@ class TestRefcounting : public Test
   bool Run() override
   {
     {
-      Ref<Counted> obj(new Counted());
+      RefPtr<Counted> obj(new Counted());
     }
     if (!check(sDtors == 1, "Ref/Newborn counted properly"))
       return false;
@@ -86,15 +86,15 @@ class TestRefcounting : public Test
     {
       Counted *counted = new Counted();
       counted->AddRef();
-      Ref<Counted> obj(AdoptRef(counted));
+      RefPtr<Counted> obj(AdoptRef(counted));
     }
     if (!check(sDtors == 3, "Ref/Newborn counted properly"))
       return false;
 
     // Check that subclass assignment works.
     {
-      Ref<Counted> obj(new SubCounted());
-      Ref<Counted> obj2(PassThrough(new SubCounted()));
+      RefPtr<Counted> obj(new SubCounted());
+      RefPtr<Counted> obj2(PassThrough(new SubCounted()));
     }
     if (!check(sDtors == 5, "Ref/Newborn counted properly"))
       return false;
@@ -102,12 +102,12 @@ class TestRefcounting : public Test
     sDtors = 0;
 
     {
-      Ref<Counted> obj(new Counted());
-      Ref<Counted> obj2 = PassThrough(obj);
-      Ref<Counted> obj3 = PassThrough(obj);
+      RefPtr<Counted> obj(new Counted());
+      RefPtr<Counted> obj2 = PassThrough(obj);
+      RefPtr<Counted> obj3 = PassThrough(obj);
       if (!check(sDtors == 0, "destructor not called early"))
         return false;
-      Ref<Counted> obj4 = PassThrough(PassThrough(PassThrough(obj)));
+      RefPtr<Counted> obj4 = PassThrough(PassThrough(PassThrough(obj)));
       if (!check(sDtors == 0, "destructor not called early"))
         return false;
     }
@@ -133,7 +133,7 @@ class TestRefcounting : public Test
 
     sDtors = 0;
     {
-      Ref<Counted> obj(new Counted());
+      RefPtr<Counted> obj(new Counted());
       AlreadyRefed<Counted> xfer = obj.take();
       if (!check(!obj, "obj should have its ref taken"))
         return false;

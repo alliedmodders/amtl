@@ -65,7 +65,7 @@ class TestSystem : public Test
 # endif
 #endif
 
-    Ref<SharedLib> lib = SharedLib::Open(libname, nullptr, 0);
+    RefPtr<SharedLib> lib = SharedLib::Open(libname, nullptr, 0);
     if (!check(lib, "should have opened shared library"))
       return false;
     if (!check(!!lib->lookup(symbol), "should have found symbol"))
