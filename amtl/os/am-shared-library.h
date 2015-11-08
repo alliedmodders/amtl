@@ -79,9 +79,8 @@ class SharedLib : public Refcounted<SharedLib>
     return !!lib_;
   }
 
-  static inline PassRef<SharedLib> Open(const char* path,
-                                        char* error = nullptr,
-                                        size_t maxlength = 0)
+  static inline AlreadyRefed<SharedLib>
+  Open(const char* path, char* error = nullptr, size_t maxlength = 0)
   {
     RefPtr<SharedLib> lib = new SharedLib(path);
     if (!lib || !lib->valid()) {
@@ -94,7 +93,7 @@ class SharedLib : public Refcounted<SharedLib>
 #endif
       return nullptr;
     }
-    return lib;
+    return lib.forget();
   }
 
   void* lookup(const char* symbol) {

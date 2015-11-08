@@ -57,7 +57,7 @@ TypeChecks_DoNotCall()
     abort();
 }
 
-static inline PassRef<Counted>
+static inline RefPtr<Counted>
 PassThrough(const RefPtr<Counted> &obj)
 {
   return obj;
@@ -79,7 +79,7 @@ class TestRefcounting : public Test
     if (!check(sDtors == 1, "Ref/Newborn counted properly"))
       return false;
     {
-      PassRef<Counted> obj(new Counted());
+      RefPtr<Counted> obj(new Counted());
     }
     if (!check(sDtors == 2, "Ref/Newborn counted properly"))
       return false;
@@ -111,7 +111,7 @@ class TestRefcounting : public Test
       if (!check(sDtors == 0, "destructor not called early"))
         return false;
     }
-    if (!check(sDtors == 1, "PassRef/Ref counted properly"))
+    if (!check(sDtors == 1, "RefPtr counted properly"))
       return false;
 
     sDtors = 0;

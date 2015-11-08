@@ -40,8 +40,8 @@ template <typename T> class RefPtr;
 // Objects in AMTL inheriting from Refcounted will have an initial refcount
 // of 0. However, in some systems (such as COM), the initial refcount is 1,
 // or functions may return raw pointers that have been AddRef'd. In these
-// cases it would be a mistake to use RefPtr<> or PassRef<>, since the object
-// would leak an extra reference.
+// cases it would be a mistake to use RefPtr<> since the object leak an extra
+// reference.
 //
 // This container holds a refcounted object without addrefing it. This is
 // intended only for interacting with functions which return an object that
@@ -60,6 +60,11 @@ class AlreadyRefed
     {
         // If copy elision for some reason doesn't happen (for example, when
         // returning from AdoptRef), just null out the source ref.
+        other.thing_ = nullptr;
+    }
+    AlreadyRefed(AlreadyRefed<T>&& other)
+      : thing_(other.thing_)
+    {
         other.thing_ = nullptr;
     }
     ~AlreadyRefed() {
@@ -95,108 +100,11 @@ AdoptRef(T *t)
     return AlreadyRefed<T>(t);
 }
 
-// When returning a value, we'd rather not be needlessly changing the refcount,
-// so we have a special type to use for returns.
-template <typename T>
-class PassRef
-{
-  public:
-    PassRef(T *thing)
-      : thing_(thing)
-    {
-        AddRef();
-    }
-    PassRef()
-      : thing_(nullptr)
-    {
-    }
-
-    PassRef(const AlreadyRefed<T> &other)
-      : thing_(other.release())
-    {
-        // Don't addref, newborn means already addref'd.
-    }
-
-    template <typename S>
-    PassRef(const AlreadyRefed<S> &other)
-      : thing_(other.release())
-    {
-        // Don't addref, newborn means already addref'd.
-    }
-
-    template <typename S>
-    inline PassRef(const RefPtr<S> &other);
-
-    PassRef(const PassRef &other)
-      : thing_(other.release())
-    {
-    }
-    template <typename S>
-    PassRef(const PassRef<S> &other)
-      : thing_(other.release())
-    {
-    }
-    ~PassRef()
-    {
-        Release();
-    }
-
-    operator T &() {
-        return *thing_;
-    }
-    operator T *() const {
-        return thing_;
-    }
-    T *operator ->() const {
-        return operator *();
-    }
-    T *operator *() const {
-        return thing_;
-    }
-    bool operator !() const {
-        return !thing_;
-    }
-#if defined(KE_CXX11)
-    explicit operator bool() const {
-        return !!thing_;
-    }
-#endif
-
-    T *release() const {
-        return ReturnAndVoid(thing_);
-    }
-
-    template <typename S>
-    PassRef &operator =(const PassRef<S> &other) {
-        Release();
-        thing_ = other.release();
-        return *this;
-    }
-
-  private:
-    // Disallowed operators.
-    PassRef &operator =(T *other);
-    PassRef &operator =(AlreadyRefed<T> &other);
-
-    void AddRef() {
-        if (thing_)
-            thing_->AddRef();
-    }
-    void Release() {
-        if (thing_)
-            thing_->Release();
-    }
-
-  private:
-    mutable T *thing_;
-};
-
 // Classes which are refcounted should inherit from this. Note that reference
 // counts start at 0 in AMTL, rather than 1. This avoids the complexity of
 // having to adopt the initial ref upon allocation. However, this also means
 // invoking Release() on a newly allocated object is illegal. Newborn objects
-// must either be assigned to a RefPtr or PassRef (NOT an AdoptRef/AlreadyRefed),
-// or must be deleted using |delete|.
+// must either be assigned to a RefPtr or must be deleted using |delete|.
 template <typename T>
 class KE_LINK Refcounted
 {
@@ -307,14 +215,11 @@ class RefPtr
     {
         AddRef();
     }
-    RefPtr(const PassRef<T> &other)
-      : thing_(other.release())
-    {
-    }
     template <typename S>
-    RefPtr(const PassRef<S> &other)
-      : thing_(other.release())
+    RefPtr(RefPtr<S>&& other)
+      : thing_(*other)
     {
+        other.thing_ = nullptr;
     }
     RefPtr(const AlreadyRefed<T> &other)
       : thing_(other.release())
@@ -368,13 +273,6 @@ class RefPtr
     }
     
     template <typename S>
-    RefPtr &operator =(const PassRef<S> &other) {
-        Release();
-        thing_ = other.release();
-        return *this;
-    }
-
-    template <typename S>
     RefPtr &operator =(const AlreadyRefed<S> &other) {
         Release();
         thing_ = other.release();
@@ -421,13 +319,6 @@ class RefPtr
   protected:
     T *thing_;
 };
-
-template <typename T> template <typename S>
-PassRef<T>::PassRef(const RefPtr<S> &other)
-  : thing_(*other)
-{
-    AddRef();
-}
 
 } // namespace ke
 

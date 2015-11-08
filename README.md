@@ -98,11 +98,8 @@ without first calling AddRef.
 A few RAII objects are provided for automatically retaining and releasing references:
 
 * RefPtr<T>. Adds one reference upon construction and releases one reference on destruction.
-* PassRef<T>. Same as RefPtr<T>, except, when passed into a RefPtr<T> or into a PassRef<T>, the
-  contained reference is NULL'd, rather than performing an unnecessary extra AddRef()+Release().
-  PassRef<T> is intended only for return values.
-* AdoptRef(T). If an object is returned with an implicit AddRef, not using Ref or PassRef, then
-  it is necessary to AdoptRef() when assigning into a Ref or PassRef.
+* AdoptRef(T). If an object is returned with an implicit AddRef, not using RefPtr, then
+  it is necessary to AdoptRef() when assigning into a RefPtr.
 
 RefcountedThreadsafe provides the same accessors as Refcounted. However, the reference counting is
 performed using atomic operations, so that two threads racing do not accidentally result in a wrong
