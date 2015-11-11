@@ -88,7 +88,8 @@ class AlreadyRefed
         return thing_ != other;
     }
 
-    T *release() const {
+    // Analagous to AutoPtr::take().
+    T *take() const {
         return ReturnAndVoid(thing_);
     }
 
@@ -220,17 +221,16 @@ class RefPtr
     }
     template <typename S>
     RefPtr(RefPtr<S>&& other)
-      : thing_(*other)
+      : thing_(other.forget().take())
     {
-        other.thing_ = nullptr;
     }
     RefPtr(const AlreadyRefed<T> &other)
-      : thing_(other.release())
+      : thing_(other.take())
     {
     }
     template <typename S>
     RefPtr(const AlreadyRefed<S> &other)
-      : thing_(other.release())
+      : thing_(other.take())
     {
     }
     ~RefPtr()
@@ -278,7 +278,7 @@ class RefPtr
     template <typename S>
     RefPtr &operator =(const AlreadyRefed<S> &other) {
         Release();
-        thing_ = other.release();
+        thing_ = other.take();
         return *this;
     }
 
