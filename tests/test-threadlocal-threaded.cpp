@@ -35,7 +35,7 @@ using namespace ke;
 static ThreadLocal<int> sThreadVar;
 static ThreadLocal<void *> sThreadVarPointer;
 
-class VarThread : public IRunnable
+class VarThread
 {
  public:
   VarThread()
@@ -43,7 +43,7 @@ class VarThread : public IRunnable
   {
   }
 
-  void Run() override {
+  void Run() {
     if (!check(sThreadVar == 0, "value starts as 0 on new thread"))
       return;
 
@@ -75,7 +75,9 @@ class TestThreadLocalThreaded : public Test
     sThreadVar = 10;
 
     VarThread run;
-    ke::AutoPtr<Thread> thread(new Thread(&run, "TestThreadLocal"));
+    ke::AutoPtr<Thread> thread(new Thread([&run] () -> void {
+      run.Run();
+    }, "TestThreadLocal"));
     if (!check(thread->Succeeded(), "thread launched"))
       return false;
     thread->Join();

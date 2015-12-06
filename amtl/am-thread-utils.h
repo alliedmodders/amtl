@@ -86,11 +86,11 @@
 //
 // -- Threads --
 //
-// A Thread object, when created, spawns a new thread with the given callback
-// (the callbacks must implement IRunnable). Threads have one method of
-// interest, Join(), which will block until the thread's execution finishes.
-// Deleting a thread object will free any operating system resources associated
-// with that thread, if the thread has finished executing.
+// A Thread object, when created, spawns a new thread with the given callback.
+// Threads have one method of interest, Join(), which will block until the
+// thread's execution finishes. Deleting a thread object will free any
+// operating system resources associated with that thread, if the thread has
+// finished executing.
 //
 // Threads can fail to spawn; make sure to check Succeeded().
 //
@@ -303,16 +303,6 @@ enum WaitResult {
 
   // Woke up, but because of an error.
   Wait_Error
-};
-
-// This must be implemented in order to spawn a new thread.
-class IRunnable
-{
- public:
-  virtual ~IRunnable() {
-  }
-
-  virtual void Run() = 0;
 };
 
 } // namespace ke

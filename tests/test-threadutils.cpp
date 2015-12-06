@@ -35,7 +35,7 @@
 using namespace ke;
 
 // Simple worker that adds up numbers.
-class TestWorkerModel : public IRunnable
+class TestWorkerModel
 {
  public:
   TestWorkerModel()
@@ -120,7 +120,9 @@ class TestThreading : public Test
   {
     TestWorkerModel test;
 
-    ke::AutoPtr<Thread> thread(new Thread(&test, "TestWorkerModel"));
+    ke::AutoPtr<Thread> thread(new Thread([&test] () -> void {
+      test.Run();
+    }, "TestWorkerModel"));
     if (!check(thread->Succeeded(), "thread launched"))
       return false;
 
