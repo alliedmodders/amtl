@@ -92,10 +92,12 @@ class Maybe
   }
 
   Maybe& operator =(const Maybe& other) {
+    initialized_ = false;
     copyFrom(other);
     return *this;
   }
   Maybe& operator =(Maybe&& other) {
+    initialized_ = false;
     moveFrom(ke::Move(other));
     return *this;
   }
