@@ -387,36 +387,6 @@ class SaveAndSet
 };
 
 template <typename T>
-class Maybe
-{
- public:
-  Maybe()
-   : initialized_(false)
-  {}
-  ~Maybe() {
-    if (initialized_)
-      t_.address()->~T();
-  }
-
-  void init() {
-    new (t_.address()) T();
-    initialized_ = true;
-  }
-  template <typename U>
-  void init(U &&u) {
-    new (t_.address()) T(Forward<U>(u));
-    initialized_ = true;
-  }
-  bool initialized() const {
-    return initialized_;
-  }
-
- private:
-  bool initialized_;
-  StorageBuffer<T> t_;
-};
-
-template <typename T>
 class StackLinked
 {
  public:
