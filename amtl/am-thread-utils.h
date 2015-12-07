@@ -273,6 +273,10 @@ class AutoTryLock
       lock_->Unlock();
   }
 
+  explicit operator bool() const {
+    return !!lock_;
+  }
+
  private:
   Lockable *lock_;
 };
