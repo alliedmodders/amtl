@@ -108,15 +108,23 @@ class FallibleMalloc
   {
   }
 
-  void *malloc(size_t amount) {
+  void *am_malloc(size_t amount) {
     if (shouldOutOfMemory_) {
       reportOutOfMemory();
       return nullptr;
     }
+#if defined(_DEBUG) && defined(_CRTDBG_MAP_ALLOC)
+    return malloc(amount);
+#else
     return ::malloc(amount);
+#endif
   }
-  void free(void *p) {
+  void am_free(void *p) {
+#if defined(_DEBUG) && defined(_CRTDBG_MAP_ALLOC)
+    return free(p);
+#else
     return ::free(p);
+#endif
   }
   void reportOutOfMemory() {
     ooms_++;

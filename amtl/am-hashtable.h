@@ -147,7 +147,7 @@ class HashTable : public AllocPolicy
   Entry *createTable(uint32_t capacity) {
     assert(capacity <= kMaxCapacity);
 
-    Entry *table = (Entry *)this->malloc(capacity * sizeof(Entry));
+    Entry *table = (Entry *)this->am_malloc(capacity * sizeof(Entry));
     if (!table)
       return nullptr;
 
@@ -269,7 +269,7 @@ class HashTable : public AllocPolicy
       }
       oldEntry.destruct();
     }
-    this->free(oldTable);
+    this->am_free(oldTable);
 
     return true;
   }
@@ -380,7 +380,7 @@ class HashTable : public AllocPolicy
   {
     for (uint32_t i = 0; i < capacity_; i++)
       table_[i].destruct();
-    this->free(table_);
+    this->am_free(table_);
   }
 
   bool init(size_t capacity = 0) {

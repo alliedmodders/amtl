@@ -202,7 +202,7 @@ class Vector : public AllocPolicy
   }
   void zap() {
     destruct_live();
-    this->free(data_);
+    this->am_free(data_);
   }
   void reset() {
     data_ = nullptr;
@@ -243,11 +243,11 @@ class Vector : public AllocPolicy
       new_maxsize *= 2;
     }
 
-    T* newdata = (T*)this->malloc(sizeof(T) * new_maxsize);
+    T* newdata = (T*)this->am_malloc(sizeof(T) * new_maxsize);
     if (newdata == nullptr)
       return false;
     MoveRange<T>(newdata, data_, nitems_);
-    this->free(data_);
+    this->am_free(data_);
 
     data_ = newdata;
     maxsize_ = new_maxsize;
