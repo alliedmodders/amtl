@@ -49,11 +49,19 @@ class SystemAllocatorPolicy
     }
 
   public:
-    void free(void *memory) {
+    void am_free(void *memory) {
+#if defined(_DEBUG) && defined(_CRTDBG_MAP_ALLOC)
+      free(memory);
+#else
       ::free(memory);
+#endif
     }
-    void *malloc(size_t bytes) {
+    void *am_malloc(size_t bytes) {
+#if defined(_DEBUG) && defined(_CRTDBG_MAP_ALLOC)
+      void *ptr = malloc(bytes);
+#else
       void *ptr = ::malloc(bytes);
+#endif
       if (!ptr)
         reportOutOfMemory();
       return ptr;

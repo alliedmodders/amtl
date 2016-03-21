@@ -202,7 +202,7 @@ class Deque : public AllocPolicy
     }
 
     size_t new_maxlength = maxlength_ ? maxlength_ * 2 : 8;
-    T *new_buffer = (T *)this->malloc(sizeof(T) * new_maxlength);
+    T *new_buffer = (T *)this->am_malloc(sizeof(T) * new_maxlength);
     if (!new_buffer)
       return false;
 
@@ -218,7 +218,7 @@ class Deque : public AllocPolicy
       last_ = last_ + (maxlength_ - first_);
       first_ = 0;
     }
-    this->free(buffer_);
+    this->am_free(buffer_);
 
     buffer_ = new_buffer;
     maxlength_ = new_maxlength;
@@ -242,7 +242,7 @@ class Deque : public AllocPolicy
       for (size_t i = 0; i < last_; i++)
         buffer_[i].~T();
     }
-    this->free(buffer_);
+    this->am_free(buffer_);
   }
 
  private:

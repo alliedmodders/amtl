@@ -122,7 +122,7 @@ public:
 
   template <typename U>
   Node *allocNode(U &&obj) {
-    Node *node = (Node *)this->malloc(sizeof(Node));
+    Node *node = (Node *)this->am_malloc(sizeof(Node));
     if (!node)
       return nullptr;
     new (&node->obj) T(ke::Forward<U>(obj));
@@ -131,7 +131,7 @@ public:
 
   void freeNode(Node *node) {
     node->obj.~T();
-    this->free(node);
+    this->am_free(node);
   }
 
  private:

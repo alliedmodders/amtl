@@ -41,7 +41,7 @@ class FixedArray : public AllocPolicy
  public:
   FixedArray(size_t length, AllocPolicy = AllocPolicy()) {
     length_ = length;
-    data_ = (T *)this->malloc(sizeof(T) * length_);
+    data_ = (T *)this->am_malloc(sizeof(T) * length_);
     if (!data_)
       return;
 
@@ -51,7 +51,7 @@ class FixedArray : public AllocPolicy
   ~FixedArray() {
     for (size_t i = 0; i < length_; i++)
       data_[i].~T();
-    this->free(data_);
+    this->am_free(data_);
   }
 
   // This call may be skipped if the allocator policy is infallible.
