@@ -94,6 +94,9 @@ class Vector : public AllocPolicy
   // Shift all elements at the given position down, removing the given
   // element. This is a linear-time operation.
   void remove(size_t at) {
+    assert(at < length());
+    if (length() > 1)
+      data_[at].~T(); //Make sure value AT index we want to remove frees it's memory(if we got more then 1 value).
     for (size_t i = at; i < length() - 1; i++)
       data_[i] = ke::Move(data_[i + 1]);
     pop();
