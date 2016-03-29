@@ -28,6 +28,7 @@
 // POSSIBILITY OF SUCH DAMAGE.
 
 #include <am-vector.h>
+#include <amtl/am-refcounting.h>
 #include <assert.h>
 #include "runner.h"
 
@@ -306,6 +307,76 @@ class TestVector : public Test
     return true;
   }
 
+  bool testRemove()
+  {
+    class HeldThing {
+     public:
+      HeldThing()
+       : refcount(0)
+      {}
+      virtual ~HeldThing()
+      {}
+
+      void AddRef() {
+        refcount++;
+      }
+      void Release() {
+        if (--refcount == 0)
+          delete this;
+      }
+
+      uintptr_t refcount;
+    };
+
+    class WrappedThing {
+     public:
+      WrappedThing(HeldThing* thing)
+       : thing(thing)
+      {}
+      WrappedThing(WrappedThing&& other)
+       : thing(ke::Move(other.thing))
+      {}
+      WrappedThing& operator=(WrappedThing&& other) {
+        thing = ke::Move(other.thing);
+        return *this;
+      }
+
+      ke::RefPtr<HeldThing> thing;
+
+     private:
+      WrappedThing(const WrappedThing& other) = delete;
+      void operator =(const WrappedThing& other) = delete;
+    };
+
+    ke::RefPtr<HeldThing> thing1(new HeldThing);
+    ke::RefPtr<HeldThing> thing2(new HeldThing);
+
+    Vector<WrappedThing> things;
+    things.append(WrappedThing(thing1));
+    things.append(WrappedThing(thing2));
+
+    if (!check(thing1->refcount == 2, "thing1 refcount should be 2"))
+      return false;
+    if (!check(thing2->refcount == 2, "thing2 refcount should be 2"))
+      return false;
+
+    things.remove(0);
+
+    if (!check(thing1->refcount == 1, "thing1 refcount should be 1"))
+      return false;
+    if (!check(thing2->refcount == 2, "thing2 refcount should be 2"))
+      return false;
+
+    things.remove(0);
+
+    if (!check(thing1->refcount == 1, "thing1 refcount should be 1"))
+      return false;
+    if (!check(thing2->refcount == 1, "thing2 refcount should be 1"))
+      return false;
+
+    return true;
+  }
+
   bool Run() override
   {
     if (!testInts())
@@ -319,6 +390,8 @@ class TestVector : public Test
     if (!testMoveDuringInsert())
       return false;
     if (!testResize())
+      return false;
+    if (!testRemove())
       return false;
     return true;
   }
