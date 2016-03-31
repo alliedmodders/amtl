@@ -53,6 +53,45 @@ Swap(T &left, T &right)
   right = Move(tmp);
 }
 
+template <typename T> static inline bool
+LessThen(const T &value1, const T &value2) { return value1 < value2; }
+
+template <typename T> static inline bool
+GreaterThen(const T &value1, const T &value2) { return value1 > value2; }
+
+template <typename T, class FuncType> static inline void
+Sort(T *array, const size_t maxlength, FuncType comparer)
+{
+  size_t index = 0, lastIndex = 0;
+  bool reverse = false;
+
+  while (index < maxlength - 1)
+  {
+    T &value1 = array[index], &value2 = array[index + 1];
+
+    if (!comparer(value1, value2))
+    {
+      Swap(value1, value2);
+
+      if (!reverse && index != 0)
+      {
+        lastIndex = index;
+        reverse = true;
+      }
+    }
+    else if (reverse)
+    {
+      index = lastIndex;
+      reverse = false;
+    }
+
+    if (!reverse)
+      ++index;
+    else
+      --index;
+  }
+}
+
 } // namespace ke
 
 #endif // _include_amtl_algorithm_h_
