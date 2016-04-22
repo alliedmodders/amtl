@@ -1,13 +1,22 @@
+addons:
+  apt:
+    sources:
+      - ubuntu-toolchain-r-test
+    packages:
+      - lib32stdc++6
+      - lib32z1-dev
+      - libc6-dev-i386
+      - g++-multilib
+      - g++-4.8
+      - g++-4.7
 language: cpp
+sudo: false
 compiler:
   - clang
 before_script:
-  - sudo add-apt-repository ppa:ubuntu-toolchain-r/test -y
-  - sudo apt-get update -qq
-  - sudo apt-get install -y g++-multilib libc6-dev-i386 lib32stdc++6 lib32z1-dev
-  - sudo apt-get install g++-4.8 g++-4.7
   - CHECKOUT_DIR=$PWD && cd .. && $CHECKOUT_DIR/checkout-deps.sh && cd $CHECKOUT_DIR
 script:
+  - PATH="~/.local/bin:$PATH"
   - mkdir build-clang-opt && cd build-clang-opt
   - python ../configure.py --enable-optimize
   - ambuild
