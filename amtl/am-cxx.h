@@ -133,6 +133,10 @@
 # if _MSC_VER == 1800 && _MSC_FULL_VER == 180021114
 #  define KE_CXX_HAS_CONSTEXPR
 # endif
+# if _MSC_VER >= 1900
+#  define KE_CXX_HAS_CONSTEXPR
+#  define KE_CXX_HAS_NOEXCEPT
+# endif
 #else
 # error Unrecognized compiler.
 #endif
