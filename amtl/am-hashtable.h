@@ -82,7 +82,7 @@ namespace detail {
     bool removed() const {
       return hash_ == kRemovedHash;
     }
-    bool free() const {
+    bool isFree() const {
       return hash_ == kFreeHash;
     }
     bool isLive() const {
@@ -280,7 +280,7 @@ class HashTable : public AllocPolicy
 
     Entry *e = &table_[probulator.entry()];
     for (;;) {
-      if (e->free() || e->removed())
+      if (e->isFree() || e->removed())
         break;
       e = &table_[probulator.next()];
     }
@@ -295,7 +295,7 @@ class HashTable : public AllocPolicy
 
     Entry *e = &table_[probulator.entry()];
     for (;;) {
-      if (e->free())
+      if (e->isFree())
         break;
       if (e->isLive() &&
           e->sameHash(hash) &&
