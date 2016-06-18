@@ -2,10 +2,10 @@
 //
 // Copyright (C) 2013-2014, David Anderson and AlliedModders LLC
 // All rights reserved.
-// 
+//
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
-// 
+//
 //  * Redistributions of source code must retain the above copyright notice, this
 //    list of conditions and the following disclaimer.
 //  * Redistributions in binary form must reproduce the above copyright notice,
@@ -234,11 +234,15 @@ Log2(size_t number)
 {
   assert(number != 0);
 
+#ifdef __GNUC__
+  return 31 - __builtin_clz(number);
+#else
   size_t bit;
   asm("bsr %1, %0\n"
       : "=r" (bit)
       : "rm" (number));
   return bit;
+#endif
 }
 #endif
 
@@ -255,6 +259,8 @@ FindRightmostBit(size_t number)
     _BitScanForward64(&rval, number);
 # endif
     return rval;
+#elif __GNUC__
+    return __builtin_ctz(number);
 #else
     size_t bit;
     asm("bsf %1, %0\n"
