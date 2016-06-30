@@ -61,6 +61,23 @@ namespace ke {
 # define KE_POSIX
 #endif
 
+#if defined(__x86_64) ||   \
+    defined(__x86_64__) || \
+    defined(__amd64__) ||  \
+    defined(__amd64) ||    \
+    (defined(_MSC_VER) && defined(_M_X64))
+# define KE_ARCH_X64
+#elif defined(__i686) ||   \
+      defined(__i686__) || \
+      defined(__i386) ||   \
+      defined(__i386__) || \
+      defined(i386) ||     \
+      (defined(_MSC_VER) && defined(_M_IX86))
+# define KE_ARCH_X86
+#else
+# define KE_ARCH_UNKNOWN
+#endif
+
 } // ke
 
 #endif // _include_amtl_platform_h_
