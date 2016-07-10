@@ -92,6 +92,10 @@ namespace detail {
       assert(isLive());
       return t_;
     }
+    const T &payload() const {
+      assert(isLive());
+      return t_;
+    }
     bool sameHash(uint32_t hash) const {
       return hash_ == hash;
     }
@@ -136,7 +140,7 @@ class HashTable : public AllocPolicy
   static const uint32_t kMaxCapacity = INT_MAX / sizeof(Entry);
 
   template <typename Key>
-  uint32_t computeHash(const Key &key) {
+  uint32_t computeHash(const Key &key) const {
     // Multiply by golden ratio.
     uint32_t hash = HashPolicy::hash(key) * 0x9E3779B9;
     if (hash == Entry::kFreeHash || hash == Entry::kRemovedHash)
@@ -289,7 +293,7 @@ class HashTable : public AllocPolicy
   }
 
   template <typename Key>
-  Result lookup(const Key &key) {
+  Result lookup(const Key &key) const {
     uint32_t hash = computeHash(key);
     Probulator probulator(hash, capacity_);
 
@@ -405,7 +409,7 @@ class HashTable : public AllocPolicy
 
   // The Result object must not be used past mutating table operations.
   template <typename Key>
-  Result find(const Key &key) {
+  Result find(const Key &key) const {
     return lookup(key);
   }
 

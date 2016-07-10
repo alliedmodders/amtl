@@ -108,7 +108,7 @@ class HashMap : public AllocPolicy
   typedef typename Internal::iterator iterator;
 
   template <typename Lookup>
-  Result find(const Lookup &key) {
+  Result find(const Lookup &key) const {
     return table_.find(key);
   }
 
