@@ -35,12 +35,19 @@ class KEConfig(object):
         '-Werror',
       ]
       if cxx.name == 'gcc':
-        if cxx.version >= '4.7':
+        if cxx.version >= '4.9':
+          cfg.cxxflags += ['-std=c++14']
+        elif cxx.version >= '4.7':
           cfg.cxxflags += ['-std=c++11']
         elif cxx.version >= '4.3':
           cfg.cxxflags += ['-std=c++0x']
       else:
-        cfg.cxxflags += ['-std=c++11']
+        if cxx.version >= '3.5':
+          cfg.cxxflags += ['-std=c++14']
+        elif cxx.version >= '3.3':
+          cfg.cxxflags += ['-std=c++1y']
+        else:
+          cfg.cxxflags += ['-std=c++11']
 
       cfg.linkflags += ['-lpthread']
       if builder.target_platform != 'mac':

@@ -115,8 +115,8 @@ class ConditionVariable : public Lockable
 class Thread
 {
  public:
-  Thread(ke::Lambda<void()>&& callback, const char *name = nullptr) {
-    auto ptr = new ke::Lambda<void()>(ke::Move(callback));
+  Thread(ke::Function<void()>&& callback, const char *name = nullptr) {
+    auto ptr = new ke::Function<void()>(ke::Move(callback));
     thread_ = CreateThread(nullptr, 0, MainCallback, ptr, 0, nullptr);
     if (!thread_)
       delete ptr;

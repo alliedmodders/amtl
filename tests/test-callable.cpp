@@ -28,6 +28,7 @@
 // POSSIBILITY OF SUCH DAMAGE.
 
 #include <am-function.h>
+#include <am-vector.h>
 #include "runner.h"
 
 using namespace ke;
@@ -250,6 +251,22 @@ class TestCallable : public Test
     return true;
   }
 
+  bool testMoveUncopyable() {
+    Vector<int> v;
+
+    auto lambda = [v = Move(v)]() -> size_t {
+      return v.length();
+    };
+
+    v.append(10);
+    Function<size_t()> f = ke::Move(lambda);
+
+    if (!check(f() == 0, "f() should have returned 0"))
+      return false;
+
+    return true;
+  }
+
   bool Run() override
   {
     if (!testLambdaBasic())
@@ -259,6 +276,8 @@ class TestCallable : public Test
     if (!testMove())
       return false;
     if (!testFuncPtr())
+      return false;
+    if (!testMoveUncopyable())
       return false;
     return true;
   };
