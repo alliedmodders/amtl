@@ -154,7 +154,7 @@ iterator is abandoned. However, the table must stay alive for as long as the ite
 
 ### Functions and Lambdas (am-function.h)
 
-AMTL provides two replacements for `std::function`. The first, `ke::Lambda`, is roughly identical
+AMTL provides three replacements for `std::function`. The first, `ke::Lambda`, is roughly identical
 to `std::function` in that it represents any callable object of a given signature. It can hold a
 functor, C-style static function, a C++11-lambda, or any other callable object.
 
@@ -192,6 +192,18 @@ An example of how each is declared:
       return value;
     };
     FuncPtr<int()> callback2(&fn);
+
+Finally, AMTL provides a third variant, called Function. This version is similar to Lambda except
+that it does not provide any copy constructors. This is useful since, due to implementation reasons,
+Lambda cannot be used with C++14 move captures if the resulting type does not have a non-move copy
+constructor. For example,
+
+    Vector<int> v;
+    Function<void()> fn = [v = Move(v)]() -> void {};
+    Lambda<void()> fn = [v = Move(v)]() -> void {};
+
+The first capture, using `Function`, will succeed. The second, using `Lambda`, will fail, since
+`Lambda` does not support captures with no copy constructor.
 
 ### HashMap (am-hashmap.h)
 

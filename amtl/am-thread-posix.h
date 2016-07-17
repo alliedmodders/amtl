@@ -162,13 +162,13 @@ class ConditionVariable : public Lockable
 class Thread
 {
   struct ThreadData {
-    ke::Lambda<void()> callback;
+    ke::Function<void()> callback;
     char name[17];
   };
  public:
-  Thread(ke::Lambda<void()>&& callback, const char *name = nullptr) {
+  Thread(ke::Function<void()>&& callback, const char *name = nullptr) {
     ThreadData *data = new ThreadData;
-    data->callback = callback;
+    data->callback = ke::Move(callback);
     snprintf(data->name, sizeof(data->name), "%s", name ? name : "");
 
     initialized_ = (pthread_create(&thread_, nullptr, Main, data) == 0);

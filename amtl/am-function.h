@@ -38,48 +38,200 @@ namespace ke {
 
 namespace impl {
   template <typename ReturnType, typename ...ArgTypes>
-  class FuncHolderBase
+  class FunctionHolderBase
   {
    public:
-     virtual ~FuncHolderBase()
+     virtual ~FunctionHolderBase()
      {}
-     virtual ReturnType invoke(ArgTypes&&... argv) const = 0;
-     virtual FuncHolderBase<ReturnType, ArgTypes...>* clone(void* mem) const = 0;
-     virtual FuncHolderBase<ReturnType, ArgTypes...>* move(void* mem) = 0;
+     virtual ReturnType invoke(ArgTypes&&... argv) = 0;
+     virtual FunctionHolderBase<ReturnType, ArgTypes...>* move(void* mem) = 0;
   };
 
   template <typename T, typename ReturnType, typename ...ArgTypes>
-  class FuncHolder : public FuncHolderBase<ReturnType, ArgTypes...>
+  class FunctionHolder : public FunctionHolderBase<ReturnType, ArgTypes...>
   {
-    typedef FuncHolderBase<ReturnType, ArgTypes...> BaseType;
+    typedef FunctionHolderBase<ReturnType, ArgTypes...> BaseType;
 
    public:
-    FuncHolder(const FuncHolder& other)
-     : obj_(other.obj_)
-    {}
-    FuncHolder(FuncHolder&& other)
+    FunctionHolder(FunctionHolder&& other)
      : obj_(ke::Move(other.obj_))
     {}
-    FuncHolder(const T& obj)
-     : obj_(obj)
-    {}
-    FuncHolder(T&& obj)
+    FunctionHolder(T&& obj)
      : obj_(ke::Move(obj))
     {}
 
-    virtual ~FuncHolder()
+    virtual ~FunctionHolder() override
+    {}
+    virtual ReturnType invoke(ArgTypes&&... argv) override {
+      return obj_(ke::Forward<ArgTypes>(argv)...);
+    }
+    virtual BaseType* move(void* mem) override {
+      new (mem) FunctionHolder(ke::Move(*this));
+      return (BaseType*)mem;
+    }
+
+   private:
+    T obj_;
+  };
+
+  static const size_t kMinFunctionInlineBufferSize = sizeof(void*) * 3;
+} // namespace impl
+
+template <typename Tk>
+class Function;
+
+template <typename ReturnType, typename ...ArgTypes>
+class Function<ReturnType(ArgTypes...)>
+{
+  typedef impl::FunctionHolderBase<ReturnType, ArgTypes...> HolderType;
+
+ public:
+  Function()
+   : impl_(nullptr)
+  {}
+  Function(decltype(nullptr))
+   : impl_(nullptr)
+  {}
+  Function(Function&& other) {
+    move(ke::Forward<Function>(other));
+  }
+
+  template <typename T>
+  Function(T&& obj) {
+    assign(ke::Forward<T>(obj));
+  }
+
+  ~Function() {
+    destroy();
+  }
+
+  Function& operator =(decltype(nullptr)) {
+    destroy();
+    impl_ = nullptr;
+    return *this;
+  }
+  Function& operator =(Function&& other) {
+    destroy();
+    move(ke::Move(other));
+    return *this;
+  }
+
+  template <typename T>
+  Function& operator =(T&& other) {
+    destroy();
+    assign(ke::Forward<T>(other));
+    return *this;
+  }
+
+  explicit operator bool() const {
+    return !!impl_;
+  }
+
+  ReturnType operator()(ArgTypes... argv) const {
+    assert(impl_);
+    return impl_->invoke(ke::Forward<ArgTypes>(argv)...);
+  }
+
+  bool usingInlineStorage() const {
+    return (void *)impl_ == &buffer_;
+  }
+
+ private:
+  void destroy() {
+    if (!impl_)
+      return;
+
+    if (usingInlineStorage())
+      impl_->~HolderType();
+    else
+      delete impl_;
+  }
+  void zap() {
+    destroy();
+    impl_ = nullptr;
+  }
+
+  void* inline_buffer() {
+    return &buffer_;
+  }
+
+  void move(Function&& other) {
+    if (!other) {
+      impl_ = nullptr;
+    } else if (other.usingInlineStorage()) {
+      impl_ = other.impl_->move(inline_buffer());
+      other.zap();
+    } else {
+      impl_ = other.impl_;
+      other.impl_ = nullptr;
+    }
+  }
+
+  template <typename T>
+  void assign(T&& obj) {
+    typedef typename ke::decay<T>::type CallableType;
+    typedef impl::FunctionHolder<CallableType, ReturnType, ArgTypes...> ImplType;
+
+    if (sizeof(ImplType) <= sizeof(buffer_)) {
+      impl_ = reinterpret_cast<ImplType*>(inline_buffer());
+      new (inline_buffer()) ImplType(ke::Forward<T>(obj));
+    } else {
+      impl_ = new ImplType(ke::Forward<T>(obj));
+    }
+  }
+
+ private:
+  HolderType* impl_;
+  union {
+    double alignment_;
+    char alias_[impl::kMinFunctionInlineBufferSize];
+  } buffer_;
+};
+
+namespace impl {
+  template <typename ReturnType, typename ...ArgTypes>
+  class LambdaHolderBase
+  {
+   public:
+     virtual ~LambdaHolderBase()
+     {}
+     virtual ReturnType invoke(ArgTypes&&... argv) const = 0;
+     virtual LambdaHolderBase<ReturnType, ArgTypes...>* clone(void* mem) const = 0;
+     virtual LambdaHolderBase<ReturnType, ArgTypes...>* move(void* mem) = 0;
+  };
+
+  template <typename T, typename ReturnType, typename ...ArgTypes>
+  class LambdaHolder : public LambdaHolderBase<ReturnType, ArgTypes...>
+  {
+    typedef LambdaHolderBase<ReturnType, ArgTypes...> BaseType;
+
+   public:
+    LambdaHolder(const LambdaHolder& other)
+     : obj_(other.obj_)
+    {}
+    LambdaHolder(LambdaHolder&& other)
+     : obj_(ke::Move(other.obj_))
+    {}
+    LambdaHolder(const T& obj)
+     : obj_(obj)
+    {}
+    LambdaHolder(T&& obj)
+     : obj_(ke::Move(obj))
+    {}
+
+    virtual ~LambdaHolder()
     {}
     virtual ReturnType invoke(ArgTypes&&... argv) const override {
       return obj_(ke::Forward<ArgTypes>(argv)...);
     }
     virtual BaseType* clone(void* mem) const override {
        if (!mem)
-         return new FuncHolder(*this);
-       new (mem) FuncHolder(*this);
+         return new LambdaHolder(*this);
+       new (mem) LambdaHolder(*this);
        return (BaseType*)mem;
     }
     virtual BaseType* move(void* mem) override {
-      new (mem) FuncHolder(ke::Move(*this));
+      new (mem) LambdaHolder(ke::Move(*this));
       return (BaseType*)mem;
     }
 
@@ -96,7 +248,7 @@ class Lambda;
 template <typename ReturnType, typename ...ArgTypes>
 class Lambda<ReturnType(ArgTypes...)>
 {
-  typedef impl::FuncHolderBase<ReturnType, ArgTypes...> HolderType;
+  typedef impl::LambdaHolderBase<ReturnType, ArgTypes...> HolderType;
 
  public:
   Lambda()
@@ -200,7 +352,7 @@ class Lambda<ReturnType(ArgTypes...)>
   template <typename T>
   void assign(T&& obj) {
     typedef typename ke::decay<T>::type CallableType;
-    typedef impl::FuncHolder<CallableType, ReturnType, ArgTypes...> ImplType;
+    typedef impl::LambdaHolder<CallableType, ReturnType, ArgTypes...> ImplType;
 
     if (sizeof(ImplType) <= sizeof(buffer_)) {
       impl_ = reinterpret_cast<ImplType*>(inline_buffer());
