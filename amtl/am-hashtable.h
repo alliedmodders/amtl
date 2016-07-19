@@ -128,7 +128,7 @@ namespace detail {
 // Note that the table is not usable until init() has been called.
 //
 template <typename HashPolicy, typename AllocPolicy = SystemAllocatorPolicy>
-class HashTable : public AllocPolicy
+class HashTable : private AllocPolicy
 {
   friend class iterator;
 
@@ -370,7 +370,7 @@ class HashTable : public AllocPolicy
   }
 
  public:
-  HashTable(AllocPolicy ap = AllocPolicy())
+  explicit HashTable(AllocPolicy ap = AllocPolicy())
   : AllocPolicy(ap),
     capacity_(0),
     nelements_(0),

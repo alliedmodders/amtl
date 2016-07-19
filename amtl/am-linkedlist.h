@@ -47,7 +47,7 @@ namespace ke {
 // exactly one T. If T is very large, LinkedList should be allocated on the
 // heap, to avoid using the stack.
 template <class T, class AllocPolicy = SystemAllocatorPolicy>
-class LinkedList : public AllocPolicy
+class LinkedList : private AllocPolicy
 {
  public:
   friend class iterator;
@@ -60,7 +60,7 @@ class LinkedList : public AllocPolicy
   };
 
 public:
-  LinkedList(AllocPolicy = AllocPolicy())
+  explicit LinkedList(AllocPolicy = AllocPolicy())
    : length_(0)
   {
     head()->prev = head();
@@ -82,6 +82,13 @@ public:
 
   size_t length() const {
     return length_;
+  }
+
+  AllocPolicy& allocPolicy() {
+    return *this;
+  }
+  const AllocPolicy& allocPolicy() const {
+    return *this;
   }
 
   void clear() {
@@ -278,8 +285,8 @@ public:
  private:
   // These are disallowed because they basically violate the failure handling
   // model for AllocPolicies and are also likely to have abysmal performance.
-  LinkedList &operator =(const LinkedList<T> &other) = delete;
-  LinkedList(const LinkedList<T> &other) = delete;
+  LinkedList &operator =(const LinkedList &other) = delete;
+  LinkedList(const LinkedList &other) = delete;
 };
 
 } // namespace ke

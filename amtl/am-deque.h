@@ -40,12 +40,12 @@
 namespace ke {
 
 template <typename T, typename AllocPolicy = SystemAllocatorPolicy>
-class Deque : public AllocPolicy
+class Deque : private AllocPolicy
 {
   static const size_t kInvalidIndex = ~size_t(0);
 
  public:
-  Deque(AllocPolicy = AllocPolicy())
+  explicit Deque(AllocPolicy = AllocPolicy())
    : buffer_(NULL),
      maxlength_(0),
      first_(0),
@@ -53,7 +53,8 @@ class Deque : public AllocPolicy
   {
   }
   Deque(Deque &&other)
-   : buffer_(other.buffer_),
+   : AllocPolicy(Move(other)),
+     buffer_(other.buffer_),
      maxlength_(other.maxlength_),
      first_(other.first_),
      last_(other.last_)
@@ -159,8 +160,8 @@ class Deque : public AllocPolicy
   }
 
  private:
-  Deque(const Deque<T> &other) = delete;
-  Deque &operator =(const Deque<T> &other) = delete;
+  Deque(const Deque &other) = delete;
+  Deque &operator =(const Deque &other) = delete;
 
   // Return the next value of first_.
   size_t ensureCanPrepend() {
