@@ -30,6 +30,8 @@
 #ifndef _include_amtl_storagebuffer_h_
 #define _include_amtl_storagebuffer_h_
 
+#include <stdint.h>
+
 namespace ke {
 
 // StorageBuffer allows storage of objects where calling a destructor is

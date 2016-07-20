@@ -33,8 +33,9 @@
 #include <new>
 #include <stdlib.h>
 #include <amtl/am-allocator-policies.h>
-#include <amtl/am-utility.h>
 #include <amtl/am-moveable.h>
+#include <amtl/am-storagebuffer.h>
+#include <amtl/am-utility.h>
 
 namespace ke {
 
