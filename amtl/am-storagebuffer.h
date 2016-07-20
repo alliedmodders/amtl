@@ -2,10 +2,10 @@
 //
 // Copyright (C) 2013-2014, David Anderson and AlliedModders LLC
 // All rights reserved.
-// 
+//
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
-// 
+//
 //  * Redistributions of source code must retain the above copyright notice, this
 //    list of conditions and the following disclaimer.
 //  * Redistributions in binary form must reproduce the above copyright notice,
@@ -26,101 +26,32 @@
 // CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
 // ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 // POSSIBILITY OF SUCH DAMAGE.
-#ifndef _include_amtl_maybe_h_
-#define _include_amtl_maybe_h_
 
-#include <amtl/am-moveable.h>
-#include <amtl/am-storagebuffer.h>
-#include <assert.h>
+#ifndef _include_amtl_storagebuffer_h_
+#define _include_amtl_storagebuffer_h_
 
 namespace ke {
 
+// StorageBuffer allows storage of objects where calling a destructor is
+// undesirable or impossible (for example, members in unions).
 template <typename T>
-class Maybe
+class StorageBuffer
 {
  public:
-  Maybe()
-   : initialized_(false)
-  {}
-  Maybe(const Maybe& other)
-   : initialized_(false)
-  {
-    copyFrom(other);
+  T *address() {
+    return reinterpret_cast<T *>(buffer_);
   }
-  Maybe(Maybe&& other)
-   : initialized_(false)
-  {
-    moveFrom(ke::Move(other));
-  }
-
-  ~Maybe() {
-    if (isValid())
-      t_.address()->~T();
-  }
-
-  template <typename ... ArgTypes>
-  void init(ArgTypes&&... argv) {
-    if (isValid())
-      t_.address()->~T();
-
-    new (t_.address()) T(Forward<ArgTypes>(argv)...);
-    initialized_ = true;
-  }
-
-  bool isValid() const {
-    return initialized_;
-  }
-
-  T& operator ->() {
-    assert(isValid());
-    return t_.address();
-  }
-  T& operator *() {
-    assert(isValid());
-    return *t_.address();
-  }
-  const T& operator ->() const {
-    assert(isValid());
-    return t_.address();
-  }
-  const T& operator *() const {
-    assert(isValid());
-    return *t_.address();
-  }
-
-  explicit operator bool() const {
-    return isValid();
-  }
-
-  Maybe& operator =(const Maybe& other) {
-    initialized_ = false;
-    copyFrom(other);
-    return *this;
-  }
-  Maybe& operator =(Maybe&& other) {
-    initialized_ = false;
-    moveFrom(ke::Move(other));
-    return *this;
+  const T *address() const {
+    return reinterpret_cast<const T *>(buffer_);
   }
 
  private:
-  void copyFrom(const Maybe& other) {
-    if (other.initialized_) {
-      init(*other.t_.address());
-    }
-  }
-  void moveFrom(Maybe&& other) {
-    if (other.initialized_) {
-      init(ke::Move(*other.t_.address()));
-      other.initialized_ = false;
-    }
-  }
-
- private:
-  bool initialized_;
-  StorageBuffer<T> t_;
+  union {
+    char buffer_[sizeof(T)];
+    uint64_t aligned_;
+  };
 };
 
 } // namespace ke
 
-#endif // _include_amtl_maybe_h_
+#endif // _include_amtl_storagebuffer_h_
