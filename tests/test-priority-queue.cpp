@@ -1,6 +1,6 @@
 // vim: set sts=8 ts=2 sw=2 tw=99 et:
 //
-// Copyright (C) 2013-2014, David Anderson and AlliedModders LLC
+// Copyright (C) 2013, David Anderson and AlliedModders LLC
 // All rights reserved.
 // 
 // Redistribution and use in source and binary forms, with or without
@@ -26,49 +26,54 @@
 // CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
 // ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 // POSSIBILITY OF SUCH DAMAGE.
-#ifndef _include_amtl_algorithm_h_
-#define _include_amtl_algorithm_h_
 
-#include <amtl/am-moveable.h>
+#include <amtl/am-priority-queue.h>
+#include <assert.h>
+#include "runner.h"
 
-namespace ke {
+using namespace ke;
 
-template <typename T> static inline T
-Min(const T &t1, const T &t2)
+class TestPriorityQueue : public Test
 {
-    return t1 < t2 ? t1 : t2;
-}
-
-template <typename T> static inline T
-Max(const T &t1, const T &t2)
-{
-    return t1 > t2 ? t1 : t2;
-}
-
-template <typename T> static inline void
-Swap(T &left, T &right)
-{
-  T tmp(Move(left));
-  left = Move(right);
-  right = Move(tmp);
-}
-
-template <typename T>
-struct LessThan
-{
-  constexpr bool operator ()(const T& left, const T& right) const {
-    return left < right;
+ public:
+  TestPriorityQueue()
+   : Test("PriorityQueue")
+  {
   }
-};
 
-template <typename T>
-struct GreaterThan
-{
-  constexpr bool operator ()(const T& left, const T& right) const {
-    return left > right;
+  bool testBasic()
+  {
+    PriorityQueue<int> pq;
+    pq.add(16);
+    pq.add(16);
+    pq.add(16);
+    pq.add(9);
+    pq.add(77);
+    pq.add(3);
+
+    if (!check(pq.popCopy() == 3, "should pop 3"))
+      return false;
+    if (!check(pq.popCopy() == 9, "should pop 9"))
+      return false;
+    if (!check(pq.popCopy() == 16, "should pop 16"))
+      return false;
+    if (!check(pq.popCopy() == 16, "should pop 16"))
+      return false;
+    if (!check(pq.popCopy() == 16, "should pop 16"))
+      return false;
+    if (!check(pq.popCopy() == 77, "should pop 77"))
+      return false;
+    if (!check(pq.empty(), "should be empty"))
+      return false;
+
+    return true;
   }
-};
 
-} // namespace ke
+  bool Run() override
+  {
+    if (!testBasic())
+      return false;
+    return true;
+  }
+} sTestPriorityQueue;
 
-#endif // _include_amtl_algorithm_h_
