@@ -43,6 +43,7 @@ binary.sources += [
   'test-threadutils.cpp',
   'test-deque.cpp',
   'test-system.cpp',
+  'test-priority-queue.cpp',
 ]
 
 builder.Add(binary)
