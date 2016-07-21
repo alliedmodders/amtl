@@ -49,7 +49,7 @@ template <typename K,
           typename V,
           typename HashPolicy,
           typename AllocPolicy = SystemAllocatorPolicy>
-class HashMap : public AllocPolicy
+class HashMap : private AllocPolicy
 {
  private:
   struct Entry
@@ -93,8 +93,8 @@ class HashMap : public AllocPolicy
   typedef HashTable<Policy, AllocPolicy> Internal;
 
  public:
-  HashMap(AllocPolicy ap = AllocPolicy())
-    : table_(ap)
+  explicit HashMap(AllocPolicy ap = AllocPolicy())
+   : table_(ap)
   {
   }
 

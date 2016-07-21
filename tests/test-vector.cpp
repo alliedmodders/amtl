@@ -255,13 +255,13 @@ class TestVector : public Test
   bool testFallibleMalloc()
   {
     Vector<int, FallibleMalloc> vector;
-    vector.setOutOfMemory(true);
+    vector.allocPolicy().setOutOfMemory(true);
     if (!check(!vector.append(7), "vector handled out-of-memory"))
       return false;
-    vector.setOutOfMemory(false);
+    vector.allocPolicy().setOutOfMemory(false);
     if (!check(vector.append(8), "vector recovered out-of-memory"))
       return false;
-    if (!check(vector.ooms() == 1, "vector received 1 oom"))
+    if (!check(vector.allocPolicy().ooms() == 1, "vector received 1 oom"))
       return false;
     return true;
   }

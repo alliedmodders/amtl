@@ -36,7 +36,7 @@
 namespace ke {
 
 template <typename T, typename AllocPolicy = SystemAllocatorPolicy>
-class FixedArray : public AllocPolicy
+class FixedArray : private AllocPolicy
 {
  public:
   FixedArray(size_t length, AllocPolicy = AllocPolicy()) {

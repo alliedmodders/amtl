@@ -254,13 +254,13 @@ class TestLinkedList : public Test
     LinkedList<int, FallibleMalloc> list;
     list.append(5);
     list.append(6);
-    list.setOutOfMemory(true);
+    list.allocPolicy().setOutOfMemory(true);
     if (!check(!list.append(7), "list handled out-of-memory"))
       return false;
-    list.setOutOfMemory(false);
+    list.allocPolicy().setOutOfMemory(false);
     if (!check(list.append(8), "list recovered out-of-memory"))
       return false;
-    if (!check(list.ooms() == 1, "list received 1 oom"))
+    if (!check(list.allocPolicy().ooms() == 1, "list received 1 oom"))
       return false;
     return true;
   }
