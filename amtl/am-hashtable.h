@@ -34,7 +34,7 @@
 #include <limits.h>
 #include <stdlib.h>
 #include "amtl/am-allocator-policies.h"
-#include "amtl/am-utility.h"
+#include "amtl/am-bits.h"
 #include "amtl/am-moveable.h"
 
 namespace ke {

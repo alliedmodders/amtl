@@ -30,8 +30,11 @@
 #ifndef _include_amtl_refcounting_h_
 #define _include_amtl_refcounting_h_
 
-#include <amtl/am-utility.h>
+#include <assert.h>
+#include <stddef.h>
+#include <stdint.h>
 #include <amtl/am-moveable.h>
+#include <amtl/am-raii.h>
 
 namespace ke {
 
@@ -110,7 +113,7 @@ AdoptRef(T *t)
 // invoking Release() on a newly allocated object is illegal. Newborn objects
 // must either be assigned to a RefPtr or must be deleted using |delete|.
 template <typename T>
-class KE_LINK Refcounted
+class Refcounted
 {
   public:
     Refcounted()
@@ -145,7 +148,7 @@ class KE_LINK Refcounted
    }
 
 // This can be used for classes which will inherit from VirtualRefcounted.
-class KE_LINK IRefcounted
+class IRefcounted
 {
  public:
   virtual ~IRefcounted() {}
@@ -155,7 +158,7 @@ class KE_LINK IRefcounted
 
 // Classes may be multiply-inherited may wish to derive from this Refcounted
 // instead.
-class KE_LINK VirtualRefcounted : public IRefcounted
+class VirtualRefcounted : public IRefcounted
 {
  public:
   VirtualRefcounted() : refcount_(0)

@@ -30,9 +30,9 @@
 #ifndef _INCLUDE_KEIMA_TPL_SHARED_PTR__H_
 #define _INCLUDE_KEIMA_TPL_SHARED_PTR__H_
 
+#include <amtl/am-autoptr.h>
 #include <amtl/am-moveable.h>
 #include <amtl/am-refcounting.h>
-#include <amtl/am-utility.h>
 
 namespace ke {
 

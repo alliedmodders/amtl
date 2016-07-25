@@ -31,7 +31,10 @@
 #define _include_amtl_thread_local_h_
 
 #include <amtl/am-thread-utils.h>
+#include <stddef.h>
+#include <stdint.h>
 #include <stdio.h>
+#include <stdlib.h>
 
 namespace ke {
 

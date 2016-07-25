@@ -32,9 +32,9 @@
 #include <new>
 #include <stdlib.h>
 #include <assert.h>
-#include <amtl/am-cxx.h>
 #include <amtl/am-allocator-policies.h>
-#include <amtl/am-utility.h>
+#include <amtl/am-bits.h>
+#include <amtl/am-cxx.h>
 #include <amtl/am-moveable.h>
 
 namespace ke {
