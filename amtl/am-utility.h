@@ -198,8 +198,7 @@ class AutoArray
 template <typename T>
 static uint32_t Log2(T value);
 
-template <>
-static inline uint32_t
+template <> inline uint32_t
 Log2<uint32_t>(uint32_t number)
 {
   assert(number != 0);
@@ -209,8 +208,7 @@ Log2<uint32_t>(uint32_t number)
   return rval;
 }
 
-template <>
-static inline uint32_t
+template <> inline uint32_t
 Log2<uint64_t>(uint64_t number)
 {
   assert(number != 0);

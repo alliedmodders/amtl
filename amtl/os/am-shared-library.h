@@ -98,7 +98,7 @@ class SharedLib : public Refcounted<SharedLib>
 
   void* lookup(const char* symbol) {
 #if defined(KE_WINDOWS)
-    return GetProcAddress(lib_, symbol);
+    return reinterpret_cast<void*>(GetProcAddress(lib_, symbol));
 #else
     return dlsym(lib_, symbol);
 #endif

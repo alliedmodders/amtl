@@ -18,40 +18,42 @@ class KEConfig(object):
       raise Exception('AMTL requires Visual Studio 2010 (CL 16.00) or higher.')
 
     if cxx.like('gcc'):
-      std = getattr(builder.options, 'std', None)
-      if std is not None:
-          cfg.cxxflags += ['-std={0}'.format(std)]
-      cfg.defines += [
-        'stricmp=strcasecmp',
-        '_stricmp=strcasecmp',
-        '_snprintf=snprintf',
-        '_vsnprintf=vsnprintf',
-        'HAVE_STDINT_H',
-        'GNUC',
-      ]
+      if builder.target_platform != 'windows':
+        if cxx.name == 'gcc':
+          if cxx.version >= '4.9':
+            cfg.cxxflags += ['-std=c++14']
+          elif cxx.version >= '4.7':
+            cfg.cxxflags += ['-std=c++11']
+          elif cxx.version >= '4.3':
+            cfg.cxxflags += ['-std=c++0x']
+        else:
+          if cxx.version >= '3.5':
+            cfg.cxxflags += ['-std=c++14']
+          elif cxx.version >= '3.3':
+            cfg.cxxflags += ['-std=c++1y']
+          else:
+            cfg.cxxflags += ['-std=c++11']
+
+        cfg.defines += [
+          'stricmp=strcasecmp',
+          '_stricmp=strcasecmp',
+          '_snprintf=snprintf',
+          '_vsnprintf=vsnprintf',
+        ]
+        cfg.linkflags += ['-lpthread']
+        if builder.target_platform != 'mac':
+          cfg.linkflags += ['-lrt']
+      else:
+        cfg.cxxflags += [
+          '-std=c++14',
+          '-fms-compatibility-version=19',
+        ]
+
       cfg.cflags += [
         '-pipe',
         '-Wall',
         '-Werror',
       ]
-      if cxx.name == 'gcc':
-        if cxx.version >= '4.9':
-          cfg.cxxflags += ['-std=c++14']
-        elif cxx.version >= '4.7':
-          cfg.cxxflags += ['-std=c++11']
-        elif cxx.version >= '4.3':
-          cfg.cxxflags += ['-std=c++0x']
-      else:
-        if cxx.version >= '3.5':
-          cfg.cxxflags += ['-std=c++14']
-        elif cxx.version >= '3.3':
-          cfg.cxxflags += ['-std=c++1y']
-        else:
-          cfg.cxxflags += ['-std=c++11']
-
-      cfg.linkflags += ['-lpthread']
-      if builder.target_platform != 'mac':
-        cfg.linkflags += ['-lrt']
 
       have_gcc = cxx.name == 'gcc'
       have_clang = cxx.name == 'clang'

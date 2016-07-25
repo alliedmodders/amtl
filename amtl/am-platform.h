@@ -78,6 +78,20 @@ namespace ke {
 # define KE_ARCH_UNKNOWN
 #endif
 
+// Create macros that exactly match the compiler - peeking past any tricks
+// vendors play for interoperability.
+#if defined(__clang__)
+# define KE_CXX_CLANG
+#elif defined(__GNUC__)
+# define KE_CXX_GCC
+#elif defined(_MSC_VER)
+# define KE_CXX_MSVC
+#endif
+
+#if defined(KE_CXX_CLANG) || defined(KE_CXX_GCC)
+# define KE_CXX_LIKE_GCC
+#endif
+
 } // ke
 
 #endif // _include_amtl_platform_h_

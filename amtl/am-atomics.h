@@ -31,10 +31,11 @@
 #define _include_amtl_atomics_h_
 
 #include <amtl/am-utility.h>
+#include <amtl/am-platform.h>
 
 namespace ke {
 
-#if defined(_MSC_VER)
+#if defined(KE_CXX_MSVC)
 extern "C" {
   long __cdecl _InterlockedIncrement(long volatile *dest);
   long __cdecl _InterlockedDecrement(long volatile *dest);
@@ -69,7 +70,7 @@ extern "C" {
 # endif
 #endif
 
-#if defined(__GNUC__)
+#if defined(KE_CXX_LIKE_GCC)
 # if defined(i386) || defined(__x86_64__)
 #  if defined(__clang__)
     static inline void YieldProcessor() { asm("pause"); }
@@ -89,7 +90,7 @@ extern "C" {
 # endif
 #endif
 
-#if defined(_MSC_VER)
+#if defined(KE_CXX_MSVC)
 static inline void *
 CompareAndSwapPtr(void *volatile *Destination, void *Exchange, void *Comparand)
 {
@@ -109,7 +110,7 @@ struct AtomicOps;
 template <>
 struct AtomicOps<4>
 {
-#if defined(_MSC_VER)
+#if defined(KE_CXX_MSVC)
   typedef volatile long Type;
 
   static Type Increment(Type *ptr) {
@@ -118,7 +119,7 @@ struct AtomicOps<4>
   static Type Decrement(Type *ptr) {
     return _InterlockedDecrement(ptr);
   };
-#elif defined(__GNUC__)
+#elif defined(KE_CXX_LIKE_GCC)
   typedef volatile int Type;
 
   // x86/x64 notes: When using GCC < 4.8, this will compile to a spinlock.
@@ -136,7 +137,7 @@ struct AtomicOps<4>
 template <>
 struct AtomicOps<8>
 {
-#if defined(_MSC_VER)
+#if defined(KE_CXX_MSVC)
   typedef volatile long long Type;
 
   static Type Increment(Type *ptr) {
@@ -145,7 +146,7 @@ struct AtomicOps<8>
   static Type Decrement(Type *ptr) {
     return _InterlockedDecrement64(ptr);
   };
-#elif defined(__GNUC__)
+#elif defined(KE_CXX_LIKE_GCC)
   typedef volatile int64_t Type;
 
   // x86/x64 notes: When using GCC < 4.8, this will compile to a spinlock.
