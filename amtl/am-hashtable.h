@@ -464,6 +464,13 @@ class HashTable : private AllocPolicy
     nelements_ = 0;
   }
 
+  AllocPolicy& allocPolicy() {
+    return *this;
+  }
+  const AllocPolicy& allocPolicy() const {
+    return *this;
+  }
+
   size_t elements() const {
     return nelements_;
   }

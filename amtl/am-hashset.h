@@ -142,6 +142,13 @@ class HashSet : private AllocPolicy
       table_.add(p, ke::Forward<UK>(key));
   }
 
+  AllocPolicy& allocPolicy() {
+    return *this;
+  }
+  const AllocPolicy& allocPolicy() const {
+    return *this;
+  }
+
  private:
   Internal table_;
 };

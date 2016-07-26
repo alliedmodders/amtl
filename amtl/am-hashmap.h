@@ -162,6 +162,13 @@ class HashMap : private AllocPolicy
     return table_.estimateMemoryUse();
   }
 
+  AllocPolicy& allocPolicy() {
+    return *this;
+  }
+  const AllocPolicy& allocPolicy() const {
+    return *this;
+  }
+
  private:
   Internal table_;
 };
