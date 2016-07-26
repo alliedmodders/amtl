@@ -31,6 +31,9 @@
 #define _include_amtl_string_h_
 
 #define __STDC_FORMAT_MACROS
+#if !defined(KE_WINDOWS)
+# include <inttypes.h>
+#endif
 #include <amtl/am-autoptr.h>
 #include <amtl/am-cxx.h>
 #include <amtl/am-moveable.h>
@@ -40,9 +43,6 @@
 #include <string.h>
 #include <stdarg.h>
 #include <stdint.h>
-#if !defined(KE_WINDOWS)
-# include <inttypes.h>
-#endif
 
 namespace ke {
 
@@ -192,11 +192,11 @@ SafeStrcpy(char* dest, size_t maxlength, const char* src)
   return iter - dest;
 }
 
-#if defined(_MSC_VER)
+#if defined(KE_WINDOWS)
 # define KE_FMT_SIZET           "Iu"
 # define KE_FMT_I64             "I64d"
 # define KE_FMT_U64             "I64u"
-#elif defined(__GNUC__)
+#elif defined(KE_POSIX)
 # define KE_FMT_SIZET           "zu"
 # define KE_FMT_I64             PRId64
 # define KE_FMT_U64             PRIu64

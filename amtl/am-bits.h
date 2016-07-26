@@ -35,8 +35,6 @@
 #include <stdint.h>
 #if defined(_MSC_VER)
 # include <intrin.h>
-#else
-# include <inttypes.h>
 #endif
 #include <amtl/am-cxx.h>
 #include <amtl/am-platform.h>
