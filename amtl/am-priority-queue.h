@@ -31,6 +31,7 @@
 #define _include_amtl_am_priority_queue_h_
 
 #include <amtl/am-algorithm.h>
+#include <amtl/am-cxx.h>
 #include <amtl/am-moveable.h>
 #include <amtl/am-vector.h>
 
@@ -122,16 +123,16 @@ class PriorityQueue final
     }
   }
 
-  static constexpr size_t parentOf(size_t at) {
+  static KE_CONSTEXPR size_t parentOf(size_t at) {
 #if __cplusplus >= 201402L
     assert(at > 0);
 #endif
     return (at - 1) / 2;
   }
-  static constexpr size_t leftChildOf(size_t at) {
+  static KE_CONSTEXPR size_t leftChildOf(size_t at) {
     return (at * 2) + 1;
   }
-  static constexpr size_t rightChildOf(size_t at) {
+  static KE_CONSTEXPR size_t rightChildOf(size_t at) {
     return (at * 2) + 2;
   }
 
