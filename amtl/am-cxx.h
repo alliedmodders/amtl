@@ -84,6 +84,9 @@
 # if KE_CLANG_AT_LEAST(3, 1)
 #  define KE_CXX_HAS_CONSTEXPR
 # endif
+# if KE_CLANG_AT_LEAST(3, 4)
+#  define KE_CXX_HAS_GENERIC_LAMBDA_CAPTURES
+# endif
 
 #elif defined(__GNUC__)
 # define KE_GCC_AT_LEAST(x, y) ((__GNUC__ > (x)) || (__GNUC__ == x && __GNUC_MINOR__ >= y))
@@ -112,6 +115,9 @@
 # if KE_GCC_AT_LEAST(4, 7)
 #  define KE_CXX_HAS_OVERRIDE
 # endif
+# if KE_GCC_AT_LEAST(4, 9)
+#  define KE_CXX_HAS_GENERIC_LAMBDA_CAPTURES
+# endif
 
 #elif defined(_MSC_VER)
 # if _MSC_VER >= 1600
@@ -136,6 +142,7 @@
 # if _MSC_VER >= 1900
 #  define KE_CXX_HAS_CONSTEXPR
 #  define KE_CXX_HAS_NOEXCEPT
+#  define KE_CXX_HAS_GENERIC_LAMBDA_CAPTURES
 # endif
 #else
 # error Unrecognized compiler.

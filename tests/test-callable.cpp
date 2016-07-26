@@ -252,6 +252,7 @@ class TestCallable : public Test
   }
 
   bool testMoveUncopyable() {
+#if defined(KE_CXX_HAS_GENERIC_LAMBDA_CAPTURES)
     Vector<int> v;
 
     auto lambda = [v = Move(v)]() -> size_t {
@@ -263,6 +264,7 @@ class TestCallable : public Test
 
     if (!check(f() == 0, "f() should have returned 0"))
       return false;
+#endif
 
     return true;
   }
