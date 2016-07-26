@@ -39,7 +39,7 @@
 namespace ke {
 
 template <typename T, typename AllocPolicy = SystemAllocatorPolicy>
-class Vector final : private AllocPolicy
+class Vector : private AllocPolicy
 {
  public:
   explicit Vector(AllocPolicy = AllocPolicy())
