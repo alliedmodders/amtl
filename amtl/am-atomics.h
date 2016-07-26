@@ -31,6 +31,7 @@
 #define _include_amtl_atomics_h_
 
 #include <amtl/am-platform.h>
+#include <stdint.h>
 
 namespace ke {
 
