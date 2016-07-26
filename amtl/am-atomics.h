@@ -30,7 +30,6 @@
 #ifndef _include_amtl_atomics_h_
 #define _include_amtl_atomics_h_
 
-#include <amtl/am-utility.h>
 #include <amtl/am-platform.h>
 
 namespace ke {
@@ -161,7 +160,7 @@ struct AtomicOps<8>
 #endif
 };
 
-class KE_LINK AtomicRefcount
+class AtomicRefcount
 {
   typedef AtomicOps<sizeof(uintptr_t)> Ops;
 

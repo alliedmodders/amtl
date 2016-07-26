@@ -30,8 +30,9 @@
 #ifndef _include_amtl_ts_refcounting_h_
 #define _include_amtl_ts_refcounting_h_
 
-#include <amtl/am-refcounting.h>
 #include <amtl/am-atomics.h>
+#include <amtl/am-bits.h>
+#include <amtl/am-refcounting.h>
 
 namespace ke {
 
@@ -39,7 +40,7 @@ namespace ke {
 // identical, except changing the reference count is guaranteed to be atomic
 // with respect to other threads changing the reference count.
 template <typename T>
-class KE_LINK RefcountedThreadsafe
+class RefcountedThreadsafe
 {
   public:
     RefcountedThreadsafe()

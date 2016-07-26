@@ -30,9 +30,10 @@
 #ifndef _include_amtl_string_h_
 #define _include_amtl_string_h_
 
-#include <amtl/am-platform.h>
-#include <amtl/am-utility.h>
+#define __STDC_FORMAT_MACROS
+#include <amtl/am-autoptr.h>
 #include <amtl/am-moveable.h>
+#include <amtl/am-platform.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -185,6 +186,18 @@ SafeStrcpy(char* dest, size_t maxlength, const char* src)
 
   return iter - dest;
 }
+
+#if defined(_MSC_VER)
+# define KE_FMT_SIZET           "Iu"
+# define KE_FMT_I64             "I64d"
+# define KE_FMT_U64             "I64u"
+#elif defined(__GNUC__)
+# define KE_FMT_SIZET           "zu"
+# define KE_FMT_I64             PRId64
+# define KE_FMT_U64             PRIu64
+#else
+# error "Implement format specifier string"
+#endif
 
 }
 
