@@ -32,12 +32,17 @@
 
 #define __STDC_FORMAT_MACROS
 #include <amtl/am-autoptr.h>
+#include <amtl/am-cxx.h>
 #include <amtl/am-moveable.h>
 #include <amtl/am-platform.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <stdarg.h>
+#include <stdint.h>
+#if !defined(KE_WINDOWS)
+# include <inttypes.h>
+#endif
 
 namespace ke {
 
