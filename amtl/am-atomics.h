@@ -32,6 +32,7 @@
 
 #include <amtl/am-cxx.h>
 #include <amtl/am-platform.h>
+#include <stddef.h>
 #include <stdint.h>
 
 namespace ke {
