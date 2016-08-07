@@ -198,6 +198,22 @@ class Vector : private AllocPolicy
     return *this;
   }
 
+ public:
+  // Support for C++11 iteration. Note that the vector length must not be
+  // mutated inside such an iterator.
+  T* begin() {
+    return data_;
+  }
+  const T* begin() const {
+    return data_;
+  }
+  T* end() {
+    return data_ + nitems_;
+  }
+  const T* end() const {
+    return data_ + nitems_;
+  }
+
  private:
   // These are disallowed because they basically violate the failure handling
   // model for AllocPolicies and are also likely to have abysmal performance.
