@@ -30,6 +30,7 @@
 #ifndef _include_amtl_atomics_h_
 #define _include_amtl_atomics_h_
 
+#include <amtl/am-cxx.h>
 #include <amtl/am-platform.h>
 #include <stdint.h>
 
