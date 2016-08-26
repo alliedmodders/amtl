@@ -319,7 +319,7 @@ class HashTable : private AllocPolicy
     Probulator probulator(hash, capacity_);
 
     Entry *e = &table_[probulator.entry()];
-	Entry *firstRemoved = nullptr;
+    Entry *firstRemoved = nullptr;
     for (;;) {
       if (e->isFree()) {
         if (firstRemoved)
