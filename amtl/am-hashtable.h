@@ -331,7 +331,7 @@ class HashTable : private AllocPolicy
       e = &table_[probulator.next()];
     }
 
-	if (!e->isLive() && firstRemoved)
+    if (!e->isLive() && firstRemoved)
       e = firstRemoved;
 
     return Insert(e, hash);
