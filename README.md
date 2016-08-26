@@ -218,9 +218,9 @@ with comparison and hash functions.
 
 ### InlineList (am-inlinelist.h)
 
-InlineList is a doubly-linked list that does use any calls to malloc(), with the caveat that list
-members can be members in at most one inline list at a time. Objects must recursively inherit from
-InlineListNode, which ensures that the object has prev/next pointers. Example:
+InlineList is a doubly-linked list that does not use any calls to malloc(), with the caveat that
+list members can be members in at most one inline list at a time. Objects must recursively inherit
+from InlineListNode, which ensures that the object has prev/next pointers. Example:
 
     class MyObject : public InlineListNode<MyObject>
     { };
