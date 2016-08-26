@@ -102,7 +102,7 @@ class PriorityQueue final
       cursor = parent;
     }
 
-    impl_[cursor] = key;
+    impl_[cursor] = ke::Move(key);
   }
 
   void propagateDown(size_t at) {
