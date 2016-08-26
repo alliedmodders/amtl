@@ -329,9 +329,8 @@ class HashTable : private AllocPolicy
       if (e->removed()) {
         if (!firstRemoved)
          firstRemoved = e;
-      }
-      else if (e->sameHash(hash) && HashPolicy::matches(key, e->payload()))
-        break;
+      } else if (e->sameHash(hash) && HashPolicy::matches(key, e->payload()))
+          break;
       e = &table_[probulator.next()];
     }
 
