@@ -321,18 +321,18 @@ class HashTable : private AllocPolicy
     Entry *e = &table_[probulator.entry()];
     Entry *firstRemoved = nullptr;
     for (;;) {
-      if (e->isFree()) {
-        if (firstRemoved)
-         e = firstRemoved;
+      if (e->isFree())
         break;
-      }
       if (e->removed()) {
         if (!firstRemoved)
-         firstRemoved = e;
+          firstRemoved = e;
       } else if (e->sameHash(hash) && HashPolicy::matches(key, e->payload()))
           break;
       e = &table_[probulator.next()];
     }
+
+	if (!e->isLive() && firstRemoved)
+      e = firstRemoved;
 
     return Insert(e, hash);
   }
