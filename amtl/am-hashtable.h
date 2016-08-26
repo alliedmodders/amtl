@@ -320,9 +320,9 @@ class HashTable : private AllocPolicy
 
     Entry *e = &table_[probulator.entry()];
     for (;;) {
-      if (!e->isLive())
+      if (e->isFree())
         break;
-      if (e->sameHash(hash) && HashPolicy::matches(key, e->payload()))
+      if (!e->removed() && e->sameHash(hash) && HashPolicy::matches(key, e->payload()))
         break;
       e = &table_[probulator.next()];
     }
