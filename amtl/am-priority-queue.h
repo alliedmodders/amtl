@@ -92,13 +92,17 @@ class PriorityQueue final
  private:
   void propagateUp(size_t at) {
     size_t cursor = at;
+    T key(ke::Move(impl_[cursor]));
     while (cursor != 0) {
       size_t parent = parentOf(cursor);
-      if (!is_higher_priority_(impl_[cursor], impl_[parent]))
+      if (!is_higher_priority_(key, impl_[parent]))
         break;
-      ke::Swap(impl_[parent], impl_[cursor]);
+
+      impl_[cursor] = ke::Move(impl_[parent]);
       cursor = parent;
     }
+
+    impl_[cursor] = key;
   }
 
   void propagateDown(size_t at) {
