@@ -102,9 +102,59 @@ class TestHashMap : public Test
     return true;
   }
 
+  bool testBug6527() {
+    typedef HashMap<AString, int, StringPolicy> Map;
+    Map map;
+
+    if (!check(map.init(16), "initialized"))
+      return false;
+
+    {
+      char key[] = "bb";
+      Map::Insert p = map.findForAdd(key);
+      if (!p.found())
+        map.add(p, key);
+      p->value = 0xabab;
+    }
+
+    {
+      char key[] = "dddd";
+      Map::Insert p = map.findForAdd(key);
+      if (!p.found())
+        map.add(p, key);
+      p->value = 0xacac;
+    }
+
+    {
+      char key[] = "bb";
+      map.removeIfExists(key);
+    }
+
+    {
+      char key[] = "dddd";
+      Map::Insert p = map.findForAdd(key);
+      if (!p.found())
+        map.add(p, key);
+      p->value = 0xadad;
+    }
+
+    bool found = false;
+    for (Map::iterator iter = map.iter(); !iter.empty(); iter.next()) {
+      if (iter->key.compare("dddd") == 0) {
+        if (!check(!found, "dddd occurs only once in map"))
+          return false;
+        found = true;
+      }
+    }
+
+    return true;
+  }
+
   bool Run() override
   {
     if (!testBasics())
+      return false;
+    if (!testBug6527())
       return false;
     return true;
   }
