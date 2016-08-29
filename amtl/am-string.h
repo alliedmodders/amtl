@@ -115,9 +115,26 @@ class AString
            memcmp(other.chars(), chars(), length()) == 0;
   }
 
+  friend AString operator +(const AString &a, const AString &b) {
+    return AString::concat(a.chars(), a.length(), b.chars(), b.length());
+  }
+  friend AString operator +(const AString &a, const char *b) {
+    assert(b && b[0]);
+    return AString::concat(a.chars(), a.length(), b, strlen(b));
+  }
+  friend AString operator +(const char *a, const AString &b) {
+    assert(a && a[0]);
+    return AString::concat(a, strlen(a), b.chars(), b.length());
+  }
+
   char operator [](size_t index) const {
     assert(index < length());
     return chars()[index];
+  }
+
+  char& operator [](size_t index) {
+    assert(index < length());
+    return chars_[index];
   }
 
   size_t length() const {
@@ -129,7 +146,6 @@ class AString
       return "";
     return chars_;
   }
-
  private:
   static const size_t kInvalidLength = (size_t)-1;
 
@@ -138,6 +154,14 @@ class AString
     length_ = length;
     memcpy(chars_, str, length);
     chars_[length] = '\0';
+  }
+
+  static AString concat(const char *a, size_t alen, const char *b, size_t blen) {
+    AutoArray<char> buf;
+    buf = new char[alen + blen + 1];
+    strcpy(buf, a);
+    strcat(buf, b);
+    return AString(buf);
   }
 
  private:

@@ -49,9 +49,83 @@ class TestString : public Test
     return true;
   }
 
+  bool testCreate() const {
+    bool ok = true;
+    {
+      AString str;
+      ok &= check(str.length() == 0, "length should = 0");
+    }
+    {
+      AString str("Hello");
+      ok &= check(strcmp(str.chars(), "Hello") == 0, "str should be ==\"Hello\"");
+      const char* chars = str.chars();
+      ok &= check(chars[str.length()] == '\0', "string should be null terminated");
+    }
+    {
+      AString str("test");
+      ok &= check(str.length() == 4, "\"test\".length should be == 4");
+    }
+
+    return ok;
+  }
+
+  bool testOperatorPlus() const {
+    bool ok = true;
+
+    AString a("Hello");
+    AString b(" ");
+    AString c("World");
+
+    ok &= check(
+      strcmp((a + b + c).chars(), "Hello World") == 0,
+      "a+b+c should be \"Hello World\""
+    );
+    ok &= check(
+      strcmp((a + " World").chars(), "Hello World") == 0,
+      "a + \"World\" should be \"Hello World\""
+    );
+    ok &= check(
+      strcmp(("Hello" + b + c).chars(), "Hello World") == 0,
+      "\"Hello\" + b + c should be \"Hello World\""
+    );
+    return ok;
+  }
+
+  bool testRValue() const {
+    AString a("Hello");
+    AString b("World");
+    AString c;
+    c = a + b;
+    return check(
+      strcmp(c.chars(), "HelloWorld") == 0,
+      "c should be \"HelloWorld\""
+    );
+  }
+
+  bool testGetSetChar() const {
+    bool ok = true;
+    AString str("ababaca");
+    ok &= check(str[0] == 'a', "str[0] should be == 'a'");
+
+    str[2] = 'b';
+    ok &= check(
+      strcmp(str.chars(), "abbbaca") == 0,
+      "ababaca[2] = 'b' should be abbbaca"
+    );
+    return ok;
+  }
+
   bool Run() override
   {
     if (!testSprintf())
+      return false;
+    if (!testCreate())
+      return false;
+    if (!testOperatorPlus())
+      return false;
+    if (!testRValue())
+      return false;
+    if (!testGetSetChar())
       return false;
     return true;
   };
