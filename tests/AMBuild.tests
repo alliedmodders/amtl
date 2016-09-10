@@ -45,6 +45,7 @@ binary.sources += [
   'test-system.cpp',
   'test-priority-queue.cpp',
   'test-string.cpp',
+  'test-memory.cpp',
 ]
 
 builder.Add(binary)
