@@ -106,62 +106,70 @@ class AutoPtr
 // Wrapper that automatically deletes its contents. The pointer can be taken
 // to avoid destruction.
 template <typename T>
-class AutoArray
+class AutoPtr<T[]>
 {
  public:
-  AutoArray()
+  AutoPtr()
    : t_(nullptr)
   {
   }
-  AutoArray(AutoArray&& other)
+  AutoPtr(AutoPtr&& other)
     : t_(other.t_)
   {
     other.t_ = nullptr;
   }
-  explicit AutoArray(T *t)
+  explicit AutoPtr(T *t)
    : t_(t)
   {
   }
-  ~AutoArray() {
-      delete [] t_;
+  ~AutoPtr() {
+    delete [] t_;
   }
   T *take() {
-      return ReturnAndVoid(t_);
+    return ReturnAndVoid(t_);
   }
   T *forget() {
-      return ReturnAndVoid(t_);
-  }
-  T **address() {
-    return &t_;
+    return ReturnAndVoid(t_);
   }
   T &operator *() const {
-      return t_;
+    return t_;
   }
   operator T *() const {
-      return t_;
+    return t_;
   }
   bool operator !() const {
-      return !t_;
+    return !t_;
   }
+  explicit operator bool() const {
+    return t_ != nullptr;
+  }
+
+  void assign(T* ptr) {
+    delete[] t_;
+    t_ = ptr;
+  }
+
+  T& operator[](size_t index) {
+    return t_[index];
+  }
+
   T* get() const {
     return t_;
   }
 
-  AutoArray& operator =(T *t) {
-      delete [] t_;
-      t_ = t;
-      return *this;
+  AutoPtr& operator =(decltype(nullptr)) {
+    assign(nullptr);
+    return *this;
   }
-  AutoArray& operator =(AutoArray&& other) {
-      delete[] t_;
-      t_ = other.t_;
-      other.t_ = nullptr;
-      return *this;
+  AutoPtr& operator =(AutoPtr&& other) {
+    assign(other.t_);
+    other.t_ = nullptr;
+    return *this;
   }
 
  private:
-  AutoArray(const AutoArray& other) = delete;
-  AutoArray& operator =(const AutoArray& other) = delete;
+  AutoPtr(const AutoPtr& other) = delete;
+  AutoPtr& operator =(const AutoPtr& other) = delete;
 
  private:
   T *t_;
