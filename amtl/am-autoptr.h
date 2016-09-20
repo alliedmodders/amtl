@@ -34,6 +34,7 @@
 #include <amtl/am-cxx.h>
 #include <amtl/am-moveable.h>
 #include <amtl/am-raii.h>
+#include <amtl/am-type-traits.h>
 
 namespace ke {
 
@@ -174,6 +175,47 @@ class AutoPtr<T[]>
  private:
   T *t_;
 };
+
+namespace impl {
+
+// From N3656.
+template <typename T>
+struct AutoPtrMatcher {
+  typedef AutoPtr<T> SingleObject;
+};
+
+template <typename T>
+struct AutoPtrMatcher<T[]> {
+  typedef AutoPtr<T[]> UnknownBound;
+};
+
+template <typename T, size_t N>
+struct AutoPtrMatcher<T[N]> {
+  typedef void KnownBound;
+};
+
+} // namespace impl
+
+// C++14 make_unique port.
+template <typename T, typename ... Args>
+typename impl::AutoPtrMatcher<T>::SingleObject
+MakeUnique(Args&&... args)
+{
+  return AutoPtr<T>(new T(Forward<Args>(args)...));
+}
+
+template <typename T>
+typename impl::AutoPtrMatcher<T>::UnknownBound
+MakeUnique(size_t count)
+{
+  typedef typename remove_extent<T>::type BaseType;
+  return AutoPtr<T>(new BaseType[count]());
+}
+
+// Forbidden to use T[N] or T[](args).
+template <typename T, typename ... Args>
+typename impl::AutoPtrMatcher<T>::KnownBound
+MakeUnique(Args&&... args) = delete;
 
 } // namespace ke
 
