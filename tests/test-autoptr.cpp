@@ -64,6 +64,10 @@ class TestAutoPtr : public Test
     if (!check(*five.get() == 5, "pointer should contain 5"))
       return false;
 
+    five = nullptr;
+    if (!check(!five, "pointer should be null"))
+      return false;
+
     {
       AutoPtr<Blah> blah = MakeUnique<Blah>();
       if (!check(sBlahCtors == 1, "called Blah::Blah"))
