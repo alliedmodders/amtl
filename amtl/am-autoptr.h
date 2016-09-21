@@ -140,10 +140,6 @@ class AutoPtr<T[]>
     return t_[index];
   }
 
-  T* get() const {
-    return t_;
-  }
-
   AutoPtr& operator =(decltype(nullptr)) {
     assign(nullptr);
     return *this;
