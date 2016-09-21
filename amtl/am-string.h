@@ -68,7 +68,7 @@ class AString
   }
   AString(const AString &other) {
     if (other.length_)
-      set(other.chars_, other.length_);
+      set(other.chars_.get(), other.length_);
     else
       length_ = 0;
   }
@@ -90,7 +90,7 @@ class AString
   }
   AString &operator =(const AString &other) {
     if (other.length_) {
-      set(other.chars_, other.length_);
+      set(other.chars_.get(), other.length_);
     } else {
       chars_ = nullptr;
       length_ = 0;
@@ -127,7 +127,7 @@ class AString
   const char *chars() const {
     if (!chars_)
       return "";
-    return chars_;
+    return chars_.get();
   }
 
  private:
@@ -136,7 +136,7 @@ class AString
   void set(const char *str, size_t length) {
     chars_.assign(new char[length + 1]);
     length_ = length;
-    memcpy(chars_, str, length);
+    memcpy(chars_.get(), str, length);
     chars_[length] = '\0';
   }
 

@@ -75,14 +75,6 @@ class AutoPtr
  T *operator ->() const {
      return t_;
  }
- operator T *() const {
-     return t_;
- }
- T *operator =(T *t) {
-     delete t_;
-     t_ = t;
-     return t_;
- }
  T **address() {
    return &t_;
  }
@@ -126,20 +118,14 @@ class AutoPtr<T[]>
   ~AutoPtr() {
     delete [] t_;
   }
+  T *get() {
+    return t_;
+  }
   T *take() {
     return ReturnAndVoid(t_);
   }
   T *forget() {
     return ReturnAndVoid(t_);
-  }
-  T &operator *() const {
-    return t_;
-  }
-  operator T *() const {
-    return t_;
-  }
-  bool operator !() const {
-    return !t_;
   }
   explicit operator bool() const {
     return t_ != nullptr;
