@@ -148,6 +148,16 @@ struct decay {
   >::type type;
 };
 
+// Remove one extent from an array type.
+template <typename T>
+struct remove_extent { typedef T type; };
+
+template <typename T>
+struct remove_extent<T[]> { typedef T type; };
+
+template <typename T, size_t N>
+struct remove_extent<T[N]> { typedef T type; };
+
 } // namespace ke
 
 #endif // _include_amtl_type_traits_h_

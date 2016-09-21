@@ -98,7 +98,7 @@ class AString
     return *this;
   }
   AString &operator =(AString &&other) {
-    chars_ = other.chars_.take();
+    chars_ = Move(other.chars_);
     length_ = other.length_;
     other.length_ = 0;
     return *this;
@@ -134,14 +134,14 @@ class AString
   static const size_t kInvalidLength = (size_t)-1;
 
   void set(const char *str, size_t length) {
-    chars_ = new char[length + 1];
+    chars_.assign(new char[length + 1]);
     length_ = length;
     memcpy(chars_, str, length);
     chars_[length] = '\0';
   }
 
  private:
-  AutoArray<char> chars_;
+  AutoPtr<char[]> chars_;
   size_t length_;
 };
 

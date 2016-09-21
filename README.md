@@ -61,8 +61,7 @@ All classes and functions reside in a "ke" namespace, and all macros are prefixe
 ### Platform Utilities (am-utilities.h)
 
 This provides some common helper functions pretty much lumped together:
-* AutoPtr<T>, RAII for calling delete on a pointer.
-* AutoArray<T>, RAII for calling delete[] on a pointer.
+* AutoPtr<T> and AutoPtr<T[]>, RAII objects for calling delete or delete[] on a pointer.
 * Detectors for add or multiply overflow, useful for computing allocation sizes.
 * Fast Log2/Floor2 functions (also known as bitscan or count zeroes).
 * Integer alignment (useful for allocators or code generators).
