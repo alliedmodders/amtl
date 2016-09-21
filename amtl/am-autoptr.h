@@ -45,35 +45,39 @@ class AutoPtr
 {
  public:
   AutoPtr()
-    : t_(nullptr)
+   : t_(nullptr)
   {
   }
   explicit AutoPtr(T *t)
-    : t_(t)
+   : t_(t)
   {
   }
   AutoPtr(AutoPtr &&other)
   {
-      t_ = other.t_;
-      other.t_ = nullptr;
+    t_ = other.t_;
+    other.t_ = nullptr;
   }
   ~AutoPtr() {
-      delete t_;
+    delete t_;
   }
   T *get() const {
     return t_;
   }
   T *take() {
-      return ReturnAndVoid(t_);
+    return ReturnAndVoid(t_);
   }
   T *forget() {
-      return ReturnAndVoid(t_);
+    return ReturnAndVoid(t_);
+  }
+  void assign(T* ptr) {
+    delete t_;
+    t_ = ptr;
   }
   T *operator *() const {
-      return t_;
+    return t_;
   }
   T *operator ->() const {
-      return t_;
+    return t_;
   }
   T **address() {
     return &t_;
