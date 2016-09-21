@@ -60,7 +60,7 @@ class AutoPtr
  ~AutoPtr() {
      delete t_;
  }
- T *get() {
+ T *get() const {
    return t_;
  }
  T *take() {
@@ -118,7 +118,7 @@ class AutoPtr<T[]>
   ~AutoPtr() {
     delete [] t_;
   }
-  T *get() {
+  T *get() const {
     return t_;
   }
   T *take() {
