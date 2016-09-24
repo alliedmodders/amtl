@@ -44,49 +44,49 @@ template <typename T>
 class AutoPtr
 {
  public:
- AutoPtr()
+  AutoPtr()
    : t_(nullptr)
- {
- }
- explicit AutoPtr(T *t)
+  {
+  }
+  explicit AutoPtr(T *t)
    : t_(t)
- {
- }
- AutoPtr(AutoPtr &&other)
- {
-     t_ = other.t_;
-     other.t_ = nullptr;
- }
- ~AutoPtr() {
-     delete t_;
- }
- T *get() const {
-   return t_;
- }
- T *take() {
-     return ReturnAndVoid(t_);
- }
- T *forget() {
-     return ReturnAndVoid(t_);
- }
- T *operator *() const {
-     return t_;
- }
- T *operator ->() const {
-     return t_;
- }
- T **address() {
-   return &t_;
- }
- T *operator =(AutoPtr &&other) {
-     delete t_;
-     t_ = other.t_;
-     other.t_ = nullptr;
-     return t_;
- }
- bool operator !() const {
-     return !t_;
- }
+  {
+  }
+  AutoPtr(AutoPtr &&other)
+  {
+    t_ = other.t_;
+    other.t_ = nullptr;
+  }
+  ~AutoPtr() {
+    delete t_;
+  }
+  T *get() const {
+    return t_;
+  }
+  T *take() {
+    return ReturnAndVoid(t_);
+  }
+  T *forget() {
+    return ReturnAndVoid(t_);
+  }
+  T *operator *() const {
+    return t_;
+  }
+  T *operator ->() const {
+    return t_;
+  }
+  operator T* () const {
+    return t_;
+  }
+  T *operator =(AutoPtr &&other) {
+    delete t_;
+    t_ = other.t_;
+    other.t_ = nullptr;
+    return t_;
+  }
+  bool operator !() const {
+    return !t_;
+  }
 
  private:
   AutoPtr(const AutoPtr &other) = delete;
