@@ -77,14 +77,11 @@ class UniquePtr
     return t_;
   }
   T *operator =(UniquePtr &&other) {
-    delete t_;
-    t_ = other.t_;
-    other.t_ = nullptr;
+    assign(other.take());
     return t_;
   }
   UniquePtr& operator =(decltype(nullptr)) {
-    delete t_;
-    t_ = nullptr;
+    assign(nullptr);
     return *this;
   }
   explicit operator bool() const {
@@ -145,8 +142,7 @@ class UniquePtr<T[]>
     return *this;
   }
   UniquePtr& operator =(UniquePtr&& other) {
-    assign(other.t_);
-    other.t_ = nullptr;
+    assign(other.take());
     return *this;
   }
 
