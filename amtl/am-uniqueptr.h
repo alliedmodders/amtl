@@ -27,8 +27,8 @@
 // ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 // POSSIBILITY OF SUCH DAMAGE.
 
-#ifndef _include_amtl_autoptr_h_
-#define _include_amtl_autoptr_h_
+#ifndef _include_amtl_uniqueptr_h_
+#define _include_amtl_uniqueptr_h_
 
 #include <assert.h>
 #include <amtl/am-cxx.h>
@@ -41,56 +41,59 @@ namespace ke {
 // Wrapper that automatically deletes its contents. The pointer can be taken
 // to avoid destruction.
 template <typename T>
-class AutoPtr
+class UniquePtr
 {
  public:
- AutoPtr()
+  UniquePtr()
    : t_(nullptr)
- {
- }
- explicit AutoPtr(T *t)
+  {
+  }
+  explicit UniquePtr(T *t)
    : t_(t)
- {
- }
- AutoPtr(AutoPtr &&other)
- {
-     t_ = other.t_;
-     other.t_ = nullptr;
- }
- ~AutoPtr() {
-     delete t_;
- }
- T *get() const {
-   return t_;
- }
- T *take() {
-     return ReturnAndVoid(t_);
- }
- T *forget() {
-     return ReturnAndVoid(t_);
- }
- T *operator *() const {
-     return t_;
- }
- T *operator ->() const {
-     return t_;
- }
- T **address() {
-   return &t_;
- }
- T *operator =(AutoPtr &&other) {
-     delete t_;
-     t_ = other.t_;
-     other.t_ = nullptr;
-     return t_;
- }
- bool operator !() const {
-     return !t_;
- }
+  {
+  }
+  UniquePtr(UniquePtr &&other)
+  {
+    t_ = other.t_;
+    other.t_ = nullptr;
+  }
+  ~UniquePtr() {
+    delete t_;
+  }
+  T *get() const {
+    return t_;
+  }
+  T *take() {
+    return ReturnAndVoid(t_);
+  }
+  void assign(T* ptr) {
+    delete t_;
+    t_ = ptr;
+  }
+  T *operator *() const {
+    return t_;
+  }
+  T *operator ->() const {
+    return t_;
+  }
+  T *operator =(UniquePtr &&other) {
+    delete t_;
+    t_ = other.t_;
+    other.t_ = nullptr;
+    return t_;
+  }
+  UniquePtr& operator =(decltype(nullptr)) {
+    delete t_;
+    t_ = nullptr;
+    return *this;
+  }
+  explicit operator bool() const {
+    return t_ != nullptr;
+  }
 
  private:
-  AutoPtr(const AutoPtr &other) = delete;
-  AutoPtr &operator =(const AutoPtr &other) = delete;
+  UniquePtr(const UniquePtr &other) = delete;
+  UniquePtr &operator =(const UniquePtr &other) = delete;
 
  private:
   T *t_;
@@ -99,32 +102,29 @@ class AutoPtr
 // Wrapper that automatically deletes its contents. The pointer can be taken
 // to avoid destruction.
 template <typename T>
-class AutoPtr<T[]>
+class UniquePtr<T[]>
 {
  public:
-  AutoPtr()
+  UniquePtr()
    : t_(nullptr)
   {
   }
-  AutoPtr(AutoPtr&& other)
+  UniquePtr(UniquePtr&& other)
     : t_(other.t_)
   {
     other.t_ = nullptr;
   }
-  explicit AutoPtr(T *t)
+  explicit UniquePtr(T *t)
    : t_(t)
   {
   }
-  ~AutoPtr() {
+  ~UniquePtr() {
     delete [] t_;
   }
   T *get() const {
     return t_;
   }
   T *take() {
-    return ReturnAndVoid(t_);
-  }
-  T *forget() {
     return ReturnAndVoid(t_);
   }
   explicit operator bool() const {
@@ -140,24 +140,65 @@ class AutoPtr<T[]>
     return t_[index];
   }
 
-  AutoPtr& operator =(decltype(nullptr)) {
+  UniquePtr& operator =(decltype(nullptr)) {
     assign(nullptr);
     return *this;
   }
-  AutoPtr& operator =(AutoPtr&& other) {
+  UniquePtr& operator =(UniquePtr&& other) {
     assign(other.t_);
     other.t_ = nullptr;
     return *this;
   }
 
  private:
-  AutoPtr(const AutoPtr& other) = delete;
-  AutoPtr& operator =(const AutoPtr& other) = delete;
+  UniquePtr(const UniquePtr& other) = delete;
+  UniquePtr& operator =(const UniquePtr& other) = delete;
 
  private:
   T *t_;
 };
 
+namespace impl {
+
+// From N3656.
+template <typename T>
+struct UniquePtrMatcher {
+  typedef UniquePtr<T> SingleObject;
+};
+
+template <typename T>
+struct UniquePtrMatcher<T[]> {
+  typedef UniquePtr<T[]> UnknownBound;
+};
+
+template <typename T, size_t N>
+struct UniquePtrMatcher<T[N]> {
+  typedef void KnownBound;
+};
+
+} // namespace impl
+
+// C++14 make_unique port.
+template <typename T, typename ... Args>
+typename impl::UniquePtrMatcher<T>::SingleObject
+MakeUnique(Args&&... args)
+{
+  return UniquePtr<T>(new T(Forward<Args>(args)...));
+}
+
+template <typename T>
+typename impl::UniquePtrMatcher<T>::UnknownBound
+MakeUnique(size_t count)
+{
+  typedef typename remove_extent<T>::type BaseType;
+  return UniquePtr<T>(new BaseType[count]());
+}
+
+// Forbidden to use T[N] or T[](args).
+template <typename T, typename ... Args>
+typename impl::UniquePtrMatcher<T>::KnownBound
+MakeUnique(Args&&... args) = delete;
+
 } // namespace ke
 
-#endif // _include_amtl_autoptr_h_
+#endif // _include_amtl_uniqueptr_h_

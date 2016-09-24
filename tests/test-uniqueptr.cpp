@@ -27,27 +27,27 @@
 // ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 // POSSIBILITY OF SUCH DAMAGE.
 
-#include <am-autoptr.h>
+#include <am-uniqueptr.h>
 #include "runner.h"
 
 using namespace ke;
 
-static size_t sBlahCtors = 0;
-static size_t sBlahDtors = 0;
-struct Blah {
-  Blah() {
-    sBlahCtors++;
+static size_t sBrahCtors = 0;
+static size_t sBrahDtors = 0;
+struct Brah {
+  Brah() {
+    sBrahCtors++;
   }
-  ~Blah() {
-    sBlahDtors++;
+  ~Brah() {
+    sBrahDtors++;
   }
 };
 
-class TestAutoPtr : public Test
+class TestUniquePtr : public Test
 {
  public:
-  TestAutoPtr()
-   : Test("AutoPtr")
+  TestUniquePtr()
+   : Test("UniquePtr")
   {
   }
 
@@ -60,29 +60,33 @@ class TestAutoPtr : public Test
 
  private:
   bool testSingle() {
-    AutoPtr<int> five(new int(5));
+    UniquePtr<int> five = MakeUnique<int>(5);
     if (!check(*five.get() == 5, "pointer should contain 5"))
       return false;
 
-    {
-      AutoPtr<Blah> blah(new Blah());
-      if (!check(sBlahCtors == 1, "called Blah::Blah"))
-        return false;
-    }
-    if (!check(sBlahDtors == 1, "called Blah::~Blah"))
+    five = nullptr;
+    if (!check(!five, "pointer should be null"))
       return false;
 
-    sBlahCtors = 0;
-    sBlahDtors = 0;
     {
-      AutoPtr<Blah[]> blah(new Blah[20]);
-      if (!check(sBlahCtors == 20, "called Blah::Blah 20 times"))
+      UniquePtr<Brah> blah = MakeUnique<Brah>();
+      if (!check(sBrahCtors == 1, "called Brah::Brah"))
         return false;
     }
-    if (!check(sBlahDtors == 20, "called Blah::~Blah 20 times"))
+    if (!check(sBrahDtors == 1, "called Brah::~Brah"))
+      return false;
+
+    sBrahCtors = 0;
+    sBrahDtors = 0;
+    {
+      UniquePtr<Brah[]> blah = MakeUnique<Brah[]>(20);
+      if (!check(sBrahCtors == 20, "called Brah::Brah 20 times"))
+        return false;
+    }
+    if (!check(sBrahDtors == 20, "called Brah::~Brah 20 times"))
       return false;
 
     return true;
   }
 
-} sTestAutoPtr;
+} sTestUniquePtr;
