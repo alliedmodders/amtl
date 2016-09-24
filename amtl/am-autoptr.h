@@ -53,7 +53,7 @@ class AutoPtr
    : t_(t)
   {
   }
-  explicit AutoPtr(UniquePtr<T>&& other)
+  AutoPtr(UniquePtr<T>&& other)
    : t_(other.take())
   {
   }
@@ -125,7 +125,7 @@ class AutoPtr<T[]>
    : t_(other.take())
   {
   }
-  explicit AutoPtr(UniquePtr<T[]>&& other)
+  AutoPtr(UniquePtr<T[]>&& other)
    : t_(other.take())
   {
   }
