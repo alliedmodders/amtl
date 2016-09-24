@@ -58,9 +58,8 @@ class AutoPtr
   {
   }
   AutoPtr(AutoPtr &&other)
+   : t_(other.take())
   {
-    t_ = other.t_;
-    other.t_ = nullptr;
   }
   ~AutoPtr() {
     delete t_;
@@ -69,9 +68,6 @@ class AutoPtr
     return t_;
   }
   T *take() {
-    return ReturnAndVoid(t_);
-  }
-  T *forget() {
     return ReturnAndVoid(t_);
   }
   T *operator *() const {
@@ -83,19 +79,28 @@ class AutoPtr
   operator T* () const {
     return t_;
   }
-  T *operator =(AutoPtr &&other) {
+  void assign(T* t) {
     delete t_;
-    t_ = other.t_;
-    other.t_ = nullptr;
-    return t_;
+    t_ = t;
   }
-  T *operator =(UniquePtr<T> &&other) {
-    delete t_;
-    t_ = other.take();
-    return t_;
+  AutoPtr& operator =(decltype(nullptr)) {
+    assign(nullptr);
+    return *this;
   }
-  bool operator !() const {
-    return !t_;
+  AutoPtr& operator =(T* t) {
+    assign(t);
+    return *this;
+  }
+  AutoPtr& operator =(AutoPtr &&other) {
+    assign(other.take());
+    return *this;
+  }
+  AutoPtr& operator =(UniquePtr<T> &&other) {
+    assign(other.take());
+    return *this;
+  }
+  explicit operator bool() const {
+    return !!t_;
   }
 
  private:
@@ -117,9 +122,8 @@ class AutoPtr<T[]>
   {
   }
   AutoPtr(AutoPtr&& other)
-   : t_(other.t_)
+   : t_(other.take())
   {
-    other.t_ = nullptr;
   }
   explicit AutoPtr(UniquePtr<T[]>&& other)
    : t_(other.take())
@@ -159,8 +163,7 @@ class AutoPtr<T[]>
     return *this;
   }
   AutoPtr& operator =(AutoPtr&& other) {
-    assign(other.t_);
-    other.t_ = nullptr;
+    assign(other.take());
     return *this;
   }
   AutoPtr& operator =(UniquePtr<T[]>&& other) {

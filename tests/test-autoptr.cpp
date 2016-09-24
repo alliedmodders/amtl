@@ -60,12 +60,16 @@ class TestAutoPtr : public Test
 
  private:
   bool testSingle() {
-    AutoPtr<int> five(new int(5));
-    if (!check(*five.get() == 5, "pointer should contain 5"))
+    AutoPtr<int> intp(new int(5));
+    if (!check(*intp.get() == 5, "pointer should contain 5"))
       return false;
 
-    five = MakeUnique<int>(7);
-    if (!check(*five.get() == 7, "pointer should contain 7"))
+    intp = MakeUnique<int>(7);
+    if (!check(*intp.get() == 7, "pointer should contain 7"))
+      return false;
+
+    intp = new int[2];
+    if (!check(*intp.get() == 2, "pointer should contain 2"))
       return false;
 
     {
