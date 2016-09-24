@@ -35,6 +35,7 @@
 #include <amtl/am-moveable.h>
 #include <amtl/am-raii.h>
 #include <amtl/am-type-traits.h>
+#include <amtl/am-uniqueptr.h>
 
 namespace ke {
 
@@ -50,6 +51,10 @@ class AutoPtr
   }
   explicit AutoPtr(T *t)
    : t_(t)
+  {
+  }
+  explicit AutoPtr(UniquePtr<T>&& other)
+   : t_(other.take())
   {
   }
   AutoPtr(AutoPtr &&other)
@@ -84,6 +89,11 @@ class AutoPtr
     other.t_ = nullptr;
     return t_;
   }
+  T *operator =(UniquePtr<T> &&other) {
+    delete t_;
+    t_ = other.take();
+    return t_;
+  }
   bool operator !() const {
     return !t_;
   }
@@ -107,9 +117,13 @@ class AutoPtr<T[]>
   {
   }
   AutoPtr(AutoPtr&& other)
-    : t_(other.t_)
+   : t_(other.t_)
   {
     other.t_ = nullptr;
+  }
+  explicit AutoPtr(UniquePtr<T[]>&& other)
+   : t_(other.take())
+  {
   }
   explicit AutoPtr(T *t)
    : t_(t)
@@ -147,6 +161,10 @@ class AutoPtr<T[]>
   AutoPtr& operator =(AutoPtr&& other) {
     assign(other.t_);
     other.t_ = nullptr;
+    return *this;
+  }
+  AutoPtr& operator =(UniquePtr<T[]>&& other) {
+    assign(other.take());
     return *this;
   }
 

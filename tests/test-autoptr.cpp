@@ -64,6 +64,10 @@ class TestAutoPtr : public Test
     if (!check(*five.get() == 5, "pointer should contain 5"))
       return false;
 
+    five = MakeUnique<int>(7);
+    if (!check(*five.get() == 7, "pointer should contain 7"))
+      return false;
+
     {
       AutoPtr<Blah> blah(new Blah());
       if (!check(sBlahCtors == 1, "called Blah::Blah"))
@@ -78,8 +82,10 @@ class TestAutoPtr : public Test
       AutoPtr<Blah[]> blah(new Blah[20]);
       if (!check(sBlahCtors == 20, "called Blah::Blah 20 times"))
         return false;
+
+      blah = MakeUnique<Blah[]>(15);
     }
-    if (!check(sBlahDtors == 20, "called Blah::~Blah 20 times"))
+    if (!check(sBlahDtors == 35, "called Blah::~Blah 35 times"))
       return false;
 
     return true;
