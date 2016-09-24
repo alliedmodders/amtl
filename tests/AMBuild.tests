@@ -46,6 +46,7 @@ binary.sources += [
   'test-priority-queue.cpp',
   'test-string.cpp',
   'test-autoptr.cpp',
+  'test-uniqueptr.cpp',
 ]
 
 builder.Add(binary)
