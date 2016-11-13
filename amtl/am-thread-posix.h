@@ -162,11 +162,11 @@ class ConditionVariable : public Lockable
 class Thread
 {
   struct ThreadData {
-    ke::Function<void()> callback;
+    ke::Callable<void()> callback;
     char name[17];
   };
  public:
-  Thread(ke::Function<void()>&& callback, const char *name = nullptr) {
+  Thread(ke::Callable<void()>&& callback, const char *name = nullptr) {
     ThreadData *data = new ThreadData;
     data->callback = ke::Move(callback);
     snprintf(data->name, sizeof(data->name), "%s", name ? name : "");
@@ -205,7 +205,8 @@ class Thread
         fn(data->name);
 #endif
     }
-    data->callback();
+    if ((bool)data->callback)
+      data->callback();
     return nullptr;
   }
 

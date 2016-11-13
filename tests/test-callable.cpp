@@ -39,11 +39,10 @@ static int test_old_fn(int x) {
 
 class MoveObj
 {
- public:
+public:
   static unsigned sNumMoves;
 
-  MoveObj()
-  {
+  MoveObj() {
     sNumMoves = 0;
   }
   MoveObj(MoveObj&& other) {
@@ -54,15 +53,18 @@ class MoveObj
     return sNumMoves;
   }
 
- private:
-  MoveObj(const MoveObj& other);
-  void operator =(const MoveObj& other);
+private:
+  MoveObj(const MoveObj&) = delete;
+  void operator =(const MoveObj&) = delete;
 };
 unsigned MoveObj::sNumMoves = 0;
 
 class CallableObj
 {
- public:
+public:
+  int member_function(int x) const {
+    return x * 6;
+  }
   int operator()(int x) const {
     return x + 34;
   }
@@ -70,23 +72,42 @@ class CallableObj
 
 class TestCallable : public Test
 {
- public:
+public:
   TestCallable()
-   : Test("Callable")
+    : Test("Callable")
   {
+  }
+
+  bool testCallable(const Callable<int(int)>& inputCallable, int param, int result) {
+    if (!check_silent((bool)inputCallable, "Input callable is invokable"))
+      return false;
+
+    Callable<int(int)> callable(nullptr);
+    if (!check(!callable, "New callable instance should not be invokable"))
+      return false;
+
+    callable = inputCallable;
+    if (!check((bool)callable, "Callable should now be invokable"))
+      return false;
+    if (!check(callable == inputCallable, "Callable should be a copy of input callable"))
+      return false;
+
+    if (!check(callable(Forward<int>(param)) == result, "Callable should've returned %d", result))
+      return false;
+
+    return true;
   }
 
   bool testLambdaBasic() {
     int egg = 20;
-    auto fn = [&egg](int x) -> int {
+    auto fn = [&egg] (int x) {
       return egg + x + 1;
     };
-    
-    Lambda<int(int)> ptr(fn);
+    Lambda<int(int)> ptr = fn;
     if (!check(ptr(10) == 31, "capture local variable in Lambda"))
       return false;
 
-    ptr = [](int x) -> int {
+    ptr = [] (int x) -> int {
       return x + 15;
     };
     if (!check(ptr(7) == 22, "assign new function to Lambda"))
@@ -101,138 +122,22 @@ class TestCallable : public Test
     if (!check(ptr(66) == 100, "assign callable obj to Lambda"))
       return false;
 
-    Lambda<unsigned(MoveObj&& obj)> ptr2 = [](MoveObj&& obj) -> unsigned {
-      MoveObj other(ke::Move(obj));
+    Lambda<unsigned(MoveObj&& obj)> ptr2 = [] (MoveObj&& obj) -> unsigned {
+      MoveObj other(Move(obj));
       return other.count();
     };
 
     MoveObj moveObj;
-    if (!check(ptr2(ke::Move(moveObj)) == 1, "moved Lambda arguments"))
+    if (!check(ptr2(Move(moveObj)) == 1, "moved Lambda arguments"))
       return false;
 
     return true;
   }
 
-  bool testInlineStorage() {
-    Lambda<int()> ptr = []() -> int {
-      return 10;
-    };
+  bool testFunctionPointer() {
+    FunctionPointer<int(int)> ptr = test_old_fn;
 
-    if (!check(ptr.usingInlineStorage(), "small lambda should be using inline storage"))
-      return false;
-    if (!check(ptr() == 10, "small lambda should have correct function"))
-      return false;
-
-    static size_t dtors = 0;
-    struct CallDtorObj {
-      ~CallDtorObj() {
-        dtors++;
-      }
-    };
-
-    struct {
-      void *a, *b, *c, *d, *e, *f, *g;
-      void *h, *j, *k, *m, *n, *o, *p;
-    } huge_struct;
-    CallDtorObj test_dtor;
-    ptr = [huge_struct, test_dtor]() -> int {
-      return 20;
-    };
-    if (!check(!ptr.usingInlineStorage(), "huge lambda should not be using inline storage"))
-      return false;
-    if (!check(ptr() == 20, "huge lambda should have correct function"))
-      return false;
-
-    ptr = nullptr;
-    if (!check(dtors == 2, "got 2 destructors"))
-      return false;
-
-    return true;
-  }
-
-  bool testMove() {
-    static size_t ctors = 0;
-    static size_t copyctors = 0;
-    static size_t movectors = 0;
-    static size_t dtors = 0;
-    struct CallDtorObj {
-      CallDtorObj() {
-        ctors++;
-      }
-      CallDtorObj(const CallDtorObj& other) {
-        copyctors++;
-      }
-      CallDtorObj(CallDtorObj&& other) {
-        movectors++;
-      }
-      ~CallDtorObj() {
-        dtors++;
-      }
-    };
-
-    CallDtorObj test_dtor;
-    Lambda<void()> ptr = [test_dtor] {
-    };
-
-    if (!check(dtors == 1, "got 1 destructor"))
-      return false;
-
-    ctors = 0;
-    copyctors = 0;
-    movectors = 0;
-    dtors = 0;
-
-    Lambda<void()> ptr2 = ptr;
-    if (!check(ctors == 0, "no constructors called"))
-      return false;
-    if (!check(copyctors == 1, "got one copy constructor"))
-      return false;
-    if (!check(movectors == 0, "no move constructors called"))
-      return false;
-    if (!check(dtors == 0, "no destructors called"))
-      return false;
-
-    copyctors = 0;
-
-    Lambda<void()> ptr3 = ke::Move(ptr2);
-    if (!check(ctors == 0, "no constructors called"))
-      return false;
-    if (!check(copyctors == 0, "no copy constructors called"))
-      return false;
-    if (!check(movectors == 0, "no move constructors called"))
-      return false;
-    if (!check(dtors == 0, "no destructors called"))
-      return false;
-
-    copyctors = 0;
-
-    auto fn = [test_dtor]{};
-    Lambda<void()> ptr4 = ke::Move(fn);
-    if (!check(ctors == 0, "no constructors called"))
-      return false;
-#if !defined(_MSC_VER) || (_MSC_VER >= 1900)
-    if (!check(copyctors == 1, "no copy constructors called"))
-      return false;
-    if (!check(movectors == 1, "no move constructors called"))
-      return false;
-#else
-    // Older Microsoft compilers do not implement move semantics for lambda
-    // types, unfortunately.
-    if (!check(copyctors == 2, "no copy constructors called"))
-      return false;
-    if (!check(movectors == 0, "no move constructors called"))
-      return false;
-#endif
-    if (!check(dtors == 0, "no destructors called"))
-      return false;
-
-    return true;
-  }
-
-  bool testFuncPtr() {
-    FuncPtr<int(int)> ptr = test_old_fn;
-
-    if (!check(ptr(1) == 100, "FuncPtr called static function"))
+    if (!check(ptr(1) == 100, "FunctionPointer called static function"))
       return false;
 
     auto fn = [](int x) -> int {
@@ -240,12 +145,16 @@ class TestCallable : public Test
     };
     ptr = &fn;
 
-    if (!check(ptr(10) == 12, "FuncPtr called lambda"))
+    if (!check(ptr(10) == 12, "FunctionPointer called lambda"))
       return false;
 
     CallableObj obj;
     ptr = &obj;
-    if (!check(ptr(7) == 41, "FuncPtr called callable object"))
+    if (!check(ptr(7) == 41, "FunctionPointer called callable object"))
+      return false;
+
+    ptr.assign(&obj, &CallableObj::member_function);
+    if (!check(ptr(5) == 30, "FunctionPointer called member function"))
       return false;
 
     return true;
@@ -260,7 +169,7 @@ class TestCallable : public Test
     };
 
     v.append(10);
-    Function<size_t()> f = ke::Move(lambda);
+    Lambda<size_t()> f = Move(lambda);
 
     if (!check(f() == 0, "f() should have returned 0"))
       return false;
@@ -271,13 +180,11 @@ class TestCallable : public Test
 
   bool Run() override
   {
+    if (!testCallable(Lambda<int(int)>([](int input) { return (input * input) * 10; }), 4, 160))
+      return false;
     if (!testLambdaBasic())
       return false;
-    if (!testInlineStorage())
-      return false;
-    if (!testMove())
-      return false;
-    if (!testFuncPtr())
+    if (!testFunctionPointer())
       return false;
     if (!testMoveUncopyable())
       return false;

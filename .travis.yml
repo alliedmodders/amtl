@@ -2,13 +2,15 @@ addons:
   apt:
     sources:
       - ubuntu-toolchain-r-test
+      - llvm-toolchain-precise-3.8
     packages:
       - lib32stdc++6
       - lib32z1-dev
       - libc6-dev-i386
       - g++-multilib
-      - g++-4.8
-      - g++-4.7
+      - g++-5
+      - g++-6
+      - clang-3.8
 language: cpp
 sudo: false
 compiler:
@@ -18,7 +20,7 @@ before_script:
 script:
   - PATH="~/.local/bin:$PATH"
   - mkdir build-clang-opt && cd build-clang-opt
-  - python ../configure.py --enable-optimize
+  - CC="clang-3.8" CXX="clang++-3.8" python ../configure.py --enable-optimize
   - ambuild
   - ./tests/testrunner/testrunner
   - cd ..
@@ -29,26 +31,26 @@ script:
   - ./tests/testrunner/testrunner
   - cd ..
 
-  - mkdir build-gcc47-opt && cd build-clang-opt
-  - CC="gcc-4.7" CXX="g++-4.7" python ../configure.py --enable-optimize
+  - mkdir build-gcc5-opt && cd build-gcc5-opt
+  - CC="gcc-5" CXX="g++-5" python ../configure.py --enable-optimize
   - ambuild
   - ./tests/testrunner/testrunner
   - cd ..
 
-  - mkdir build-gcc47-debug && cd build-clang-debug
-  - CC="gcc-4.7" CXX="g++-4.7" python ../configure.py --enable-debug
+  - mkdir build-gcc5-debug && cd build-gcc5-debug
+  - CC="gcc-5" CXX="g++-5" python ../configure.py --enable-debug
   - ambuild
   - ./tests/testrunner/testrunner
   - cd ..
 
-  - mkdir build-gcc48-opt && cd build-clang-opt
-  - CC="gcc-4.8" CXX="g++-4.8" python ../configure.py --enable-optimize
+  - mkdir build-gcc6-opt && cd build-gcc6-opt
+  - CC="gcc-6" CXX="g++-6" python ../configure.py --enable-optimize
   - ambuild
   - ./tests/testrunner/testrunner
   - cd ..
 
-  - mkdir build-gcc48-debug && cd build-clang-debug
-  - CC="gcc-4.8" CXX="g++-4.8" python ../configure.py --enable-debug
+  - mkdir build-gcc6-debug && cd build-gcc6-debug
+  - CC="gcc-6" CXX="g++-6" python ../configure.py --enable-debug
   - ambuild
   - ./tests/testrunner/testrunner
   - cd ..

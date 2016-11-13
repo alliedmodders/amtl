@@ -84,6 +84,9 @@
 # if KE_CLANG_AT_LEAST(3, 1)
 #  define KE_CXX_HAS_CONSTEXPR
 # endif
+# if KE_CLANG_AT_LEAST(3, 3)
+#  define KE_CXX_HAS_ALIAS_TEMPLATES
+# endif
 # if KE_CLANG_AT_LEAST(3, 4)
 #  define KE_CXX_HAS_GENERIC_LAMBDA_CAPTURES
 # endif
@@ -118,6 +121,9 @@
 # if KE_GCC_AT_LEAST(4, 9)
 #  define KE_CXX_HAS_GENERIC_LAMBDA_CAPTURES
 # endif
+# if KE_GCC_AT_LEAST(5, 4)
+#  define KE_CXX_HAS_ALIAS_TEMPLATES
+# endif
 
 #elif defined(_MSC_VER)
 # if _MSC_VER >= 1600
@@ -135,6 +141,7 @@
 # if _MSC_VER >= 1800
 #  define KE_CXX_HAS_DELETE
 #  define KE_CXX_HAS_EXPLICIT_BOOL
+#  define KE_CXX_HAS_ALIAS_TEMPLATES
 # endif
 # if _MSC_VER == 1800 && _MSC_FULL_VER == 180021114
 #  define KE_CXX_HAS_CONSTEXPR
@@ -158,6 +165,9 @@
 #endif
 #if !defined(KE_CXX_HAS_EXPLICIT_BOOL)
 # error "AMTL requires C++11 explicit bool"
+#endif
+#if !defined(KE_CXX_HAS_ALIAS_TEMPLATES)
+# error "AMTL requires C++11 alias templates"
 #endif
 
 #if defined(KE_CXX_HAS_NOEXCEPT)

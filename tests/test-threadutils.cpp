@@ -120,9 +120,7 @@ class TestThreading : public Test
   {
     TestWorkerModel test;
 
-    ke::AutoPtr<Thread> thread(new Thread([&test] () -> void {
-      test.Run();
-    }, "TestWorkerModel"));
+    ke::AutoPtr<Thread> thread(new Thread(FunctionPointer<void()>(&test, &TestWorkerModel::Run), "TestWorkerModel"));
     if (!check(thread->Succeeded(), "thread launched"))
       return false;
 

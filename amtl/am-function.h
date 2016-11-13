@@ -29,421 +29,442 @@
 #ifndef _include_amtl_function_h_
 #define _include_amtl_function_h_
 
-#include <amtl/am-moveable.h>
-#include <amtl/am-type-traits.h>
-#include <new>
-#include <assert.h>
+#include <amtl/am-uniqueptr.h>
+#include <amtl/am-refcounting-threadsafe.h>
 
 namespace ke {
 
-namespace impl {
-  template <typename ReturnType, typename ...ArgTypes>
-  class FunctionHolderBase
-  {
-   public:
-     virtual ~FunctionHolderBase()
-     {}
-     virtual ReturnType invoke(ArgTypes&&... argv) = 0;
-     virtual FunctionHolderBase<ReturnType, ArgTypes...>* move(void* mem) = 0;
-  };
+template <typename T>
+class Callable;
 
-  template <typename T, typename ReturnType, typename ...ArgTypes>
-  class FunctionHolder : public FunctionHolderBase<ReturnType, ArgTypes...>
-  {
-    typedef FunctionHolderBase<ReturnType, ArgTypes...> BaseType;
-
-   public:
-    FunctionHolder(FunctionHolder&& other)
-     : obj_(ke::Move(other.obj_))
-    {}
-    FunctionHolder(T&& obj)
-     : obj_(ke::Move(obj))
-    {}
-
-    virtual ~FunctionHolder() override
-    {}
-    virtual ReturnType invoke(ArgTypes&&... argv) override {
-      return obj_(ke::Forward<ArgTypes>(argv)...);
-    }
-    virtual BaseType* move(void* mem) override {
-      new (mem) FunctionHolder(ke::Move(*this));
-      return (BaseType*)mem;
-    }
-
-   private:
-    T obj_;
-  };
-
-  static const size_t kMinFunctionInlineBufferSize = sizeof(void*) * 3;
-} // namespace impl
-
-template <typename Tk>
-class Function;
-
-template <typename ReturnType, typename ...ArgTypes>
-class Function<ReturnType(ArgTypes...)>
+template <typename ReturnType, typename ...ParameterTypes>
+class Callable<ReturnType(ParameterTypes...)>
 {
-  typedef impl::FunctionHolderBase<ReturnType, ArgTypes...> HolderType;
+protected:
+  class Invoker : public RefcountedThreadsafe<Invoker>
+  {
+  protected:
+    Invoker()
+    {}
+  public:
+    Invoker(const Invoker&) = delete;
+    Invoker(Invoker&&) = delete;
+    virtual ~Invoker()
+    {}
 
- public:
-  Function()
-   : impl_(nullptr)
+  public:
+    virtual bool can_invoke() const = 0;
+    virtual ReturnType invoke(ParameterTypes&&... parameters) const = 0;
+
+  public:
+    Invoker& operator=(const Invoker&) = delete;
+    Invoker& operator=(Invoker&&) = delete;
+  };
+
+public:
+  Callable() {
+    assign(nullptr);
+  }
+  Callable(decltype(nullptr))
+    : Callable()
   {}
-  Function(decltype(nullptr))
-   : impl_(nullptr)
+  Callable(const Callable& other) {
+    assign(other.invoker_);
+  }
+  Callable(Callable&& other) {
+    assign(Move(other.invoker_));
+  }
+  ~Callable()
   {}
-  Function(Function&& other) {
-    move(ke::Forward<Function>(other));
+
+public:
+  bool can_invoke() const {
+    return !!invoker_ && invoker_->can_invoke();
+  }
+  ReturnType invoke(ParameterTypes&&... parameters) const {
+    assert(can_invoke());
+    return invoker_->invoke(Forward<ParameterTypes>(parameters)...);
   }
 
-  template <typename T>
-  Function(T&& obj) {
-    assign(ke::Forward<T>(obj));
-  }
-
-  ~Function() {
-    destroy();
-  }
-
-  Function& operator =(decltype(nullptr)) {
-    destroy();
-    impl_ = nullptr;
-    return *this;
-  }
-  Function& operator =(Function&& other) {
-    destroy();
-    move(ke::Move(other));
-    return *this;
-  }
-
-  template <typename T>
-  Function& operator =(T&& other) {
-    destroy();
-    assign(ke::Forward<T>(other));
-    return *this;
-  }
-
+public:
   explicit operator bool() const {
-    return !!impl_;
+    return can_invoke();
+  }
+  bool operator!() const {
+    return !(bool)*this;
+  }
+  bool operator==(const Callable& other) {
+    return *invoker_ == *other.invoker_;
+  }
+  bool operator!=(const Callable& other) {
+    return !(*this == other);
+  }
+  ReturnType operator()(ParameterTypes&&... parameters) const {
+    return invoke(Forward<ParameterTypes>(parameters)...);
+  }
+  Callable& operator=(decltype(nullptr)) {
+    assign(nullptr);
+    return *this;
+  }
+  Callable& operator=(const Callable& other) {
+    assign(other.invoker_);
+    return *this;
+  }
+  Callable& operator=(Callable&& other) {
+    assign(Move(other.invoker_));
+    return *this;
   }
 
-  ReturnType operator()(ArgTypes... argv) const {
-    assert(impl_);
-    return impl_->invoke(ke::Forward<ArgTypes>(argv)...);
+private:
+  void assign(RefPtr<Invoker>&& invoker) {
+    invoker_ = Forward<RefPtr<Invoker>>(invoker);
+  }
+protected:
+  void assign(Invoker* invoker) {
+    invoker_ = invoker;
   }
 
-  bool usingInlineStorage() const {
-    return (void *)impl_ == &buffer_;
-  }
-
- private:
-  void destroy() {
-    if (!impl_)
-      return;
-
-    if (usingInlineStorage())
-      impl_->~HolderType();
-    else
-      delete impl_;
-  }
-  void zap() {
-    destroy();
-    impl_ = nullptr;
-  }
-
-  void* inline_buffer() {
-    return &buffer_;
-  }
-
-  void move(Function&& other) {
-    if (!other) {
-      impl_ = nullptr;
-    } else if (other.usingInlineStorage()) {
-      impl_ = other.impl_->move(inline_buffer());
-      other.zap();
-    } else {
-      impl_ = other.impl_;
-      other.impl_ = nullptr;
-    }
-  }
-
-  template <typename T>
-  void assign(T&& obj) {
-    typedef typename ke::decay<T>::type CallableType;
-    typedef impl::FunctionHolder<CallableType, ReturnType, ArgTypes...> ImplType;
-
-    if (sizeof(ImplType) <= sizeof(buffer_)) {
-      impl_ = reinterpret_cast<ImplType*>(inline_buffer());
-      new (inline_buffer()) ImplType(ke::Forward<T>(obj));
-    } else {
-      impl_ = new ImplType(ke::Forward<T>(obj));
-    }
-  }
-
- private:
-  HolderType* impl_;
-  union {
-    double alignment_;
-    char alias_[impl::kMinFunctionInlineBufferSize];
-  } buffer_;
+private:
+  RefPtr<Invoker> invoker_;
 };
 
-namespace impl {
-  template <typename ReturnType, typename ...ArgTypes>
-  class LambdaHolderBase
+template <typename T>
+class FunctionPointer;
+
+template <typename ReturnType, typename ...ParameterTypes>
+class FunctionPointer<ReturnType(ParameterTypes...)> : public Callable<ReturnType(ParameterTypes...)>
+{
+private:
+  class CFunctionInvoker : public Callable<ReturnType(ParameterTypes...)>::Invoker
   {
-   public:
-     virtual ~LambdaHolderBase()
-     {}
-     virtual ReturnType invoke(ArgTypes&&... argv) const = 0;
-     virtual LambdaHolderBase<ReturnType, ArgTypes...>* clone(void* mem) const = 0;
-     virtual LambdaHolderBase<ReturnType, ArgTypes...>* move(void* mem) = 0;
+  public:
+    typedef ReturnType(*FunctionType)(ParameterTypes...);
+
+  public:
+    CFunctionInvoker(FunctionType function)
+      : function_(function)
+    {}
+
+  public:
+    virtual bool can_invoke() const override {
+      return !!function_;
+    }
+    virtual ReturnType invoke(ParameterTypes&&... parameters) const override {
+      return function_(Forward<ParameterTypes>(parameters)...);
+    }
+
+  private:
+    FunctionType function_;
+  };
+  template <typename U>
+  class MFunctionInvoker : public Callable<ReturnType(ParameterTypes...)>::Invoker
+  {
+  private:
+    class Invoker
+    {
+    protected:
+      Invoker()
+      {}
+    public:
+      Invoker(const Invoker&) = delete;
+      Invoker(Invoker&&) = delete;
+      virtual ~Invoker()
+      {}
+
+    public:
+      virtual bool has_function() const = 0;
+      virtual ReturnType invoke(U* ptr, ParameterTypes&&... parameters) const = 0;
+
+    public:
+      Invoker& operator=(const Invoker&) = delete;
+      Invoker& operator=(Invoker&&) = delete;
+    };
+    class MemberInvoker : public Invoker
+    {
+    public:
+      typedef ReturnType(U::*FunctionType)(ParameterTypes...);
+
+    public:
+      MemberInvoker(FunctionType function)
+        : function_(function)
+      {}
+
+    public:
+      virtual bool has_function() const override {
+        return !!function_;
+      }
+      virtual ReturnType invoke(U* ptr, ParameterTypes&&... parameters) const override {
+        return (ptr->*function_)(Forward<ParameterTypes>(parameters)...);
+      }
+
+    private:
+      FunctionType function_;
+    };
+    class CMemberInvoker : public Invoker
+    {
+    public:
+      typedef ReturnType(U::*FunctionType)(ParameterTypes...) const;
+
+    public:
+      CMemberInvoker(FunctionType function)
+        : function_(function)
+      {}
+
+    public:
+      virtual bool has_function() const override {
+        return !!function_;
+      }
+      virtual ReturnType invoke(U* ptr, ParameterTypes&&... parameters) const override {
+        return (ptr->*function_)(Forward<ParameterTypes>(parameters)...);
+      }
+
+    private:
+      FunctionType function_;
+    };
+    class VMemberInvoker : public Invoker
+    {
+    public:
+      typedef ReturnType(U::*FunctionType)(ParameterTypes...) volatile;
+
+    public:
+      VMemberInvoker(FunctionType function)
+        : function_(function)
+      {}
+
+    public:
+      virtual bool has_function() const override {
+        return !!function_;
+      }
+      virtual ReturnType invoke(U* ptr, ParameterTypes&&... parameters) const override {
+        return (ptr->*function_)(Forward<ParameterTypes>(parameters)...);
+      }
+
+    private:
+      FunctionType function_;
+    };
+    class CVMemberInvoker : public Invoker
+    {
+    public:
+      typedef ReturnType(U::*FunctionType)(ParameterTypes...) const volatile;
+
+    public:
+      CVMemberInvoker(FunctionType function)
+        : function_(function)
+      {}
+
+    public:
+      virtual bool has_function() const override {
+        return !!function_;
+      }
+      virtual ReturnType invoke(U* ptr, ParameterTypes&&... parameters) const override {
+        return (ptr->*function_)(Forward<ParameterTypes>(parameters)...);
+      }
+
+    private:
+      FunctionType function_;
+    };
+
+  public:
+    typedef typename MemberInvoker::FunctionType MFunctionType;
+    typedef typename CMemberInvoker::FunctionType CMFunctionType;
+    typedef typename VMemberInvoker::FunctionType VMFunctionType;
+    typedef typename CVMemberInvoker::FunctionType CVMFunctionType;
+
+  public:
+    MFunctionInvoker(U* ptr, MFunctionType function)
+      : ptr_(ptr),
+      invoker_(new MemberInvoker(function))
+    {}
+    MFunctionInvoker(U* ptr, CMFunctionType function)
+      : ptr_(ptr),
+      invoker_(new CMemberInvoker(function))
+    {}
+    MFunctionInvoker(U* ptr, VMFunctionType function)
+      : ptr_(ptr),
+      invoker_(new VMemberInvoker(function))
+    {}
+    MFunctionInvoker(U* ptr, CVMFunctionType function)
+      : ptr_(ptr),
+      invoker_(new CVMemberInvoker(function))
+    {}
+
+  public:
+    virtual bool can_invoke() const override {
+      return !!ptr_ && !!invoker_ && invoker_->has_function();
+    }
+    virtual ReturnType invoke(ParameterTypes&&... parameters) const override {
+      return invoker_->invoke(ptr_, Forward<ParameterTypes>(parameters)...);
+    }
+
+  private:
+    U* ptr_;
+    UniquePtr<Invoker> invoker_;
   };
 
-  template <typename T, typename ReturnType, typename ...ArgTypes>
-  class LambdaHolder : public LambdaHolderBase<ReturnType, ArgTypes...>
-  {
-    typedef LambdaHolderBase<ReturnType, ArgTypes...> BaseType;
+public:
+  FunctionPointer()
+    : Callable<ReturnType(ParameterTypes...)>()
+  {}
+  FunctionPointer(decltype(nullptr))
+    : Callable<ReturnType(ParameterTypes...)>(nullptr)
+  {}
+  FunctionPointer(const FunctionPointer& other)
+    : Callable<ReturnType(ParameterTypes...)>(other)
+  {}
+  FunctionPointer(FunctionPointer&& other)
+    : Callable<ReturnType(ParameterTypes...)>(Forward<FunctionPointer>(other))
+  {}
+  FunctionPointer(typename CFunctionInvoker::FunctionType function) {
+    assign(function);
+  }
+  template <typename U>
+  FunctionPointer(U* ptr, typename MFunctionInvoker<U>::MFunctionType function) {
+    assign(ptr, function);
+  }
+  template <typename U>
+  FunctionPointer(U* ptr, typename MFunctionInvoker<U>::CMFunctionType function) {
+    assign(ptr, function);
+  }
+  template <typename U>
+  FunctionPointer(U* ptr, typename MFunctionInvoker<U>::VMFunctionType function) {
+    assign(ptr, function);
+  }
+  template <typename U>
+  FunctionPointer(U* ptr, typename MFunctionInvoker<U>::CVMFunctionType function) {
+    assign(ptr, function);
+  }
+  template <typename U>
+  FunctionPointer(U* ptr) {
+    assign(ptr, &U::operator());
+  }
 
-   public:
-    LambdaHolder(const LambdaHolder& other)
-     : obj_(other.obj_)
-    {}
-    LambdaHolder(LambdaHolder&& other)
-     : obj_(ke::Move(other.obj_))
-    {}
-    LambdaHolder(const T& obj)
-     : obj_(obj)
-    {}
-    LambdaHolder(T&& obj)
-     : obj_(ke::Move(obj))
-    {}
+public:
+  FunctionPointer& operator=(decltype(nullptr)) {
+    return (FunctionPointer&)Callable<ReturnType(ParameterTypes...)>::operator=(nullptr);
+  }
+  FunctionPointer& operator=(const FunctionPointer& other) {
+    return (FunctionPointer&)Callable<ReturnType(ParameterTypes...)>::operator=(other);
+  }
+  FunctionPointer& operator=(FunctionPointer&& other) {
+    return (FunctionPointer&)Callable<ReturnType(ParameterTypes...)>::operator=(Forward<FunctionPointer>(other));
+  }
+  FunctionPointer& operator=(typename CFunctionInvoker::FunctionType function) {
+    assign(function);
+    return *this;
+  }
+  template <typename U>
+  FunctionPointer& operator=(U* ptr) {
+    assign(ptr, &U::operator());
+    return *this;
+  }
 
-    virtual ~LambdaHolder()
-    {}
-    virtual ReturnType invoke(ArgTypes&&... argv) const override {
-      return obj_(ke::Forward<ArgTypes>(argv)...);
-    }
-    virtual BaseType* clone(void* mem) const override {
-       if (!mem)
-         return new LambdaHolder(*this);
-       new (mem) LambdaHolder(*this);
-       return (BaseType*)mem;
-    }
-    virtual BaseType* move(void* mem) override {
-      new (mem) LambdaHolder(ke::Move(*this));
-      return (BaseType*)mem;
-    }
+public:
+  template <typename U>
+  void assign(U* ptr, typename MFunctionInvoker<U>::MFunctionType function) {
+    Callable<ReturnType(ParameterTypes...)>::assign(new MFunctionInvoker<U>(ptr, function));
+  }
+  template <typename U>
+  void assign(U* ptr, typename MFunctionInvoker<U>::CMFunctionType function) {
+    Callable<ReturnType(ParameterTypes...)>::assign(new MFunctionInvoker<U>(ptr, function));
+  }
+  template <typename U>
+  void assign(U* ptr, typename MFunctionInvoker<U>::VMFunctionType function) {
+    Callable<ReturnType(ParameterTypes...)>::assign(new MFunctionInvoker<U>(ptr, function));
+  }
+  template <typename U>
+  void assign(U* ptr, typename MFunctionInvoker<U>::CVMFunctionType function) {
+    Callable<ReturnType(ParameterTypes...)>::assign(new MFunctionInvoker<U>(ptr, function));
+  }
+private:
+  void assign(typename CFunctionInvoker::FunctionType function) {
+    Callable<ReturnType(ParameterTypes...)>::assign(new CFunctionInvoker(function));
+  }
+};
 
-   private:
-    T obj_;
-  };
-
-  static const size_t kMinLambdaInlineBufferSize = sizeof(void*) * 3;
-} // namespace impl
-
-template <typename Tk>
+template <typename T>
 class Lambda;
 
-template <typename ReturnType, typename ...ArgTypes>
-class Lambda<ReturnType(ArgTypes...)>
+template <typename ReturnType, typename ...ParameterTypes>
+class Lambda<ReturnType(ParameterTypes...)> : public Callable<ReturnType(ParameterTypes...)>
 {
-  typedef impl::LambdaHolderBase<ReturnType, ArgTypes...> HolderType;
+private:
+  template <typename U>
+  class LambdaInvoker : public Callable<ReturnType(ParameterTypes...)>::Invoker
+  {
+  public:
+    LambdaInvoker(const U& obj)
+      : obj_(obj)
+    {}
+    LambdaInvoker(U&& obj)
+      : obj_(Move(obj))
+    {}
 
- public:
+  public:
+    virtual bool can_invoke() const override {
+      return true; // This can never be false in our knowledge.
+    }
+    virtual ReturnType invoke(ParameterTypes&&... parameters) const override {
+      return obj_(Forward<ParameterTypes>(parameters)...);
+    }
+
+  private:
+    U obj_;
+  };
+
+public:
   Lambda()
-   : impl_(nullptr)
+    : Callable<ReturnType(ParameterTypes...)>()
   {}
   Lambda(decltype(nullptr))
-   : impl_(nullptr)
+    : Callable<ReturnType(ParameterTypes...)>(nullptr)
   {}
-  Lambda(const Lambda& other) {
-    assign(other);
-  }
-  Lambda(Lambda&& other) {
-    move(ke::Forward<Lambda>(other));
-  }
-
-  template <typename T>
-  Lambda(T&& obj) {
-    assign(ke::Forward<T>(obj));
-  }
-
-  ~Lambda() {
-    destroy();
-  }
-
-  Lambda& operator =(decltype(nullptr)) {
-    destroy();
-    impl_ = nullptr;
-    return *this;
-  }
-  Lambda& operator =(const Lambda& other) {
-    destroy();
-    assign(other);
-    return *this;
-  }
-  Lambda& operator =(Lambda&& other) {
-    destroy();
-    move(ke::Move(other));
-    return *this;
-  }
-
-  template <typename T>
-  Lambda& operator =(T&& other) {
-    destroy();
-    assign(other);
-    return *this;
-  }
-
-  explicit operator bool() const {
-    return !!impl_;
-  }
-
-  ReturnType operator()(ArgTypes... argv) const {
-    assert(impl_);
-    return impl_->invoke(ke::Forward<ArgTypes>(argv)...);
-  }
-
-  bool usingInlineStorage() const {
-    return (void *)impl_ == &buffer_;
-  }
-
- private:
-  void destroy() {
-    if (!impl_)
-      return;
-
-    if (usingInlineStorage())
-      impl_->~HolderType();
-    else
-      delete impl_;
-  }
-  void zap() {
-    destroy();
-    impl_ = nullptr;
-  }
-
-  void* inline_buffer() {
-    return &buffer_;
-  }
-
-  void assign(const Lambda& other) {
-    if (!other)
-      impl_ = nullptr;
-    else if (other.usingInlineStorage())
-      impl_ = other.impl_->clone(inline_buffer());
-    else
-      impl_ = other.impl_->clone(nullptr);
-  }
-
-  void move(Lambda&& other) {
-    if (!other) {
-      impl_ = nullptr;
-    } else if (other.usingInlineStorage()) {
-      impl_ = other.impl_->move(inline_buffer());
-      other.zap();
-    } else {
-      impl_ = other.impl_;
-      other.impl_ = nullptr;
-    }
-  }
-
-  template <typename T>
-  void assign(T&& obj) {
-    typedef typename ke::decay<T>::type CallableType;
-    typedef impl::LambdaHolder<CallableType, ReturnType, ArgTypes...> ImplType;
-
-    if (sizeof(ImplType) <= sizeof(buffer_)) {
-      impl_ = reinterpret_cast<ImplType*>(inline_buffer());
-      new (inline_buffer()) ImplType(ke::Forward<T>(obj));
-    } else {
-      impl_ = new ImplType(ke::Forward<T>(obj));
-    }
-  }
-
- private:
-  HolderType* impl_;
-  union {
-    double alignment_;
-    char alias_[impl::kMinLambdaInlineBufferSize];
-  } buffer_;
-};
-
-template <typename Tk>
-class FuncPtr;
-
-template <typename ReturnType, typename ...ArgTypes>
-class FuncPtr<ReturnType(ArgTypes...)>
-{
-  typedef ReturnType(*Invoker)(void*, ArgTypes&&...);
-
- public:
-  FuncPtr()
-   : ptr_(nullptr)
+  Lambda(const Lambda& other)
+    : Callable<ReturnType(ParameterTypes...)>(other)
   {}
-  FuncPtr(const FuncPtr& other)
-   : ptr_(other.ptr_),
-     invoker_(other.invoker_)
+  Lambda(Lambda&& other)
+    : Callable<ReturnType(ParameterTypes...)>(Forward<Lambda>(other))
   {}
-  FuncPtr(ReturnType(*fn)(ArgTypes...)) {
-    assignStatic(fn);
+  template <typename U>
+  Lambda(const U& obj) {
+    assign(obj);
   }
-  template <typename T>
-  FuncPtr(T* obj) {
-    assignFunctor(obj);
+  template <typename U>
+  Lambda(U&& obj) {
+    assign(Forward<U>(obj));
   }
 
-  FuncPtr& operator =(decltype(nullptr)) {
-    ptr_ = nullptr;
-    invoker_ = nullptr;
+public:
+  Lambda& operator=(decltype(nullptr)) {
+    return (Lambda&)Callable<ReturnType(ParameterTypes...)>::operator=(nullptr);
+  }
+  Lambda& operator=(const Lambda& other) {
+    return (Lambda&)Callable<ReturnType(ParameterTypes...)>::operator=(other);
+  }
+  Lambda& operator=(Lambda&& other) {
+    return (Lambda&)Callable<ReturnType(ParameterTypes...)>::operator=(Forward<Lambda>(other));
+  }
+  template <typename U>
+  Lambda& operator=(const U& obj) {
+    assign(obj);
     return *this;
   }
-  FuncPtr& operator =(const FuncPtr& other) {
-    ptr_ = other.ptr_;
-    invoker_ = other.invoker_;
-    return *this;
-  }
-  FuncPtr& operator =(ReturnType(*fn)(ArgTypes...)) {
-    assignStatic(fn);
-    return *this;
-  }
-  template <typename T>
-  FuncPtr& operator =(T* obj) {
-    assignFunctor(obj);
+  template <typename U>
+  Lambda& operator=(U&& obj) {
+    assign(Forward<U>(obj));
     return *this;
   }
 
-  explicit operator bool() const {
-    return !!ptr_;
-  }
+private:
+  template <typename U>
+  void assign(U&& obj) {
+    typedef typename decay<U>::type CallableType;
+    typedef LambdaInvoker<CallableType> HolderType;
 
-  ReturnType operator()(ArgTypes... argv) const {
-    assert(ptr_ && invoker_);
-    return invoker_(ptr_, ke::Forward<ArgTypes>(argv)...);
+    Callable<ReturnType(ParameterTypes...)>::assign(new HolderType(Forward<U>(obj)));
   }
-
- private:
-  void assignStatic(ReturnType(*fn)(ArgTypes...)) {
-    typedef decltype(fn) FnType;
-    ptr_ = reinterpret_cast<void*>(fn);
-    invoker_ = [](void *ptr, ArgTypes&&... argv) {
-      return (reinterpret_cast<FnType>(ptr))(ke::Forward<ArgTypes>(argv)...);
-    };
-  }
-  template <typename T>
-  void assignFunctor(T* obj) {
-    ptr_ = obj;
-    invoker_ = [](void *ptr, ArgTypes&&... argv) {
-      return (reinterpret_cast<T*>(ptr))->operator()(ke::Forward<ArgTypes>(argv)...);
-    };
-  }
-
- private:
-  void* ptr_;
-  Invoker invoker_;
 };
 
 } // namespace ke
 
 #endif // _include_amtl_function_h_
+

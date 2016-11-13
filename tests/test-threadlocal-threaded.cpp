@@ -75,9 +75,7 @@ class TestThreadLocalThreaded : public Test
     sThreadVar = 10;
 
     VarThread run;
-    ke::AutoPtr<Thread> thread(new Thread([&run] () -> void {
-      run.Run();
-    }, "TestThreadLocal"));
+    ke::AutoPtr<Thread> thread(new Thread(FunctionPointer<void()>(&run, &VarThread::Run), "TestThreadLocal"));
     if (!check(thread->Succeeded(), "thread launched"))
       return false;
     thread->Join();

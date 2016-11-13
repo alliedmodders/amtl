@@ -115,8 +115,8 @@ class ConditionVariable : public Lockable
 class Thread
 {
  public:
-  Thread(ke::Function<void()>&& callback, const char *name = nullptr) {
-    auto ptr = new ke::Function<void()>(ke::Move(callback));
+  Thread(Callable<void()>&& callback, const char *name = nullptr) {
+    auto ptr = new ke::Callable<void()>(ke::Move(callback));
     thread_ = CreateThread(nullptr, 0, MainCallback, ptr, 0, nullptr);
     if (!thread_)
       delete ptr;
@@ -143,8 +143,9 @@ class Thread
 
  private:
   static DWORD WINAPI MainCallback(LPVOID arg) {
-    auto ptr = reinterpret_cast<ke::Lambda<void()>*>(arg);
-    (*ptr)();
+    auto ptr = reinterpret_cast<ke::Callable<void()>*>(arg);
+    if (ptr->can_invoke())
+      ptr->invoke();
     delete ptr;
     return 0;
   }

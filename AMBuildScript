@@ -10,12 +10,12 @@ class KEConfig(object):
     cfg = builder.DetectCompilers()
     cxx = cfg.cxx
 
-    if cfg.version < 'clang-3.0' or cfg.version < 'apple-clang-3.0':
-      raise Exception('AMTL requires clang 3.0 or higher.')
-    if cfg.version < 'gcc-4.5':
-      raise Exception('AMTL requires GCC 4.5 or higher.')
-    if cfg.version < 'msvc-1600':
-      raise Exception('AMTL requires Visual Studio 2010 (CL 16.00) or higher.')
+    if cfg.version < 'clang-3.3' or cfg.version < 'apple-clang-3.3':
+      raise Exception('AMTL requires clang 3.3 or higher.')
+    if cfg.version < 'gcc-4.7':
+      raise Exception('AMTL requires GCC 4.7 or higher.')
+    if cfg.version < 'msvc-1800':
+      raise Exception('AMTL requires Visual Studio 2013 (CL 18.00) or higher.')
 
     if cxx.like('gcc'):
       if builder.target_platform != 'windows':
@@ -24,15 +24,11 @@ class KEConfig(object):
             cfg.cxxflags += ['-std=c++14']
           elif cxx.version >= '4.7':
             cfg.cxxflags += ['-std=c++11']
-          elif cxx.version >= '4.3':
-            cfg.cxxflags += ['-std=c++0x']
         else:
           if cxx.version >= '3.5':
             cfg.cxxflags += ['-std=c++14']
           elif cxx.version >= '3.3':
             cfg.cxxflags += ['-std=c++1y']
-          else:
-            cfg.cxxflags += ['-std=c++11']
 
         cfg.defines += [
           'stricmp=strcasecmp',
@@ -60,6 +56,8 @@ class KEConfig(object):
       if have_clang or (have_gcc and cxx.majorVersion >= 4):
         cfg.cflags += ['-fvisibility=hidden']
         cfg.cxxflags += ['-fvisibility-inlines-hidden']
+      if have_clang:
+        cfg.cflags += ['-Wno-implicit-exception-spec-mismatch']
 
       cfg.cxxflags += [
         '-fno-exceptions',
