@@ -31,7 +31,7 @@
 #define _include_amtl_allocatorpolicies_h_
 
 #include <stdio.h>
-#include <stdlib.h>
+#include <amtl/am-memory.h>
 
 namespace ke {
 
@@ -50,18 +50,10 @@ class SystemAllocatorPolicy
 
   public:
     void am_free(void *memory) {
-#if defined(_DEBUG) && defined(_CRTDBG_MAP_ALLOC)
       free(memory);
-#else
-      ::free(memory);
-#endif
     }
     void *am_malloc(size_t bytes) {
-#if defined(_DEBUG) && defined(_CRTDBG_MAP_ALLOC)
-      void *ptr = malloc(bytes);
-#else
-      void *ptr = ::malloc(bytes);
-#endif
+      void* ptr = malloc(bytes);
       if (!ptr)
         reportOutOfMemory();
       return ptr;
