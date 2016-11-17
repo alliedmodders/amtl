@@ -69,10 +69,10 @@ public:
     : Callable()
   {}
   Callable(const Callable& other) {
-    assign(other.invoker_);
+    assign(other);
   }
   Callable(Callable&& other) {
-    assign(Move(other.invoker_));
+    assign(Forward<Callable>(other));
   }
   ~Callable()
   {}
@@ -84,6 +84,16 @@ public:
   ReturnType invoke(ParameterTypes&&... parameters) const {
     assert(can_invoke());
     return invoker_->invoke(Forward<ParameterTypes>(parameters)...);
+  }
+  void assign(const Callable& other) {
+    invoker_ = other.invoker_;
+  }
+  void assign(Callable&& other) {
+    invoker_ = Move(other.invoker_);
+  }
+protected:
+  void assign(Invoker* invoker) {
+    invoker_ = invoker;
   }
 
 public:
@@ -107,21 +117,12 @@ public:
     return *this;
   }
   Callable& operator=(const Callable& other) {
-    assign(other.invoker_);
+    assign(other);
     return *this;
   }
   Callable& operator=(Callable&& other) {
-    assign(Move(other.invoker_));
+    assign(Forward<Callable>(other));
     return *this;
-  }
-
-private:
-  void assign(RefPtr<Invoker>&& invoker) {
-    invoker_ = Forward<RefPtr<Invoker>>(invoker);
-  }
-protected:
-  void assign(Invoker* invoker) {
-    invoker_ = invoker;
   }
 
 private:

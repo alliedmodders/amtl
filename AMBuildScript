@@ -12,7 +12,7 @@ class KEConfig(object):
 
     if cfg.version < 'clang-3.3' or cfg.version < 'apple-clang-3.3':
       raise Exception('AMTL requires clang 3.3 or higher.')
-    if cfg.version < 'gcc-4.7':
+    if cfg.version < 'gcc-5.4':
       raise Exception('AMTL requires GCC 4.7 or higher.')
     if cfg.version < 'msvc-1800':
       raise Exception('AMTL requires Visual Studio 2013 (CL 18.00) or higher.')
@@ -20,10 +20,7 @@ class KEConfig(object):
     if cxx.like('gcc'):
       if builder.target_platform != 'windows':
         if cxx.name == 'gcc':
-          if cxx.version >= '4.9':
-            cfg.cxxflags += ['-std=c++14']
-          elif cxx.version >= '4.7':
-            cfg.cxxflags += ['-std=c++11']
+          cfg.cxxflags += ['-std=c++14']
         else:
           if cxx.version >= '3.5':
             cfg.cxxflags += ['-std=c++14']
