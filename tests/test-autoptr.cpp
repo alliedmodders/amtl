@@ -68,7 +68,7 @@ class TestAutoPtr : public Test
     if (!check(*intp.get() == 7, "pointer should contain 7"))
       return false;
 
-    intp = new int[2];
+    intp = new int(2);
     if (!check(*intp.get() == 2, "pointer should contain 2"))
       return false;
 

@@ -48,11 +48,12 @@ int main(int argc, char **argv)
     fprintf(stdout, "Testing %s... \n", test->name());
     if (!test->Run()) {
       fprintf(stdout, "TEST:%s FAIL\n", test->name());
-      break;
+      return 1;
     }
     fprintf(stdout, "TEST:%s OK\n", test->name());
     test = test->next();
   }
+  return 0;
 }
 
 #if defined(__GNUC__)
