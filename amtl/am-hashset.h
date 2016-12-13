@@ -90,7 +90,7 @@ class HashSet : private AllocPolicy
 
   template <typename Lookup>
   void removeIfExists(const Lookup &key) {
-    return table_.remove(key);
+    return table_.removeIfExists(key);
   }
 
   void remove(Result &r) {
