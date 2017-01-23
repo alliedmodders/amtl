@@ -387,6 +387,21 @@ class HashTable : private AllocPolicy
   {
   }
 
+  HashTable(HashTable&& other)
+    : AllocPolicy(ke::Move(other)),
+      capacity_(other.capacity_),
+      nelements_(other.nelements_),
+      ndeleted_(other.ndeleted_),
+      table_(other.table_),
+      minCapacity_(other.minCapacity_)
+  {
+    other.capacity_ = 0;
+    other.nelements_ = 0;
+    other.ndeleted_ = 0;
+    other.table_ = nullptr;
+    other.minCapacity_ = kMinCapacity;
+  }
+
   ~HashTable()
   {
     for (uint32_t i = 0; i < capacity_; i++)

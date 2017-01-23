@@ -98,6 +98,11 @@ class HashMap : private AllocPolicy
   {
   }
 
+  HashMap(HashMap&& other)
+   : table_(ke::Move(other.table_))
+  {
+  }
+
   // capacity must be a power of two.
   bool init(size_t capacity = 16) {
     return table_.init(capacity);
@@ -135,7 +140,8 @@ class HashMap : private AllocPolicy
   }
   template <typename UK>
   bool add(Insert &i, UK &&key) {
-    Entry entry(ke::Forward<UK>(key), V());
+    V value;
+    Entry entry(ke::Forward<UK>(key), ke::Move(value));
     return table_.add(i, ke::Move(entry));
   }
 
