@@ -39,30 +39,50 @@
 
 namespace ke {
 
+template <typename T>
+struct DefaultDeleter
+{
+  void operator()(T *ptr) {
+    delete ptr;
+  }
+};
+
+template <typename T>
+struct DefaultDeleter<T[]>
+{
+  void operator()(T *ptr) {
+    delete[] ptr;
+  }
+};
+
 // Wrapper that automatically deletes its contents. The pointer can be taken
 // to avoid destruction.
-template <typename T>
+template <typename T, typename Deleter = DefaultDeleter<T>>
 class AutoPtr
 {
  public:
   AutoPtr()
-   : t_(nullptr)
+   : t_(nullptr),
+    deleter_()
   {
   }
   explicit AutoPtr(T *t)
-   : t_(t)
+   : t_(t),
+    deleter_()
   {
   }
   AutoPtr(UniquePtr<T>&& other)
-   : t_(other.take())
+   : t_(other.take()),
+    deleter_()
   {
   }
   AutoPtr(AutoPtr &&other)
-   : t_(other.take())
+   : t_(other.take()),
+    deleter_(Move(other.deleter_))
   {
   }
   ~AutoPtr() {
-    delete t_;
+    deleter_(t_);
   }
   T *get() const {
     return t_;
@@ -80,8 +100,11 @@ class AutoPtr
     return t_;
   }
   void assign(T* t) {
-    delete t_;
+    deleter_(t_);
     t_ = t;
+  }
+  Deleter &getDeleter() const {
+    return deleter_;
   }
   AutoPtr& operator =(decltype(nullptr)) {
     assign(nullptr);
@@ -93,6 +116,7 @@ class AutoPtr
   }
   AutoPtr& operator =(AutoPtr &&other) {
     assign(other.take());
+    deleter_ = Move(other.deleter_);
     return *this;
   }
   AutoPtr& operator =(UniquePtr<T> &&other) {
@@ -109,32 +133,37 @@ class AutoPtr
 
  private:
   T *t_;
+  Deleter deleter_;
 };
 
 // Wrapper that automatically deletes its contents. The pointer can be taken
 // to avoid destruction.
-template <typename T>
-class AutoPtr<T[]>
+template <typename T, typename Deleter>
+class AutoPtr<T[], Deleter>
 {
  public:
   AutoPtr()
-   : t_(nullptr)
+   : t_(nullptr),
+    deleter_()
   {
   }
   AutoPtr(AutoPtr&& other)
-   : t_(other.take())
+   : t_(other.take()),
+    deleter_(Move(other.deleter_))
   {
   }
   AutoPtr(UniquePtr<T[]>&& other)
-   : t_(other.take())
+   : t_(other.take()),
+    deleter_()
   {
   }
   explicit AutoPtr(T *t)
-   : t_(t)
+   : t_(t),
+    deleter_()
   {
   }
   ~AutoPtr() {
-    delete [] t_;
+    deleter_(t_);
   }
   T *get() const {
     return t_;
@@ -150,8 +179,11 @@ class AutoPtr<T[]>
   }
 
   void assign(T* ptr) {
-    delete[] t_;
+    deleter_(t_);
     t_ = ptr;
+  }
+  Deleter &getDeleter() const {
+    return deleter_;
   }
 
   T& operator[](size_t index) {
@@ -164,6 +196,7 @@ class AutoPtr<T[]>
   }
   AutoPtr& operator =(AutoPtr&& other) {
     assign(other.take());
+    deleter_ = Move(other.deleter_);
     return *this;
   }
   AutoPtr& operator =(UniquePtr<T[]>&& other) {
@@ -177,6 +210,7 @@ class AutoPtr<T[]>
 
  private:
   T *t_;
+  Deleter deleter_;
 };
 
 } // namespace ke

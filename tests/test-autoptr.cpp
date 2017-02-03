@@ -43,6 +43,26 @@ struct Blah {
   }
 };
 
+static size_t sDeleterCalls = 0;
+static size_t sDeleterMoves = 0;
+template <typename T>
+class CountedDeleter
+{
+public:
+  CountedDeleter &operator=(CountedDeleter &&) {
+    ++sDeleterMoves;
+    return *this;
+  }
+
+public:
+  void operator()(typename remove_extent<T>::type *ptr) {
+    if (ptr)
+      ++sDeleterCalls;
+
+    DefaultDeleter<T>{}(ptr);
+  }
+};
+
 class TestAutoPtr : public Test
 {
  public:
@@ -54,6 +74,8 @@ class TestAutoPtr : public Test
   bool Run() override
   {
     if (!testSingle())
+      return false;
+    else if (!testDeleter())
       return false;
     return true;
   };
@@ -90,6 +112,49 @@ class TestAutoPtr : public Test
       blah = MakeUnique<Blah[]>(15);
     }
     if (!check(sBlahDtors == 35, "called Blah::~Blah 35 times"))
+      return false;
+
+    return true;
+  }
+
+  bool testDeleter() {
+    {
+      ke::AutoPtr<int, CountedDeleter<int>> ptr(MakeUnique<int>(6));
+      {
+        ke::AutoPtr<int, CountedDeleter<int>> ptr2(MakeUnique<int>(7));
+        ptr = Move(ptr2);
+        if (!check(sDeleterCalls == 1, "deletion count should be 1"))
+          return false;
+        else if (!check(sDeleterMoves == 1, "deletor moved once"))
+          return false;
+      }
+
+      if (!check(sDeleterCalls == 1, "deletion count should still be 1"))
+        return false;
+    }
+
+    if (!check(sDeleterCalls == 2, "deletion count should be 2"))
+      return false;
+
+    sDeleterCalls = 0;
+    sDeleterMoves = 0;
+
+    {
+      ke::AutoPtr<int[], CountedDeleter<int[]>> ptr(new int[2]);
+      {
+        ke::AutoPtr<int[], CountedDeleter<int[]>> ptr2(new int[3]);
+        ptr = Move(ptr2);
+        if (!check(sDeleterCalls == 1, "array deletion count should be 1"))
+          return false;
+        else if (!check(sDeleterMoves == 1, "array deletor moved once"))
+          return false;
+      }
+
+      if (!check(sDeleterCalls == 1, "array deletion count should still be 1"))
+        return false;
+    }
+
+    if (!check(sDeleterCalls == 2, "array deletion count should be 2"))
       return false;
 
     return true;
