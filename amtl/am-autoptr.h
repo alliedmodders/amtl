@@ -42,7 +42,7 @@ namespace ke {
 template <typename T>
 struct DefaultDeleter
 {
-  void operator()(T *ptr) {
+  void operator()(T *ptr) const {
     delete ptr;
   }
 };
@@ -50,7 +50,7 @@ struct DefaultDeleter
 template <typename T>
 struct DefaultDeleter<T[]>
 {
-  void operator()(T *ptr) {
+  void operator()(T *ptr) const {
     delete[] ptr;
   }
 };
