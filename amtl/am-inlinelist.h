@@ -123,7 +123,7 @@ class InlineList
     }
 
     iterator & operator ++() {
-      iter_ = iter_->next;
+      iter_ = iter_->next_;
       return *this;
     }
     iterator operator ++(int) {
