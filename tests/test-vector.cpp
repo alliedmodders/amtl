@@ -39,6 +39,7 @@ static size_t sCopyCtors = 0;
 static size_t sMovingCtors = 0;
 static size_t sMovedDtors = 0;
 static size_t sDtors = 0;
+static size_t sNDtors = 0;
 
 namespace {
 
@@ -59,6 +60,43 @@ class BasicThing
   }
 };
 
+class BasicRemoveThing
+{
+  public:
+    BasicRemoveThing() :
+      moved_(false),
+      count_(true)
+    {
+    }
+    BasicRemoveThing(bool count) :
+      moved_(false),
+      count_(count)
+    {
+    }
+    BasicRemoveThing(BasicRemoveThing &&other)
+    {
+      assert(!other.moved_);
+      count_ = other.count_;
+      moved_ = false;
+      other.moved_ = true;
+    }
+    BasicRemoveThing &operator =(BasicRemoveThing &&other) {
+      assert(!other.moved_);
+      count_ = other.count_;
+      moved_ = false;
+      other.moved_ = true;
+      return *this;
+    }
+    ~BasicRemoveThing()
+    {
+      if (count_ && !moved_)
+        sNDtors++;
+    }
+  private:
+    bool moved_;
+    bool count_;
+};
+
 class MovingThing
 {
  public:
@@ -77,7 +115,7 @@ class MovingThing
   ~MovingThing()
   {
     sDtors++;
-    if (moved_)
+    if (!moved_)
       sMovedDtors++;
   }
   MovingThing &operator =(MovingThing &&other) {
@@ -104,6 +142,32 @@ class TestVector : public Test
   TestVector()
    : Test("Vector")
   {
+  }
+  
+  bool testRemove()
+  {
+    // This test requires us to verify the destructor is only called once, even after destruction of vector itself.
+    {
+      Vector<BasicRemoveThing> vector;
+      vector.append(ke::Move(BasicRemoveThing()));
+      vector.remove(0);
+    }
+    
+    if (!check(sNDtors == 1, "Destructor only called once"))
+      return false;
+    
+    // This test requires us to verify the destructor is only called once, 2 values in, even after destruction of vector itself.
+    {
+      Vector<BasicRemoveThing> vector;
+      vector.append(ke::Move(BasicRemoveThing()));
+      vector.append(ke::Move(BasicRemoveThing(false)));
+      vector.remove(0);
+    }
+    
+    if (!check(sNDtors == 2, "Destructor only called once"))
+      return false;
+  
+    return true;
   }
 
   bool testInts()
@@ -380,6 +444,8 @@ class TestVector : public Test
   bool Run() override
   {
     if (!testInts())
+      return false;
+    if (!testRemove())
       return false;
     if (!testDestructors())
       return false;
