@@ -31,7 +31,10 @@
 
 namespace ke {
 
-#if defined(__NetBSD__)
+#if defined(__EMSCRIPTEN__)
+# define KE_EMSCRIPTEN
+# define KE_POSIX
+#elif defined(__NetBSD__)
 # define KE_NETBSD
 # define KE_BSD
 #elif defined(__FreeBSD__)
