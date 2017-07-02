@@ -1,6 +1,6 @@
 // vim: set sts=8 ts=2 sw=2 tw=99 et:
 //
-// Copyright (C) 2017, David Anderson and AlliedModders LLC
+// Copyright (C) 2013, David Anderson and AlliedModders LLC
 // All rights reserved.
 //
 // Redistribution and use in source and binary forms, with or without
@@ -27,62 +27,38 @@
 // ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 // POSSIBILITY OF SUCH DAMAGE.
 
-#ifndef _include_amtl_atomics_h_
-#define _include_amtl_atomics_h_
+#ifndef _include_amtl_atomics_stl_h_
+#define _include_amtl_atomics_stl_h_
 
-#if defined(KE_ABSOLUTELY_NO_STL)
-# include <amtl/am-atomics-no-stl.h>
-#else
-# include <amtl/am-atomics-stl.h>
-#endif
-
-#if defined(KE_CXX_MSVC)
-extern "C" {
-  void * __cdecl _InterlockedCompareExchangePointer(
-     void * volatile *Destination,
-     void * Exchange,
-     void * Comparand
-  );
-} // extern "C"
-# pragma intrinsic(_InterlockedCompareExchangePointer)
-#endif
-
-#if defined(KE_CXX_LIKE_GCC)
-# if defined(i386) || defined(__x86_64__)
-#  if defined(__clang__)
-    static inline void YieldProcessor() { asm("pause"); }
-#  else
-#   if KE_GCC_AT_LEAST(4, 7)
-#    define YieldProcessor() __builtin_ia32_pause()
-#   else
-    static inline void YieldProcessor() { asm("pause"); }
-#   endif
-#  endif
-# else
-#  define YieldProcessor()
-# endif
-#elif defined(_MSC_VER)
-# if !defined(YieldProcessor)
-#  define YieldProcessor _mm_pause
-# endif
-#endif
+#include <amtl/am-cxx.h>
+#include <amtl/am-platform.h>
+#include <stddef.h>
+#include <stdint.h>
+#include <atomic>
 
 namespace ke {
 
-#if defined(KE_CXX_MSVC)
-static inline void *
-CompareAndSwapPtr(void *volatile *Destination, void *Exchange, void *Comparand)
+class AtomicRefcount
 {
-  return _InterlockedCompareExchangePointer(Destination, Exchange, Comparand);
-}
-#else
-static inline void *
-CompareAndSwapPtr(void *volatile *dest, void *newval, void *oldval)
-{
-  return __sync_val_compare_and_swap(dest, oldval, newval);
-}
-#endif
+ public:
+  explicit AtomicRefcount(uintptr_t value)
+   : value_(value)
+  {
+  }
+
+  void increment() {
+    value_.fetch_add(1);
+  }
+
+  // Return false if all references are gone.
+  bool decrement() {
+    return value_.fetch_sub(1) == 1;
+  }
+
+ private:
+  std::atomic<uintptr_t> value_;
+};
 
 } // namespace ke
 
-#endif // _include_amtl_atomics_h_
+#endif // _include_amtl_atomics_stl_h_
