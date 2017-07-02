@@ -52,7 +52,7 @@ class AtomicRefcount
 
   // Return false if all references are gone.
   bool decrement() {
-    return value_.fetch_sub(1) == 1;
+    return value_.fetch_sub(1) != 1;
   }
 
  private:
