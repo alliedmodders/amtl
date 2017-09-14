@@ -55,7 +55,7 @@ FormatSystemErrorCode(int code, char* error, size_t maxlength)
     SafeSprintf(error, maxlength, "error code %08x", code);
     return;
   }
-#elif defined(KE_LINUX)
+#elif defined(KE_LINUX) && defined(__GLIBC__)
   const char* ptr = strerror_r(code, error, maxlength);
   if (ptr != error)
     ke::SafeSprintf(error, maxlength, "%s", ptr);
