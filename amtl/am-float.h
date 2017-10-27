@@ -30,8 +30,8 @@
 #ifndef _include_amtl_float_h_
 #define _include_amtl_float_h_
 
-#include <math.h>
-#include <float.h>
+#include <cmath>
+#include <cfloat>
 
 namespace ke {
 
@@ -88,7 +88,7 @@ IsNaN(T v)
 #ifdef _MSC_VER
   return !!_isnan(v);
 #else
-  return isnan(v);
+  return std::isnan(v);
 #endif
 }
 
