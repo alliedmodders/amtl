@@ -140,8 +140,7 @@ class HashMap : private AllocPolicy
   }
   template <typename UK>
   bool add(Insert &i, UK &&key) {
-    V value;
-    Entry entry(ke::Forward<UK>(key), ke::Move(value));
+    Entry entry(ke::Forward<UK>(key), V());
     return table_.add(i, ke::Move(entry));
   }
 
