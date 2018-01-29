@@ -98,6 +98,11 @@ class HashMap : private AllocPolicy
   {
   }
 
+  HashMap(HashMap&& other)
+   : table_(ke::Move(other.table_))
+  {
+  }
+
   // capacity must be a power of two.
   bool init(size_t capacity = 16) {
     return table_.init(capacity);

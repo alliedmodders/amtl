@@ -131,12 +131,13 @@ class TestCallable : public Test
     };
 
     struct {
-      void *a, *b, *c, *d, *e, *f, *g;
+      int a;
+      void *b, *c, *d, *e, *f, *g;
       void *h, *j, *k, *m, *n, *o, *p;
-    } huge_struct;
+    } huge_struct = { 20 };
     CallDtorObj test_dtor;
     ptr = [huge_struct, test_dtor]() -> int {
-      return 20;
+      return huge_struct.a;
     };
     if (!check(!ptr.usingInlineStorage(), "huge lambda should not be using inline storage"))
       return false;
