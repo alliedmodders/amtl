@@ -60,6 +60,8 @@ class KEConfig(object):
       if have_clang or (have_gcc and cxx.majorVersion >= 4):
         cfg.cflags += ['-fvisibility=hidden']
         cfg.cxxflags += ['-fvisibility-inlines-hidden']
+        # -Wunused-function breaks test_flags.cpp
+        cfg.cxxflags += ['-Wno-unused-function']
 
       cfg.cxxflags += [
         '-fno-exceptions',

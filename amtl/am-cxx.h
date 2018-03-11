@@ -205,44 +205,4 @@
 # define KE_LINKONCE(x) x __attribute__((weak))
 #endif
 
-#define KE_DEFINE_ENUM_OPERATORS(EnumName)                                          \
-  static inline EnumName operator |(const EnumName &left, const EnumName &right) {  \
-    return EnumName(uint32_t(left) | uint32_t(right));                              \
-  }                                                                                 \
-  static inline EnumName operator &(const EnumName &left, const EnumName &right) {  \
-    return EnumName(uint32_t(left) & uint32_t(right));                              \
-  }                                                                                 \
-  static inline EnumName operator ^(const EnumName &left, const EnumName &right) {  \
-    return EnumName(uint32_t(left) ^ uint32_t(right));                              \
-  }                                                                                 \
-  static inline EnumName operator ~(const EnumName &flags) {                        \
-    return EnumName(~uint32_t(flags));                                              \
-  }                                                                                 \
-  static inline EnumName & operator |=(EnumName &left, const EnumName &right) {     \
-    return left = left | right;                                                     \
-  }                                                                                 \
-  static inline EnumName & operator &=(EnumName &left, const EnumName &right) {     \
-    return left = left & right;                                                     \
-  }                                                                                 \
-  static inline EnumName & operator ^=(EnumName &left, const EnumName &right) {     \
-    return left = left ^ right;                                                     \
-  }                                                                                 \
-  static inline bool operator !(const EnumName &obj) {                              \
-    return uint32_t(obj) == 0;                                                      \
-  }
-
-#define KE_DEFINE_ENUM_COMPARATORS(EnumName, Type)                                  \
-  static inline bool operator ==(const EnumName& left, const Type& right) {         \
-    return Type(left) == right;                                                     \
-  }                                                                                 \
-  static inline bool operator ==(const Type& left, const EnumName& right) {         \
-    return left == Type(right);                                                     \
-  }                                                                                 \
-  static inline bool operator !=(const EnumName& left, const Type& right) {         \
-    return Type(left) != right;                                                     \
-  }                                                                                 \
-  static inline bool operator !=(const Type& left, const EnumName& right) {         \
-    return left != Type(right);                                                     \
-  }
-
 #endif // _include_amtl_cxx_support_h_

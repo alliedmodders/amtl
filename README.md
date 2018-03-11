@@ -261,6 +261,14 @@ Note that AutoPtr is not similar to the C++03 `auto_ptr` class. It is simply a s
 permissive UniquePtr. It is intended for code that benefits from automatic deletion, but
 not from the verbosity introduced by some of UniquePtr's safety features.
 
+### Flags (am-flags.h)
+
+`Flags<T>` is a container class for a scoped enum type (that is, an enum declared as `enum class`).
+It is meant to be used in addition to (or as a replacement of) `KE_DEFINE_ENUM_OPERATORS`. It is
+designed for enums where each member is a bit or bitmask. Flags provides type-safe bitwise
+operations, and most importantly, an implicit cast-to-bool operator which is not allowed for
+normal C++ enumerations.
+
 # Replacing SourceHook Includes
 
 AMTL is a spiritual successor to the SourceHook template library, used in many AlliedModders
@@ -313,6 +321,13 @@ variables, you might consider simply linking objects together using RAII and avo
 entirely (though CStack will have better cache performance if you need to walk the list of entries).
 
 If you don't need stable pointers, CStack can be replaced with ke::Vector.
+
+# Compile-Time Options
+
+- `KE_ALLOW_STD_CXX` - In some cases, STL is implemented using compiler intrinsics, and therefore
+  certain features are not possible to implement without using STL. An example of this would be
+  std::underlying\_type. AMTL will try to use an intrinsic if available, but if for some reason
+  it does not work, you can enable the STL version with this macro.
 
 # License
 
