@@ -35,6 +35,8 @@
 
 namespace ke {
 
+struct Nothing {};
+
 template <typename T>
 class Maybe
 {
@@ -52,6 +54,9 @@ class Maybe
   {
     moveFrom(ke::Move(other));
   }
+  Maybe(Nothing)
+   : initialized_(false)
+  {}
 
   ~Maybe() {
     if (isValid())
@@ -120,6 +125,15 @@ class Maybe
   bool initialized_;
   StorageBuffer<T> t_;
 };
+
+template <typename T>
+static inline Maybe<T>
+Some(T&& value)
+{
+  Maybe<T> m;
+  m.init(ke::Forward<T>(value));
+  return m;
+}
 
 } // namespace ke
 
