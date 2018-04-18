@@ -34,6 +34,7 @@
 #if !defined(KE_WINDOWS)
 # include <inttypes.h>
 #endif
+#include <amtl/am-bits.h>
 #include <amtl/am-autoptr.h>
 #include <amtl/am-cxx.h>
 #include <amtl/am-moveable.h>
@@ -119,6 +120,14 @@ class AString
     assert(index < length());
     return chars()[index];
   }
+  char& operator [](size_t index) {
+    assert(index < length());
+    return chars_[index];
+  }
+
+  friend AString operator +(const AString &a, const AString &b);
+  friend AString operator +(const AString &a, const char *b);
+  friend AString operator +(const char *a, const AString &b);
 
   size_t length() const {
     return length_;
@@ -129,7 +138,6 @@ class AString
       return "";
     return chars_.get();
   }
-
  private:
   static const size_t kInvalidLength = (size_t)-1;
 
@@ -140,10 +148,36 @@ class AString
     chars_[length] = '\0';
   }
 
+  static AString concat(const char *a, size_t alen, const char *b, size_t blen) {
+    if (!IsUintPtrAddSafe(alen, 1) || !IsUintPtrAddSafe(alen + 1, blen)) {
+      fprintf(stderr, "STRING LENGTH OVERFLOW\n");
+      abort();
+    }
+
+    size_t total_len = alen + blen + 1;
+    AutoArray<char> buf;
+    buf = new char[total_len];
+    strcpy(buf, a);
+    strcpy(&buf[alen], b);
+    return AString(buf);
+  }
+
  private:
   AutoPtr<char[]> chars_;
   size_t length_;
 };
+
+inline AString operator +(const AString &a, const AString &b) {
+  return AString::concat(a.chars(), a.length(), b.chars(), b.length());
+}
+inline AString operator +(const AString &a, const char *b) {
+  assert(b && b[0]);
+  return AString::concat(a.chars(), a.length(), b, strlen(b));
+}
+inline AString operator +(const char *a, const AString &b) {
+  assert(a && a[0]);
+  return AString::concat(a, strlen(a), b.chars(), b.length());
+}
 
 static inline size_t
 SafeVsprintf(char *buffer, size_t maxlength, const char *fmt, va_list ap)
