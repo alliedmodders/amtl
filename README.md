@@ -269,6 +269,12 @@ designed for enums where each member is a bit or bitmask. Flags provides type-sa
 operations, and most importantly, an implicit cast-to-bool operator which is not allowed for
 normal C++ enumerations.
 
+### args::Parser (experimental/am-argparser.h)
+
+This is currently experimental. It is a command-line argv parser similar to Python's argparse
+library. It is designed to handle a few basic cases and will be expanded as needed. Examples
+of how to use it are in test-argparse.cpp.
+
 # Replacing SourceHook Includes
 
 AMTL is a spiritual successor to the SourceHook template library, used in many AlliedModders
