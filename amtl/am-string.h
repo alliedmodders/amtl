@@ -41,6 +41,7 @@
 #include <amtl/am-uniqueptr.h>
 #include <amtl/am-vector.h>
 #include <assert.h>
+#include <ctype.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -156,6 +157,21 @@ class AString
     if (!chars_)
       return "";
     return chars_.get();
+  }
+
+  AString uppercase() const {
+    UniquePtr<char[]> buffer = MakeUnique<char[]>(length_ + 1);
+    for (size_t i = 0; i < length_; i++)
+      buffer[i] = toupper(chars_[i]);
+    buffer[length_] = '\0';
+    return AString(Move(buffer), length_);
+  }
+  AString lowercase() const {
+    UniquePtr<char[]> buffer = MakeUnique<char[]>(length_ + 1);
+    for (size_t i = 0; i < length_; i++)
+      buffer[i] = tolower(chars_[i]);
+    buffer[length_] = '\0';
+    return AString(Move(buffer), length_);
   }
 
  private:

@@ -129,6 +129,23 @@ class TestString : public Test
     return true;
   }
 
+  bool testCase() {
+    AString str("samPle1.com");
+    str = str.uppercase();
+    if (!check(str.compare("SAMPLE1.COM") == 0, "string should be uppercase"))
+      return false;
+
+    str = str.lowercase();
+    if (!check(str.compare("sample1.com") == 0, "string should be lowercase"))
+      return false;
+
+    str = AString();
+    str = str.lowercase();
+    if (!check(str.compare("") == 0, "empty string"))
+      return false;
+    return true;
+  }
+
   bool Run() override
   {
     if (!testSprintf())
@@ -138,6 +155,8 @@ class TestString : public Test
     if (!testSplit())
       return false;
     if (!testJoin())
+      return false;
+    if (!testCase())
       return false;
     return true;
   };
