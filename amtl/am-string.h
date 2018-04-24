@@ -35,9 +35,11 @@
 # include <inttypes.h>
 #endif
 #include <amtl/am-cxx.h>
+#include <amtl/am-bits.h>
 #include <amtl/am-moveable.h>
 #include <amtl/am-platform.h>
 #include <amtl/am-uniqueptr.h>
+#include <amtl/am-vector.h>
 #include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -143,6 +145,9 @@ class AString
   // Format functions that work in-place.
   inline bool format(const char* fmt, ...) KE_PRINTF_FUNCTION(2, 3);
   inline bool formatArgs(const char* fmt, va_list ap) KE_PRINTF_FUNCTION(2, 0);
+
+  // Split the string. The split argument must be a non-empty string.
+  inline Vector<AString> split(const char* sep) const;
 
   size_t length() const {
     return length_;
@@ -323,6 +328,75 @@ SafeStrcpy(char* dest, size_t maxlength, const char* src)
   *iter = '\0';
 
   return iter - dest;
+}
+
+// Split a string into a vector of strings. The |split| argument must contain
+// a non-empty string. The operation is defined such that:
+//
+//   Join(Split(str, sep), sep) == str
+//
+static inline ke::Vector<AString>
+Split(const char* str, const char* split)
+{
+  size_t split_len = strlen(split);
+  assert(split_len > 0);
+
+  Vector<AString> out;
+
+  const char* cursor = str;
+  const char* match = nullptr;
+  while (*cursor) {
+    match = strstr(cursor, split);
+    if (!match)
+      break;
+
+    out.append(AString(cursor, match - cursor));
+    cursor = match + split_len;
+  }
+
+  if (*cursor != '\0' || match)
+    out.append(AString(cursor));
+  return out;
+}
+
+// Given a list of strings, return a string combining them all with |sep|
+// appended in between.
+//
+// Unlike Split(), |sep| can be an empty string.
+static inline AString
+Join(const Vector<AString>& pieces, const char* sep)
+{
+  size_t sep_len = strlen(sep);
+  size_t buffer_len = 1;
+
+  for (const AString& piece : pieces)
+    buffer_len += piece.length();
+  if (!pieces.empty())
+    buffer_len += sep_len * (pieces.length() - 1);
+
+  UniquePtr<char[]> buffer = MakeUnique<char[]>(buffer_len);
+
+  char* iter = buffer.get();
+  char* end = buffer.get() + buffer_len;
+  for (size_t i = 0; i < pieces.length(); i++) {
+    SafeStrcpy(iter, end - iter, pieces[i].chars());
+    iter += pieces[i].length();
+
+    if (i != pieces.length() - 1) {
+      SafeStrcpy(iter, end - iter, sep);
+      iter += sep_len;
+    }
+  }
+  *iter++ = '\0';
+  assert(iter == end);
+
+  return AString(Move(buffer), buffer_len - 1);
+}
+
+inline Vector<AString>
+AString::split(const char* sep) const
+{
+  return Split(chars(), sep);
 }
 
 #if defined(KE_WINDOWS)

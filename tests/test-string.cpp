@@ -64,11 +64,80 @@ class TestString : public Test
     return true;
   }
 
+  bool testSplit() const {
+    Vector<AString> out = Split("     ", " ");
+    if (!check(out.length() == 6, "length should be 6"))
+      return false;
+    for (size_t i = 0; i < out.length(); i++) {
+      if (!check(out[i].length() == 0, "string should be empty"))
+        return false;
+    }
+
+    out = Split("egg", " ");
+    if (!check(out.length() == 1, "length should be 1"))
+      return false;
+    if (!check(out[0].compare("egg") == 0, "item should be egg"))
+      return false;
+
+    out = Split("", "egg");
+    if (!check(out.length() == 0, "length should be 0"))
+      return false;
+
+    out = Split("xaba", "a");
+    if (!check(out.length() == 3, "length should be 3"))
+      return false;
+    if (!check(out[0].compare("x") == 0, "first item should be 'x'"))
+      return false;
+    if (!check(out[1].compare("b") == 0, "second item should be 'b'"))
+      return false;
+    if (!check(out[2].compare("") == 0, "third item should be empty"))
+      return false;
+
+    out = Split("egg ham", " ");
+    if (!check(out.length() == 2, "length should be 2"))
+      return false;
+    if (!check(out[0].compare("egg") == 0, "first item should be 'egg'"))
+      return false;
+    if (!check(out[1].compare("ham") == 0, "second item should be 'ham'"))
+      return false;
+
+    return true;
+  }
+
+  bool testJoin() const {
+    Vector<AString> in;
+
+    AString result = Join(in, "x");
+    if (!check(result.compare("") == 0, "string should be empty"))
+      return false;
+
+    in.append("abc");
+    result = Join(in, "x");
+    if (!check(result.compare("abc") == 0, "string should be 'abc'"))
+      return false;
+
+    in.append("xyz");
+    result = Join(in, "T");
+    if (!check(result.compare("abcTxyz") == 0, "string should be 'abcTxyz'"))
+      return false;
+
+    in.append("def");
+    result = Join(in, "");
+    if (!check(result.compare("abcxyzdef") == 0, "string should be 'abcxyzdef'"))
+      return false;
+
+    return true;
+  }
+
   bool Run() override
   {
     if (!testSprintf())
       return false;
     if (!testAllocating())
+      return false;
+    if (!testSplit())
+      return false;
+    if (!testJoin())
       return false;
     return true;
   };
