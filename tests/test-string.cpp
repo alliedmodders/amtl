@@ -28,6 +28,7 @@
 // POSSIBILITY OF SUCH DAMAGE.
 
 #include <am-string.h>
+#include <limits.h>
 #include "runner.h"
 
 using namespace ke;
@@ -49,9 +50,25 @@ class TestString : public Test
     return true;
   }
 
+  bool testAllocating() const {
+    int a = INT_MAX;
+    const char* value = "Hello this is a test.";
+    const char* expect = "A: 2147483647 B: Hello this is a test.";
+    UniquePtr<char[]> ptr = Sprintf("A: %d B: %s", a, value);
+    if (!check(strcmp(ptr.get(), expect) == 0, expect))
+      return false;
+
+    UniquePtr<AString> str = AString::Sprintf("A: %d B: %s", a, value);
+    if (!check(str->compare(expect) == 0, expect))
+      return false;
+    return true;
+  }
+
   bool Run() override
   {
     if (!testSprintf())
+      return false;
+    if (!testAllocating())
       return false;
     return true;
   };
