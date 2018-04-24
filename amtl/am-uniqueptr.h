@@ -50,8 +50,10 @@ class UniquePtr
   }
   explicit UniquePtr(T *t)
    : t_(t)
-  {
-  }
+  {}
+  UniquePtr(decltype(nullptr) n)
+   : t_(nullptr)
+  {}
   UniquePtr(UniquePtr &&other)
   {
     t_ = other.t_;

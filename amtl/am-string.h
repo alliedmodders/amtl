@@ -34,10 +34,11 @@
 #if !defined(KE_WINDOWS)
 # include <inttypes.h>
 #endif
-#include <amtl/am-autoptr.h>
 #include <amtl/am-cxx.h>
 #include <amtl/am-moveable.h>
 #include <amtl/am-platform.h>
+#include <amtl/am-uniqueptr.h>
+#include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -45,6 +46,13 @@
 #include <stdint.h>
 
 namespace ke {
+
+#if defined(__GNUC__)
+# define KE_PRINTF_FUNCTION(string_index, first_to_check) \
+  __attribute__ ((format(printf, string_index, first_to_check)))
+#else
+# define KE_PRINTF_FUNCTION(string_index, first_to_check)
+#endif
 
 // ASCII string.
 class AString
@@ -72,9 +80,13 @@ class AString
     else
       length_ = 0;
   }
+  AString(UniquePtr<char[]>&& ptr, size_t length)
+   : chars_(Move(ptr)),
+     length_(length)
+  {}
   AString(AString &&other)
-    : chars_(other.chars_.take()),
-      length_(other.length_)
+   : chars_(Move(other.chars_)),
+     length_(other.length_)
   {
     other.length_ = 0;
   }
@@ -120,10 +132,21 @@ class AString
     return chars()[index];
   }
 
+  // Format a printf-style string and return nullptr on error.
+  static inline UniquePtr<AString>
+  Sprintf(const char* fmt, ...) KE_PRINTF_FUNCTION(1, 2);
+
+  // Format a printf-style string and return nullptr on error.
+  static inline UniquePtr<AString>
+  SprintfArgs(const char* fmt, va_list ap) KE_PRINTF_FUNCTION(1, 0);
+
+  // Format functions that work in-place.
+  inline bool format(const char* fmt, ...) KE_PRINTF_FUNCTION(2, 3);
+  inline bool formatArgs(const char* fmt, va_list ap) KE_PRINTF_FUNCTION(2, 0);
+
   size_t length() const {
     return length_;
   }
-
   const char *chars() const {
     if (!chars_)
       return "";
@@ -134,16 +157,132 @@ class AString
   static const size_t kInvalidLength = (size_t)-1;
 
   void set(const char *str, size_t length) {
-    chars_.assign(new char[length + 1]);
+    chars_ = MakeUnique<char[]>(length + 1);
     length_ = length;
     memcpy(chars_.get(), str, length);
     chars_[length] = '\0';
   }
 
  private:
-  AutoPtr<char[]> chars_;
+  UniquePtr<char[]> chars_;
   size_t length_;
 };
+
+#if defined(_MSC_VER)
+# define KE_VSNPRINTF _vsnprintf
+#else
+# define KE_VSNPRINTF vsnprintf
+#endif
+
+// Forward declare these functions since GCC will complain otherwise.
+static inline UniquePtr<char[]> SprintfArgs(const char* fmt, va_list ap) KE_PRINTF_FUNCTION(1, 0);
+static inline UniquePtr<char[]> Sprintf(const char* fmt, ...) KE_PRINTF_FUNCTION(1, 2);
+static inline size_t SafeVsprintf(char *buffer, size_t maxlength, const char *fmt, va_list ap) KE_PRINTF_FUNCTION(3, 0);
+static inline size_t SafeSprintf(char *buffer, size_t maxlength, const char *fmt, ...) KE_PRINTF_FUNCTION(3, 4);
+
+namespace detail {
+
+// Another forward declare thanks to GCC rules.
+static inline UniquePtr<char[]>
+SprintfArgsImpl(size_t* out_len, const char* fmt, va_list ap) KE_PRINTF_FUNCTION(2, 0);
+
+static inline UniquePtr<char[]>
+SprintfArgsImpl(size_t* out_len, const char* fmt, va_list ap)
+{
+  va_list argv;
+  va_copy(argv, ap);
+
+  *out_len = 0;
+
+  char tmp[2];
+  size_t len = KE_VSNPRINTF(tmp, sizeof(tmp), fmt, ap);
+
+  UniquePtr<char[]> buffer;
+  if (len == size_t(-1)) {
+    va_end(argv);
+    return buffer;
+  }
+  if (len == 0) {
+    buffer = MakeUnique<char[]>(1);
+    buffer[0] = '\0';
+    va_end(argv);
+    return buffer;
+  }
+
+  buffer = MakeUnique<char[]>(len + 1);
+  if (!buffer) {
+    va_end(argv);
+    return buffer;
+  }
+
+  *out_len = KE_VSNPRINTF(buffer.get(), len + 1, fmt, argv);
+  assert(*out_len == len);
+
+  va_end(argv);
+  return buffer;
+}
+
+} // namespace detail
+
+static inline UniquePtr<char[]>
+SprintfArgs(const char* fmt, va_list ap)
+{
+  size_t len;
+  return detail::SprintfArgsImpl(&len, fmt, ap);
+}
+
+static inline UniquePtr<char[]>
+Sprintf(const char* fmt, ...)
+{
+  va_list ap;
+  va_start(ap, fmt);
+  UniquePtr<char[]> result = SprintfArgs(fmt, ap);
+  va_end(ap);
+  return result;
+}
+
+inline UniquePtr<AString>
+AString::SprintfArgs(const char* fmt, va_list ap)
+{
+  size_t len;
+  UniquePtr<char[]> result = detail::SprintfArgsImpl(&len, fmt, ap);
+  if (!result)
+    return nullptr;
+  return MakeUnique<AString>(Move(result), len);
+}
+
+inline UniquePtr<AString>
+AString::Sprintf(const char* fmt, ...)
+{
+  va_list ap;
+  va_start(ap, fmt);
+  UniquePtr<AString> result = AString::SprintfArgs(fmt, ap);
+  va_end(ap);
+  return result;
+}
+
+inline bool
+AString::formatArgs(const char* fmt, va_list ap)
+{
+  size_t len;
+  UniquePtr<char[]> result = detail::SprintfArgsImpl(&len, fmt, ap);
+  if (!result) {
+    *this = AString();
+    return false;
+  }
+  *this = AString(Move(result), len);
+  return true;
+}
+
+inline bool
+AString::format(const char* fmt, ...)
+{
+  va_list ap;
+  va_start(ap, fmt);
+  bool ok = AString::formatArgs(fmt, ap);
+  va_end(ap);
+  return ok;
+}
 
 static inline size_t
 SafeVsprintf(char *buffer, size_t maxlength, const char *fmt, va_list ap)
@@ -151,13 +290,7 @@ SafeVsprintf(char *buffer, size_t maxlength, const char *fmt, va_list ap)
   if (!maxlength)
     return 0;
 
-  size_t len =
-#if defined(KE_WINDOWS)
-    _vsnprintf(buffer, maxlength, fmt, ap)
-#else
-    vsnprintf(buffer, maxlength, fmt, ap)
-#endif
-    ;
+  size_t len = KE_VSNPRINTF(buffer, maxlength, fmt, ap);
 
   if (len >= maxlength) {
     buffer[maxlength - 1] = '\0';

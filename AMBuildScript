@@ -62,6 +62,8 @@ class KEConfig(object):
         cfg.cxxflags += ['-fvisibility-inlines-hidden']
         # -Wunused-function breaks test_flags.cpp
         cfg.cxxflags += ['-Wno-unused-function']
+      if have_clang:
+        cfg.cxxflags += ['-Wno-implicit-exception-spec-mismatch']
 
       cfg.cxxflags += [
         '-fno-exceptions',
