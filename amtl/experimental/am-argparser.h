@@ -85,8 +85,15 @@ class IOption
 {
   friend class Parser;
 
-  virtual bool isToggle() const = 0;
-  virtual bool canOmitValue() const = 0;
+  virtual bool isToggle() const {
+    return false;
+  }
+  virtual bool canOmitValue() const {
+    return false;
+  }
+  virtual bool repeatable() const {
+    return false;
+  }
   virtual bool consumeValue(const char* arg) = 0;
 
  public:
@@ -107,6 +114,16 @@ class IOption
     // Cannot have both short/longform and name.
     assert(((short_form || long_form) && !name_) ||
            (!short_form && !long_form && name_));
+
+    if (short_form_ && short_form_[0] == '-')
+      short_form_++;
+    if (long_form_ && long_form_[0] == '-' && long_form_[1] == '-')
+      long_form_ += 2;
+
+    if (short_form_)
+      assert(short_form_[0] && short_form_[0] != '-');
+    if (long_form_)
+      assert(long_form_[0] && long_form_[0] != '-');
   }
 
   const char* short_form() const {
@@ -158,9 +175,6 @@ class Option : public IOption
    : IOption(short_form, long_form, nullptr, help),
      default_value_(default_value)
   {
-    assert(!short_form || short_form[0] != '-');
-    assert(!long_form || long_form[0] != '-');
-
     if (!default_value_)
       default_value_ = T::defaultValue();
     if (default_value_)
@@ -214,6 +228,63 @@ class Option : public IOption
  private:
   Maybe<ValueType> default_value_;
   ValueType value_;
+};
+
+// This is the base class for an option that can be repeated multiple times,
+// or can have its value repeated multiple times. (The latter is not yet
+// implemented).
+template <typename T>
+class VectorOption : public IOption
+{
+  typedef typename T::ValueType ValueType;
+
+ public:
+  VectorOption(Parser& parser,
+               const char* short_form, const char* long_form,
+               const char* help)
+   : IOption(short_form, long_form, nullptr, help)
+  {
+    parser.add(this);
+  }
+
+  Vector<ValueType>& values() {
+    return values_;
+  }
+  const Vector<ValueType>& values() const {
+    return values_;
+  }
+
+ protected:
+  bool repeatable() const override {
+    return true;
+  }
+  bool consumeValue(const char* arg) override {
+    ValueType value;
+    if (!T::consumeValue(arg, Nothing(), &value))
+      return false;
+    has_value_ = true;
+    values_.append(value);
+    return true;
+  }
+  void reset() override {
+    IOption::reset();
+    values_.clear();
+  }
+
+ private:
+  Vector<ValueType> values_;
+};
+
+// This is for an option can be repeated multiple times.
+template <typename T>
+class RepeatOption : public VectorOption<T>
+{
+ public:
+  RepeatOption(Parser& parser,
+               const char* short_form, const char* long_form,
+               const char* help)
+   : VectorOption<T>(parser, short_form, long_form, help)
+  {}
 };
 
 template <typename Derived, typename T>
@@ -404,7 +475,7 @@ Parser::parse_impl(const Vector<const char*>& args)
 
       if (!option)
         return unrecognized_option(arg);
-      if (option->has_value())
+      if (option->has_value() && !option->repeatable())
         return option_already_specified(option);
 
       if (equals) {
@@ -711,7 +782,7 @@ Parser::usage_line(char** argv, FILE* out)
   Vector<AString> words;
 
   words.append("Usage:");
-  words.append(argv[0]);
+  words.append(argv ? argv[0] : " ");
   words.append("[-h]");
   for (IOption* option : positionals_)
     words.append(option->name());
