@@ -138,6 +138,9 @@ class UniquePtr<T[]>
   T& operator[](size_t index) {
     return t_[index];
   }
+  const T& operator[](size_t index) const {
+    return t_[index];
+  }
 
   UniquePtr& operator =(decltype(nullptr)) {
     assign(nullptr);
