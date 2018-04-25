@@ -215,8 +215,12 @@ SprintfArgsImpl(size_t* out_len, const char* fmt, va_list ap)
 
   *out_len = 0;
 
+#if defined(_MSC_VER)
+  size_t len = _vscprintf(fmt, ap);
+#else
   char tmp[2];
-  size_t len = KE_VSNPRINTF(tmp, sizeof(tmp), fmt, ap);
+  size_t len = vsnprintf(tmp, sizeof(tmp), fmt, ap);
+#endif
 
   UniquePtr<char[]> buffer;
   if (len == size_t(-1)) {
