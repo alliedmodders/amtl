@@ -48,6 +48,7 @@ binary.sources += [
   'test-autoptr.cpp',
   'test-uniqueptr.cpp',
   'test-flags.cpp',
+  'test-argparser.cpp',
 ]
 
 builder.Add(binary)

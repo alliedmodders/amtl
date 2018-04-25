@@ -47,6 +47,9 @@
 #include <string.h>
 #include <stdarg.h>
 #include <stdint.h>
+#if !defined(_MSC_VER)
+# include <strings.h>
+#endif
 
 namespace ke {
 
@@ -348,6 +351,16 @@ SafeStrcpy(char* dest, size_t maxlength, const char* src)
   *iter = '\0';
 
   return iter - dest;
+}
+
+static inline int
+StrCaseCmp(const char* a, const char* b)
+{
+#if defined(_MSC_VER)
+  return strcmpi(a, b);
+#else
+  return strcasecmp(a, b);
+#endif
 }
 
 // Split a string into a vector of strings. The |split| argument must contain
