@@ -241,7 +241,7 @@ class TestArgparser : public Test
   bool testRepeatArg() {
     Parser parser("help");
 
-    RepeatOption<StringValue> inc(parser,
+    RepeatOption<AString> inc(parser,
       "-i", "--include-path",
       "Include path.");
 
