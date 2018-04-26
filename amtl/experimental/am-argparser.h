@@ -163,9 +163,12 @@ class IOption
 };
 
 template <typename T>
+struct ValuePolicy;
+
+template <typename ValueType>
 class Option : public IOption
 {
-  typedef typename T::ValueType ValueType;
+  typedef ValuePolicy<ValueType> T;
 
  public:
   Option(Parser& parser,
@@ -175,8 +178,6 @@ class Option : public IOption
    : IOption(short_form, long_form, nullptr, help),
      default_value_(default_value)
   {
-    if (!default_value_)
-      default_value_ = T::defaultValue();
     if (default_value_)
       value_ = *default_value_;
     parser.add(this);
@@ -185,8 +186,6 @@ class Option : public IOption
   Option(Parser& parser, const char* name, const char* help)
    : IOption(nullptr, nullptr, name, help)
   {
-    default_value_ = T::defaultValue();
-    assert(!isToggle());
     parser.add(this);
   }
 
@@ -210,11 +209,8 @@ class Option : public IOption
   bool canOmitValue() const override {
     return !name_ && T::canOmitValue();
   }
-  bool isToggle() const override {
-    return T::IsToggle;
-  }
   bool consumeValue(const char* arg) override {
-    if (!T::consumeValue(arg, default_value_, &value_))
+    if (!T::consumeValue(arg, &value_))
       return false;
     has_value_ = true;
     return true;
@@ -230,13 +226,63 @@ class Option : public IOption
   ValueType value_;
 };
 
+// This is an option that flips a boolean (the default value, if none is given
+// in the constructor, will be false -> true).
+class ToggleOption : public IOption
+{
+ public:
+  ToggleOption(Parser& parser,
+               const char* short_form, const char* long_form,
+               const Maybe<bool>& default_value,
+               const char* help)
+   : IOption(short_form, long_form, nullptr, help)
+  {
+    if (default_value)
+      default_value_ = *default_value;
+    else
+      default_value_ = false;
+    parser.add(this);
+  }
+
+  bool value() const {
+    if (has_value_)
+      return value_;
+    return default_value_;
+  }
+  bool hasValue() const {
+    return true;
+  }
+  bool hasUserValue() const {
+    return has_value_;
+  }
+
+ protected:
+  virtual bool canOmitValue() const override {
+    return true;
+  }
+  bool isToggle() const override {
+    return true;
+  }
+  bool consumeValue(const char* arg) override {
+    if (arg)
+      return false;
+    value_ = !default_value_;
+    has_value_ = true;
+    return true;
+  }
+
+ private:
+  bool default_value_;
+  bool value_;
+};
+
 // This is the base class for an option that can be repeated multiple times,
 // or can have its value repeated multiple times. (The latter is not yet
 // implemented).
-template <typename T>
+template <typename ValueType>
 class VectorOption : public IOption
 {
-  typedef typename T::ValueType ValueType;
+  typedef ValuePolicy<ValueType> T;
 
  public:
   VectorOption(Parser& parser,
@@ -260,7 +306,7 @@ class VectorOption : public IOption
   }
   bool consumeValue(const char* arg) override {
     ValueType value;
-    if (!T::consumeValue(arg, Nothing(), &value))
+    if (!T::consumeValue(arg, &value))
       return false;
     has_value_ = true;
     values_.append(value);
@@ -287,42 +333,23 @@ class RepeatOption : public VectorOption<T>
   {}
 };
 
-template <typename Derived, typename T>
-struct BaseValue
+// Value policies should inherit from this.
+struct BaseValuePolicy
 { 
-  typedef T ValueType;
-
-  static const bool IsToggle = false;
-
   // Return true if an argument of this type can omit a value.
   static constexpr bool canOmitValue() {
     return false;
   }
-
-  // Return true if an argument of this type CANNOT have a value.
-  static constexpr bool mustOmitValue() {
-    return false;
-  }
-
-  // This should return Nothing(), except for ToggleValue.
-  static Maybe<T> defaultValue() {
-    return Nothing();
-  }
-
-  static bool consumeValue(const char* arg,
-                           const Maybe<T>& default_value,
-                           T* out)
-  {
-    return Derived::parseValue(arg, out);
-  }
 };
 
-struct BoolValue : public BaseValue<BoolValue, bool>
+template <>
+struct ValuePolicy<bool>
 {
   static constexpr bool canOmitValue() {
     return true;
   }
-  static bool parseValue(const char* arg, bool* out) {
+
+  static bool consumeValue(const char* arg, bool* out) {
     if (!arg) {
       *out = true;
       return true;
@@ -339,38 +366,19 @@ struct BoolValue : public BaseValue<BoolValue, bool>
   }
 };
 
-struct ToggleValue : public BaseValue<ToggleValue, bool>
+template <>
+struct ValuePolicy<AString> : public BaseValuePolicy
 {
-  static const bool IsToggle = true;
-
-  static Maybe<bool> defaultValue() {
-    return Some(false);
-  }
-  static constexpr bool canOmitValue() {
-    return true;
-  }
-  static bool consumeValue(const char* arg,
-                           const Maybe<bool>& default_value,
-                           bool* out)
-  {
-    assert(!arg);
-    assert(default_value);
-    *out = !*default_value;
-    return true;
-  }
-};
-
-struct StringValue : public BaseValue<StringValue, AString>
-{
-  static bool parseValue(const char* arg, ke::AString* out) {
+  static bool consumeValue(const char* arg, ke::AString* out) {
     *out = arg;
     return true;
   }
 };
 
-struct IntValue : public BaseValue<IntValue, int>
+template <>
+struct ValuePolicy<int> : public BaseValuePolicy
 {
-  static bool parseValue(const char* arg, int* out) {
+  static bool consumeValue(const char* arg, int* out) {
     char* endptr = nullptr;
     *out = strtol(arg, &endptr, 10);
     if (endptr == arg || *endptr != '\0')
@@ -379,16 +387,15 @@ struct IntValue : public BaseValue<IntValue, int>
   }
 };
 
-typedef Option<BoolValue> BoolOption;
-typedef Option<ToggleValue> ToggleOption;
-typedef Option<StringValue> StringOption;
-typedef Option<IntValue> IntOption;
+typedef Option<bool> BoolOption;
+typedef Option<AString> StringOption;
+typedef Option<int> IntOption;
 
 inline
 Parser::Parser(const char* help)
  : help_(help)
 {
-  Option<BoolValue>* help_option = new Option<BoolValue>(
+  Option<bool>* help_option = new Option<bool>(
     *this,
     "h", "help",
     Nothing(),
