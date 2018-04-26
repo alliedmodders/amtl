@@ -238,6 +238,32 @@ class TestArgparser : public Test
     return true;
   }
 
+  bool testRepeatArg() {
+    Parser parser("help");
+
+    RepeatOption<StringValue> inc(parser,
+      "-i", "--include-path",
+      "Include path.");
+
+    if (!check(parser.parsev("-i", "blah", "-i", "crab", "--include-path=yam", nullptr) == true,
+               "repeat parse 1 succeeded"))
+    {
+      parser.usage(stderr, 0, nullptr);
+      return false;
+    }
+
+    Vector<AString> values = Move(inc.values());
+    if (!check(values.length() == 3, "values should be 3"))
+      return false;
+    if (!check(values[0].compare("blah") == 0, "value 0 should be blah"))
+      return false;
+    if (!check(values[1].compare("crab") == 0, "value 1 should be crab"))
+      return false;
+    if (!check(values[2].compare("yam") == 0, "value 2 should be yam"))
+      return false;
+    return true;
+  }
+
   bool Run() override
   {
     if (!testBasic())
@@ -249,6 +275,8 @@ class TestArgparser : public Test
     if (!testStringArg())
       return false;
     if (!testIntArg())
+      return false;
+    if (!testRepeatArg())
       return false;
     return true;
   };
