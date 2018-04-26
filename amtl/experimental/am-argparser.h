@@ -186,7 +186,7 @@ class Option : public IOption
     assert(hasValue());
     return value_;
   }
-  const Maybe<ValueType> maybeValue() const {
+  Maybe<ValueType> maybeValue() const {
     if (hasValue())
       return Some(value_);
     return Nothing();

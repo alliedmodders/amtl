@@ -31,6 +31,7 @@
 
 #include <amtl/am-moveable.h>
 #include <amtl/am-storagebuffer.h>
+#include <amtl/am-type-traits.h>
 #include <assert.h>
 
 namespace ke {
@@ -126,11 +127,12 @@ class Maybe
   StorageBuffer<T> t_;
 };
 
-template <typename T>
-static inline Maybe<T>
+template <typename T,
+          typename U = typename remove_cv<typename remove_reference<T>::type>::type>
+static inline Maybe<U>
 Some(T&& value)
 {
-  Maybe<T> m;
+  Maybe<U> m;
   m.init(ke::Forward<T>(value));
   return m;
 }
