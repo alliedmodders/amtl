@@ -133,7 +133,7 @@ class Function<ReturnType(ArgTypes...)>
   }
 
   bool usingInlineStorage() const {
-    return (void *)impl_ == &buffer_;
+    return (void*)impl_ == &buffer_;
   }
 
  private:
@@ -306,7 +306,7 @@ class Lambda<ReturnType(ArgTypes...)>
   }
 
   bool usingInlineStorage() const {
-    return (void *)impl_ == &buffer_;
+    return (void*)impl_ == &buffer_;
   }
 
  private:
@@ -427,14 +427,14 @@ class FuncPtr<ReturnType(ArgTypes...)>
   void assignStatic(ReturnType(*fn)(ArgTypes...)) {
     typedef decltype(fn) FnType;
     ptr_ = reinterpret_cast<void*>(fn);
-    invoker_ = [](void *ptr, ArgTypes&&... argv) {
+    invoker_ = [](void* ptr, ArgTypes&&... argv) {
       return (reinterpret_cast<FnType>(ptr))(ke::Forward<ArgTypes>(argv)...);
     };
   }
   template <typename T>
   void assignFunctor(T* obj) {
     ptr_ = obj;
-    invoker_ = [](void *ptr, ArgTypes&&... argv) {
+    invoker_ = [](void* ptr, ArgTypes&&... argv) {
       return (reinterpret_cast<T*>(ptr))->operator()(ke::Forward<ArgTypes>(argv)...);
     };
   }

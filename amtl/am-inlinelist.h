@@ -52,7 +52,7 @@ class InlineListNode
   {
   }
 
-  InlineListNode(InlineListNode *next, InlineListNode *prev)
+  InlineListNode(InlineListNode* next, InlineListNode* prev)
    : next_(next),
      prev_(prev)
   {
@@ -71,8 +71,8 @@ class InlineListNode
   }
 
  protected:
-  InlineListNode *next_;
-  InlineListNode *prev_;
+  InlineListNode* next_;
+  InlineListNode* prev_;
 };
 
 // An InlineList is a linked list that threads link pointers through objects,
@@ -91,7 +91,7 @@ class InlineList
   Node head_;
 
   // Work around a clang bug where we can't initialize with &head_ in the ctor.
-  inline Node *head() {
+  inline Node* head() {
     return &head_;
   }
 
@@ -114,10 +114,10 @@ class InlineList
   class iterator
   {
     friend class InlineList;
-    Node *iter_;
+    Node* iter_;
 
    public:
-    iterator(Node *iter)
+    iterator(Node* iter)
       : iter_(iter)
     {
     }
@@ -131,16 +131,16 @@ class InlineList
       iter_ = iter_->next_;
       return old;
     }
-    T * operator *() {
-      return static_cast<T *>(iter_);
+    T * operator*() {
+      return static_cast<T*>(iter_);
     }
     T * operator ->() {
-      return static_cast<T *>(iter_);
+      return static_cast<T*>(iter_);
     }
-    bool operator !=(const iterator &where) const {
+    bool operator !=(const iterator& where) const {
       return iter_ != where.iter_;
     }
-    bool operator ==(const iterator &where) const {
+    bool operator ==(const iterator& where) const {
       return iter_ == where.iter_;
     }
   };
@@ -153,7 +153,7 @@ class InlineList
     return iterator(&head_);
   }
 
-  iterator erase(iterator &at) {
+  iterator erase(iterator& at) {
     iterator next = at;
     next++;
 
@@ -169,7 +169,7 @@ class InlineList
     return head_.next_ == &head_;
   }
 
-  void remove(Node *t) {
+  void remove(Node* t) {
     t->prev_->next_ = t->next_;
     t->next_->prev_ = t->prev_;
 
@@ -179,7 +179,7 @@ class InlineList
 #endif
   }
 
-  void append(Node *t) {
+  void append(Node* t) {
     assert(!t->next_);
     assert(!t->prev_);
 

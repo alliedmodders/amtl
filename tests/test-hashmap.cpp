@@ -36,10 +36,10 @@ using namespace ke;
 
 struct StringPolicy
 {
-  static inline uint32_t hash(const char *key) {
+  static inline uint32_t hash(const char* key) {
     return FastHashCharSequence(key, strlen(key));
   }
-  static inline bool matches(const char *find, const AString &key) {
+  static inline bool matches(const char* find, const AString& key) {
     return key.compare(find) == 0;
   }
 };

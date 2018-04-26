@@ -58,11 +58,11 @@ class AlreadyRefed
       : thing_(nullptr)
     {
     }
-    explicit AlreadyRefed(T *t)
+    explicit AlreadyRefed(T* t)
       : thing_(t)
     {
     }
-    AlreadyRefed(const AlreadyRefed<T> &other)
+    AlreadyRefed(const AlreadyRefed<T>& other)
       : thing_(other.thing_)
     {
         if (thing_)
@@ -81,28 +81,28 @@ class AlreadyRefed
     bool operator !() const {
         return !thing_;
     }
-    T *operator ->() const {
+    T* operator ->() const {
         return thing_;
     }
-    bool operator ==(T *other) const {
+    bool operator ==(T* other) const {
         return thing_ == other;
     }
-    bool operator !=(T *other) const {
+    bool operator !=(T* other) const {
         return thing_ != other;
     }
 
     // Analagous to AutoPtr::take().
-    T *take() const {
+    T* take() const {
         return ReturnAndVoid(thing_);
     }
 
   private:
-    mutable T *thing_;
+    mutable T* thing_;
 };
 
 template <typename T>
 static inline AlreadyRefed<T>
-AdoptRef(T *t)
+AdoptRef(T* t)
 {
     return AlreadyRefed<T>(t);
 }
@@ -127,7 +127,7 @@ class Refcounted
     void Release() {
         assert(refcount_ > 0);
         if (--refcount_ == 0)
-            delete static_cast<T *>(this);
+            delete static_cast<T*>(this);
     }
 
   protected:
@@ -195,7 +195,7 @@ template <typename T>
 class RefPtr
 {
   public:
-    RefPtr(T *thing)
+    RefPtr(T* thing)
       : thing_(thing)
     {
         AddRef();
@@ -206,18 +206,18 @@ class RefPtr
     {
     }
 
-    RefPtr(const RefPtr &other)
+    RefPtr(const RefPtr& other)
       : thing_(other.thing_)
     {
         AddRef();
     }
-    RefPtr(RefPtr &&other)
+    RefPtr(RefPtr&& other)
       : thing_(other.thing_)
     {
         other.thing_ = nullptr;
     }
     template <typename S>
-    RefPtr(const RefPtr<S> &other)
+    RefPtr(const RefPtr<S>& other)
       : thing_(*other)
     {
         AddRef();
@@ -227,12 +227,12 @@ class RefPtr
       : thing_(other.forget().take())
     {
     }
-    RefPtr(const AlreadyRefed<T> &other)
+    RefPtr(const AlreadyRefed<T>& other)
       : thing_(other.take())
     {
     }
     template <typename S>
-    RefPtr(const AlreadyRefed<S> &other)
+    RefPtr(const AlreadyRefed<S>& other)
       : thing_(other.take())
     {
     }
@@ -241,22 +241,22 @@ class RefPtr
         Release();
     }
 
-    T *operator ->() const {
-        return operator *();
+    T* operator ->() const {
+        return operator*();
     }
-    T *operator *() const {
+    T* operator*() const {
         return thing_;
     }
-    operator T *() {
+    operator T*() {
         return thing_;
     }
-    operator T *() const {
+    operator T*() const {
         return thing_;
     }
     bool operator !() const {
         return !thing_;
     }
-    operator T &() {
+    operator T&() {
         return *thing_;
     }
     explicit operator bool() const {
@@ -271,7 +271,7 @@ class RefPtr
     }
 
     template <typename S>
-    RefPtr &operator =(S *thing) {
+    RefPtr& operator =(S* thing) {
         Release();
         thing_ = thing;
         AddRef();
@@ -279,37 +279,37 @@ class RefPtr
     }
     
     template <typename S>
-    RefPtr &operator =(const AlreadyRefed<S> &other) {
+    RefPtr& operator =(const AlreadyRefed<S>& other) {
         Release();
         thing_ = other.take();
         return *this;
     }
 
-    RefPtr &operator =(const RefPtr &other) {
+    RefPtr& operator =(const RefPtr& other) {
         Release();
         thing_ = other.thing_;
         AddRef();
         return *this;
     }
 
-    RefPtr &operator =(RefPtr &&other) {
+    RefPtr& operator =(RefPtr&& other) {
         Release();
         thing_ = other.thing_;
         other.thing_ = nullptr;
         return *this;
     }
 
-    T *get() const {
+    T* get() const {
         return thing_;
     }
-    T **byref() {
+    T** byref() {
         return &thing_;
     }
-    T * const *byref_const() const {
+    T * const* byref_const() const {
         return &thing_;
     }
-    void **address() {
-        return reinterpret_cast<void **>(&thing_);
+    void** address() {
+        return reinterpret_cast<void**>(&thing_);
     }
 
   private:
@@ -323,7 +323,7 @@ class RefPtr
     }
 
   protected:
-    T *thing_;
+    T* thing_;
 };
 
 } // namespace ke

@@ -34,7 +34,7 @@
 namespace ke {
 
 static inline bool
-TryUint64Multiply(uint64_t left, uint64_t right, uint64_t *out)
+TryUint64Multiply(uint64_t left, uint64_t right, uint64_t* out)
 {
   uint64_t r = left * right;
   if (r != 0 && ((r / left) != right))
@@ -45,7 +45,7 @@ TryUint64Multiply(uint64_t left, uint64_t right, uint64_t *out)
 }
 
 static inline bool
-TryUint32Add(uint32_t left, uint32_t right, uint32_t *out)
+TryUint32Add(uint32_t left, uint32_t right, uint32_t* out)
 {
   if (left + right < Max(left, right))
     return false;
@@ -54,7 +54,7 @@ TryUint32Add(uint32_t left, uint32_t right, uint32_t *out)
 }
 
 static inline bool
-TryUint64Add(uint64_t left, uint64_t right, uint64_t *out)
+TryUint64Add(uint64_t left, uint64_t right, uint64_t* out)
 {
   if (left + right < Max(left, right))
     return false;

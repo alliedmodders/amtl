@@ -72,10 +72,10 @@ class TestWorkerModel
     }
   }
 
-  ConditionVariable *main() {
+  ConditionVariable* main() {
     return &main_;
   }
-  ConditionVariable *wakeup() {
+  ConditionVariable* wakeup() {
     return &wakeup_;
   }
 

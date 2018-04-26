@@ -60,11 +60,11 @@ template <typename T>
 class ThreadLocal
 {
  public:
-  void operator =(const T &other) {
+  void operator =(const T& other) {
     set(other);
   }
 
-  T operator *() const {
+  T operator*() const {
     return get();
   }
   T operator ->() const {
@@ -73,16 +73,16 @@ class ThreadLocal
   bool operator !() const {
     return !get();
   }
-  bool operator ==(const T &other) const {
+  bool operator ==(const T& other) const {
     return get() == other;
   }
-  bool operator !=(const T &other) const {
+  bool operator !=(const T& other) const {
     return get() != other;
   }
 
  private:
-  ThreadLocal(const ThreadLocal &other) = delete;
-  ThreadLocal &operator =(const ThreadLocal &other) = delete;
+  ThreadLocal(const ThreadLocal& other) = delete;
+  ThreadLocal& operator =(const ThreadLocal& other) = delete;
 
 #if !defined(KE_SINGLE_THREADED)
  private:
@@ -98,7 +98,7 @@ class ThreadLocal
       return T();
     return internalGet();
   }
-  void set(const T &t) {
+  void set(const T& t) {
     if (!allocated_ && !allocate()) {
       fprintf(stderr, "could not allocate thread-local storage\n");
       abort();
@@ -116,11 +116,11 @@ class ThreadLocal
   T internalGet() const {
     return reinterpret_cast<T>(TlsGetValue(key_));
   }
-  void internalSet(const T &t) {
+  void internalSet(const T& t) {
     TlsSetValue(key_, reinterpret_cast<LPVOID>(t));
   }
   bool allocate() {
-    if (InterlockedCompareExchange((volatile LONG *)&allocated_, 1, 0) == 1)
+    if (InterlockedCompareExchange((volatile LONG*)&allocated_, 1, 0) == 1)
       return true;
     key_ = TlsAlloc();
     return key_ != TLS_OUT_OF_INDEXES;
@@ -145,8 +145,8 @@ class ThreadLocal
   T internalGet() const {
     return (T)reinterpret_cast<uintptr_t>(pthread_getspecific(key_));
   }
-  void internalSet(const T &t) {
-    pthread_setspecific(key_, reinterpret_cast<void *>(t));
+  void internalSet(const T& t) {
+    pthread_setspecific(key_, reinterpret_cast<void*>(t));
   }
 
   pthread_key_t key_;
@@ -165,7 +165,7 @@ class ThreadLocal
   T get() const {
     return t_;
   }
-  void set(const T &t) {
+  void set(const T& t) {
     t_ = t;
   }
 

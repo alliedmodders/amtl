@@ -58,7 +58,7 @@ namespace detail {
       new (&t_) T();
     }
     template <typename U>
-    void construct(U &&u) {
+    void construct(U&& u) {
       new (&t_) T(ke::Forward<U>(u));
     }
     uint32_t hash() const {
@@ -88,11 +88,11 @@ namespace detail {
     bool isLive() const {
       return hash_ > kRemovedHash;
     }
-    T &payload() {
+    T& payload() {
       assert(isLive());
       return t_;
     }
-    const T &payload() const {
+    const T& payload() const {
       assert(isLive());
       return t_;
     }
@@ -101,26 +101,26 @@ namespace detail {
     }
   
    private:
-    HashTableEntry(const HashTableEntry &other) = delete;
-    HashTableEntry &operator =(const HashTableEntry &other) = delete;
+    HashTableEntry(const HashTableEntry& other) = delete;
+    HashTableEntry& operator =(const HashTableEntry& other) = delete;
   };
 }
 
 // The HashPolicy for the table must have the following members:
 //
 //     Payload
-//     static uint32_t hash(const LookupType &key);
-//     static bool matches(const LookupType &key, const Payload &other);
+//     static uint32_t hash(const LookupType& key);
+//     static bool matches(const LookupType& key, const Payload& other);
 //
 // Payload must be a type, and LookupType is any type that lookups will be
 // performed with (these functions can be overloaded). Example:
 //
 //     struct Policy {
 //       typedef KeyValuePair Payload;
-//       static uint32 hash(const Key &key) {
+//       static uint32 hash(const Key& key) {
 //         ...
 //       }
-//       static bool matches(const Key &key, const KeyValuePair &pair) {
+//       static bool matches(const Key& key, const KeyValuePair& pair) {
 //         ...
 //       }
 //     };
@@ -140,7 +140,7 @@ class HashTable : private AllocPolicy
   static const uint32_t kMaxCapacity = INT_MAX / sizeof(Entry);
 
   template <typename Key>
-  uint32_t computeHash(const Key &key) const {
+  uint32_t computeHash(const Key& key) const {
     // Multiply by golden ratio.
     uint32_t hash = HashPolicy::hash(key) * 0x9E3779B9;
     if (hash == Entry::kFreeHash || hash == Entry::kRemovedHash)
@@ -148,10 +148,10 @@ class HashTable : private AllocPolicy
     return hash;
   }
 
-  Entry *createTable(uint32_t capacity) {
+  Entry* createTable(uint32_t capacity) {
     assert(capacity <= kMaxCapacity);
 
-    Entry *table = (Entry *)this->am_malloc(capacity * sizeof(Entry));
+    Entry* table = (Entry*)this->am_malloc(capacity * sizeof(Entry));
     if (!table)
       return nullptr;
 
@@ -166,21 +166,21 @@ class HashTable : private AllocPolicy
   {
     friend class HashTable;
 
-    Entry *entry_;
+    Entry* entry_;
 
-    Entry &entry() {
+    Entry& entry() {
       return *entry_;
     }
 
    public:
-    Result(Entry *entry)
+    Result(Entry* entry)
       : entry_(entry)
     { }
 
     Payload * operator ->() {
       return &entry_->payload();
     }
-    Payload & operator *() {
+    Payload & operator*() {
       return entry_->payload();
     }
 
@@ -194,7 +194,7 @@ class HashTable : private AllocPolicy
     uint32_t hash_;
 
    public:
-    Insert(Entry *entry, uint32_t hash)
+    Insert(Entry* entry, uint32_t hash)
       : Result(entry),
       hash_(hash)
     {
@@ -253,11 +253,11 @@ class HashTable : private AllocPolicy
   bool changeCapacity(uint32_t newCapacity) {
     assert(newCapacity <= kMaxCapacity);
 
-    Entry *newTable = createTable(newCapacity);
+    Entry* newTable = createTable(newCapacity);
     if (!newTable)
       return false;
 
-    Entry *oldTable = table_;
+    Entry* oldTable = table_;
     uint32_t oldCapacity = capacity_;
 
     table_ = newTable;
@@ -265,7 +265,7 @@ class HashTable : private AllocPolicy
     ndeleted_ = 0;
 
     for (uint32_t i = 0; i < oldCapacity; i++) {
-      Entry &oldEntry = oldTable[i];
+      Entry& oldEntry = oldTable[i];
       if (oldEntry.isLive()) {
         Insert p = insertUnique(oldEntry.hash());
         p.entry().setHash(p.hash());
@@ -282,7 +282,7 @@ class HashTable : private AllocPolicy
   Insert insertUnique(uint32_t hash) {
     Probulator probulator(hash, capacity_);
 
-    Entry *e = &table_[probulator.entry()];
+    Entry* e = &table_[probulator.entry()];
     for (;;) {
       if (e->isFree() || e->removed())
         break;
@@ -293,11 +293,11 @@ class HashTable : private AllocPolicy
   }
 
   template <typename Key>
-  Result lookup(const Key &key) const {
+  Result lookup(const Key& key) const {
     uint32_t hash = computeHash(key);
     Probulator probulator(hash, capacity_);
 
-    Entry *e = &table_[probulator.entry()];
+    Entry* e = &table_[probulator.entry()];
     for (;;) {
       if (e->isFree())
         break;
@@ -314,12 +314,12 @@ class HashTable : private AllocPolicy
   }
 
   template <typename Key>
-  Insert lookupForAdd(const Key &key) {
+  Insert lookupForAdd(const Key& key) {
     uint32_t hash = computeHash(key);
     Probulator probulator(hash, capacity_);
 
-    Entry *e = &table_[probulator.entry()];
-    Entry *firstRemoved = nullptr;
+    Entry* e = &table_[probulator.entry()];
+    Entry* firstRemoved = nullptr;
     for (;;) {
       if (e->isFree())
         break;
@@ -337,7 +337,7 @@ class HashTable : private AllocPolicy
     return Insert(e, hash);
   }
 
-  bool internalAdd(Insert &i) {
+  bool internalAdd(Insert& i) {
     assert(!i.found());
 
     // If the entry is deleted, just re-use the slot.
@@ -369,7 +369,7 @@ class HashTable : private AllocPolicy
     return true;
   }
 
-  void removeEntry(Entry &e) {
+  void removeEntry(Entry& e) {
     assert(e.isLive());
     e.setRemoved();
     ndeleted_++;
@@ -431,25 +431,25 @@ class HashTable : private AllocPolicy
 
   // The Result object must not be used past mutating table operations.
   template <typename Key>
-  Result find(const Key &key) const {
+  Result find(const Key& key) const {
     return lookup(key);
   }
 
   // The Insert object must not be used past mutating table operations.
   template <typename Key>
-  Insert findForAdd(const Key &key) {
+  Insert findForAdd(const Key& key) {
     return lookupForAdd(key);
   }
 
   template <typename Key>
-  void removeIfExists(const Key &key) {
+  void removeIfExists(const Key& key) {
     Result r = find(key);
     if (!r.found())
       return;
     remove(r);
   }
 
-  void remove(Result &r) {
+  void remove(Result& r) {
     assert(r.found());
     removeEntry(r.entry());
   }
@@ -457,13 +457,13 @@ class HashTable : private AllocPolicy
   // The table must not have been mutated in between findForAdd() and add().
   // The Insert object is still valid after add() returns, however.
   template <typename U>
-  bool add(Insert &i, U &&payload) {
+  bool add(Insert& i, U&& payload) {
     if (!internalAdd(i))
       return false;
     i.entry().construct(ke::Forward<U>(payload));
     return true;
   }
-  bool add(Insert &i) {
+  bool add(Insert& i) {
     if (!internalAdd(i))
       return false;
     i.entry().construct();
@@ -506,7 +506,7 @@ class HashTable : private AllocPolicy
   class iterator
   {
    public:
-    iterator(HashTable *table)
+    iterator(HashTable* table)
       : table_(table),
       i_(table->table_),
       end_(table->table_ + table->capacity_)
@@ -524,10 +524,10 @@ class HashTable : private AllocPolicy
       table_->removeEntry(*i_);
     }
 
-    Payload *operator ->() const {
+    Payload* operator ->() const {
       return &i_->payload();
     }
-    Payload &operator *() const {
+    Payload& operator*() const {
       return i_->payload();
     }
 
@@ -538,20 +538,20 @@ class HashTable : private AllocPolicy
     }
 
    private:
-    HashTable *table_;
-    Entry *i_;
-    Entry *end_;
+    HashTable* table_;
+    Entry* i_;
+    Entry* end_;
   };
 
  private:
-  HashTable(const HashTable &other) = delete;
-  HashTable &operator =(const HashTable &other) = delete;
+  HashTable(const HashTable& other) = delete;
+  HashTable& operator =(const HashTable& other) = delete;
 
  private:
   uint32_t capacity_;
   uint32_t nelements_;
   uint32_t ndeleted_;
-  Entry *table_;
+  Entry* table_;
   uint32_t minCapacity_;
 };
 
@@ -573,7 +573,7 @@ class CharacterStreamHasher
     hash ^= (hash >> 6);
   }
 
-  void add(const char *s, size_t length) {
+  void add(const char* s, size_t length) {
     for (size_t i = 0; i < length; i++)
       add(s[i]);
   }
@@ -587,7 +587,7 @@ class CharacterStreamHasher
 };
 
 static inline uint32_t
-HashCharSequence(const char *s, size_t length)
+HashCharSequence(const char* s, size_t length)
 {
   CharacterStreamHasher hasher;
   hasher.add(s, length);
@@ -595,7 +595,7 @@ HashCharSequence(const char *s, size_t length)
 }
 
 static inline uint32_t
-FastHashCharSequence(const char *s, size_t length)
+FastHashCharSequence(const char* s, size_t length)
 {
   uint32_t hash = 0;
   for (size_t i = 0; i < length; i++)
@@ -647,7 +647,7 @@ HashInteger<8>(uintptr_t value)
 }
 
 static inline uint32_t
-HashPointer(void *ptr)
+HashPointer(void* ptr)
 {
   return HashInteger<sizeof(ptr)>(reinterpret_cast<uintptr_t>(ptr));
 }

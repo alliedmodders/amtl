@@ -38,8 +38,8 @@ namespace ke {
 //
 // K - Key type.
 // HashPolicy - A struct with a hash and comparator function for each lookup type:
-//    static uint32_t hash(const Type &value);
-//    static bool matches(const Type &value, const K &key);
+//    static uint32_t hash(const Type& value);
+//    static bool matches(const Type& value, const K& key);
 //
 // Like HashMap and HashTable, init() must be called to construct the set.
 template <typename K,
@@ -51,12 +51,12 @@ class HashSet : private AllocPolicy
     typedef K Payload;
 
     template <typename Lookup>
-    static uint32_t hash(const Lookup &key) {
+    static uint32_t hash(const Lookup& key) {
       return HashPolicy::hash(key);
     }
 
     template <typename Lookup>
-    static bool matches(const Lookup &key, const Payload &payload) {
+    static bool matches(const Lookup& key, const Payload& payload) {
       return HashPolicy::matches(key, payload);
     }
   };
@@ -84,35 +84,35 @@ class HashSet : private AllocPolicy
   typedef typename Internal::iterator iterator;
 
   template <typename Lookup>
-  Result find(const Lookup &key) {
+  Result find(const Lookup& key) {
     return table_.find(key);
   }
 
   template <typename Lookup>
-  Insert findForAdd(const Lookup &key) {
+  Insert findForAdd(const Lookup& key) {
     return table_.findForAdd(key);
   }
 
   template <typename Lookup>
-  void removeIfExists(const Lookup &key) {
+  void removeIfExists(const Lookup& key) {
     return table_.removeIfExists(key);
   }
 
-  void remove(Result &r) {
+  void remove(Result& r) {
     table_.remove(r);
   }
 
   // The map must not have been mutated in between findForAdd() and add().
   // The Insert object is still valid after add() returns, however.
   template <typename UK>
-  bool add(Insert &i, UK &&key) {
+  bool add(Insert& i, UK&& key) {
     return table_.add(i, ke::Forward<UK>(key));
   }
 
   // This can be used to avoid compiler constructed temporaries, since AMTL
   // does not yet support move semantics. If you use this, the key and value
   // must be set after.
-  bool add(Insert &i) {
+  bool add(Insert& i) {
     return table_.add(i);
   }
 
@@ -133,7 +133,7 @@ class HashSet : private AllocPolicy
 
   // Convenience wrapper for find().found().
   template <typename Lookup>
-  bool has(const Lookup &key) {
+  bool has(const Lookup& key) {
     Result r = table_.find(key);
     return r.found();
   }
@@ -141,7 +141,7 @@ class HashSet : private AllocPolicy
   // Convenience wrapper for findForAdd() + add(), if the item is not already
   // in the set.
   template <typename UK>
-  void add(UK &&key) {
+  void add(UK&& key) {
     Insert p = table_.findForAdd(key);
     if (!p.found())
       table_.add(p, ke::Forward<UK>(key));

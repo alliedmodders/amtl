@@ -58,7 +58,7 @@ TypeChecks_DoNotCall()
 }
 
 static inline RefPtr<Counted>
-PassThrough(const RefPtr<Counted> &obj)
+PassThrough(const RefPtr<Counted>& obj)
 {
   return obj;
 }
@@ -84,7 +84,7 @@ class TestRefcounting : public Test
     if (!check(sDtors == 2, "Ref/Newborn counted properly"))
       return false;
     {
-      Counted *counted = new Counted();
+      Counted* counted = new Counted();
       counted->AddRef();
       RefPtr<Counted> obj(AdoptRef(counted));
     }

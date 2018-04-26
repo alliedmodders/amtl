@@ -49,7 +49,7 @@ namespace ke {
 // Zero out a non-array pointer.
 template <typename T>
 static inline void
-MemsetZero(T *t)
+MemsetZero(T* t)
 {
   memset(t, 0, sizeof(*t));
 }

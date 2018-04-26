@@ -49,7 +49,7 @@ class Vector : private AllocPolicy
   {
   }
 
-  Vector(Vector &&other)
+  Vector(Vector&& other)
    : AllocPolicy(Move(other))
   {
     data_ = other.data_;
@@ -63,7 +63,7 @@ class Vector : private AllocPolicy
   }
 
   template <typename U>
-  bool append(U &&item) {
+  bool append(U&& item) {
     if (!growIfNeeded(1))
       return false;
     new (&data_[nitems_]) T(ke::Forward<U>(item));
@@ -71,7 +71,7 @@ class Vector : private AllocPolicy
     return true;
   }
   template <typename U>
-  void infallibleAppend(U &&item) {
+  void infallibleAppend(U&& item) {
     assert(growIfNeeded(1));
     new (&data_[nitems_]) T(ke::Forward<U>(item));
     nitems_++;
@@ -84,7 +84,7 @@ class Vector : private AllocPolicy
   //
   // This is a linear-time operation.
   template <typename U>
-  bool insert(size_t at, U &&item) {
+  bool insert(size_t at, U&& item) {
     if (at == length())
       return append(ke::Forward<U>(item));
     if (!moveUp(at))
@@ -142,17 +142,17 @@ class Vector : private AllocPolicy
     destruct_live();
     nitems_ = 0;
   }
-  const T &back() const {
+  const T& back() const {
     return at(length() - 1);
   }
-  T &back() {
+  T& back() {
     return at(length() - 1);
   }
 
-  T *buffer() {
+  T* buffer() {
     return data_;
   }
-  const T *buffer() const {
+  const T* buffer() const {
     return data_;
   }
 
@@ -177,7 +177,7 @@ class Vector : private AllocPolicy
   }
 
   template <typename U>
-  bool extend(U &&other) {
+  bool extend(U&& other) {
     if (length() == 0) {
       *this = Move(other);
     } else {
@@ -189,7 +189,7 @@ class Vector : private AllocPolicy
     return true;
   }
 
-  Vector &operator =(Vector &&other) {
+  Vector& operator =(Vector&& other) {
     zap();
     data_ = other.data_;
     nitems_ = other.nitems_;
@@ -217,8 +217,8 @@ class Vector : private AllocPolicy
  private:
   // These are disallowed because they basically violate the failure handling
   // model for AllocPolicies and are also likely to have abysmal performance.
-  Vector(const Vector &other) = delete;
-  Vector &operator =(const Vector &other) = delete;
+  Vector(const Vector& other) = delete;
+  Vector& operator =(const Vector& other) = delete;
 
  private:
   void destruct_live() {

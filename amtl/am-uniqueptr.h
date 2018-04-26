@@ -48,13 +48,13 @@ class UniquePtr
    : t_(nullptr)
   {
   }
-  explicit UniquePtr(T *t)
+  explicit UniquePtr(T* t)
    : t_(t)
   {}
   UniquePtr(decltype(nullptr) n)
    : t_(nullptr)
   {}
-  UniquePtr(UniquePtr &&other)
+  UniquePtr(UniquePtr&& other)
   {
     t_ = other.t_;
     other.t_ = nullptr;
@@ -62,23 +62,23 @@ class UniquePtr
   ~UniquePtr() {
     delete t_;
   }
-  T *get() const {
+  T* get() const {
     return t_;
   }
-  T *take() {
+  T* take() {
     return ReturnAndVoid(t_);
   }
   void assign(T* ptr) {
     delete t_;
     t_ = ptr;
   }
-  T *operator *() const {
+  T* operator*() const {
     return t_;
   }
-  T *operator ->() const {
+  T* operator ->() const {
     return t_;
   }
-  T *operator =(UniquePtr &&other) {
+  T* operator =(UniquePtr&& other) {
     assign(other.take());
     return t_;
   }
@@ -91,11 +91,11 @@ class UniquePtr
   }
 
  private:
-  UniquePtr(const UniquePtr &other) = delete;
-  UniquePtr &operator =(const UniquePtr &other) = delete;
+  UniquePtr(const UniquePtr& other) = delete;
+  UniquePtr& operator =(const UniquePtr& other) = delete;
 
  private:
-  T *t_;
+  T* t_;
 };
 
 // Wrapper that automatically deletes its contents. The pointer can be taken
@@ -113,17 +113,17 @@ class UniquePtr<T[]>
   {
     other.t_ = nullptr;
   }
-  explicit UniquePtr(T *t)
+  explicit UniquePtr(T* t)
    : t_(t)
   {
   }
   ~UniquePtr() {
     delete [] t_;
   }
-  T *get() const {
+  T* get() const {
     return t_;
   }
-  T *take() {
+  T* take() {
     return ReturnAndVoid(t_);
   }
   explicit operator bool() const {
@@ -156,7 +156,7 @@ class UniquePtr<T[]>
   UniquePtr& operator =(const UniquePtr& other) = delete;
 
  private:
-  T *t_;
+  T* t_;
 };
 
 namespace impl {

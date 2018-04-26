@@ -49,7 +49,7 @@ class BasicThing
   {
     sCtors++;
   }
-  BasicThing(const BasicThing &other)
+  BasicThing(const BasicThing& other)
   {
     sCopyCtors++;
   }
@@ -67,7 +67,7 @@ class MovingThing
   {
     sCtors++;
   }
-  MovingThing(MovingThing &&other)
+  MovingThing(MovingThing&& other)
   {
     assert(!other.moved_);
     sMovingCtors++;
@@ -80,7 +80,7 @@ class MovingThing
     if (moved_)
       sMovedDtors++;
   }
-  MovingThing &operator =(MovingThing &&other) {
+  MovingThing& operator =(MovingThing&& other) {
     assert(!other.moved_);
     sCopyCtors++;
     moved_ = false;
@@ -92,7 +92,7 @@ class MovingThing
   }
 
  private:
-  MovingThing(const MovingThing &other) = delete;
+  MovingThing(const MovingThing& other) = delete;
   bool moved_;
 };
 

@@ -132,8 +132,8 @@ class TestCallable : public Test
 
     struct {
       int a;
-      void *b, *c, *d, *e, *f, *g;
-      void *h, *j, *k, *m, *n, *o, *p;
+      void* b, *c, *d, *e, *f, *g;
+      void* h, *j, *k, *m, *n, *o, *p;
     } huge_struct = { 20 };
     CallDtorObj test_dtor;
     ptr = [huge_struct, test_dtor]() -> int {

@@ -40,7 +40,7 @@ namespace ke {
 class Test
 {
  public:
-  Test(const char *name)
+  Test(const char* name)
    : name_(name),
      next_(head)
   {
@@ -49,29 +49,29 @@ class Test
 
   virtual bool Run() = 0;
 
-  const char *name() const {
+  const char* name() const {
     return name_;
   }
-  Test *next() const {
+  Test* next() const {
     return next_;
   }
 
-  static inline Test *first() {
+  static inline Test* first() {
     return head;
   }
 
  private:
-  static Test *head;
+  static Test* head;
 
  private:
-  const char *name_;
-  Test *next_;
+  const char* name_;
+  Test* next_;
 };
 
 static inline bool
-check(bool condition, const char *fmt, ...)
+check(bool condition, const char* fmt, ...)
 {
-  FILE *fp = condition ? stdout : stderr;
+  FILE* fp = condition ? stdout : stderr;
   if (condition)
     fprintf(fp, " -- Ok: ");
   else
@@ -85,7 +85,7 @@ check(bool condition, const char *fmt, ...)
 }
 
 static inline bool
-check_silent(bool condition, const char *fmt, ...)
+check_silent(bool condition, const char* fmt, ...)
 {
   if (condition)
     return true;
@@ -108,7 +108,7 @@ class FallibleMalloc
   {
   }
 
-  void *am_malloc(size_t amount) {
+  void* am_malloc(size_t amount) {
     if (shouldOutOfMemory_) {
       reportOutOfMemory();
       return nullptr;
@@ -119,7 +119,7 @@ class FallibleMalloc
     return ::malloc(amount);
 #endif
   }
-  void am_free(void *p) {
+  void am_free(void* p) {
 #if defined(_DEBUG) && defined(_CRTDBG_MAP_ALLOC)
     return free(p);
 #else

@@ -53,7 +53,7 @@ class RefcountedThreadsafe
     }
     bool Release() {
         if (!refcount_.decrement()) {
-            delete static_cast<T *>(this);
+            delete static_cast<T*>(this);
             return false;
         }
         return true;
@@ -118,7 +118,7 @@ class VirtualRefcountedThreadsafe : public IRefcounted
 // destroy the left-hand side. This prevents such a scenario by making reads
 // atomic with respect to the incref operation.
 //
-// Pointers stored in an AtomicRef<> must be at least sizeof(void *) aligned.
+// Pointers stored in an AtomicRef<> must be at least sizeof(void*) aligned.
 template <typename T>
 class AtomicRef
 {
@@ -126,22 +126,22 @@ class AtomicRef
   AtomicRef()
    : thing_(nullptr)
   {}
-  AtomicRef(T *thing)
+  AtomicRef(T* thing)
    : thing_(thing)
   {
-    assert(IsAligned(thing, sizeof(void *)));
+    assert(IsAligned(thing, sizeof(void*)));
     if (thing)
       thing->AddRef();
   }
   ~AtomicRef() {
     assert(thing_ == untagged(thing_));
     if (thing_)
-      reinterpret_cast<T *>(thing_)->Release();
+      reinterpret_cast<T*>(thing_)->Release();
   }
 
   // Atomically retrieve and add a reference to the contained value.
   AlreadyRefed<T> get() {
-    T *value = lock();
+    T* value = lock();
     if (value)
       value->AddRef();
     unlock(value);
@@ -149,8 +149,8 @@ class AtomicRef
   }
 
   // Atomically incref the new value and replace the old value.
-  void operator =(T *other) {
-    T *value = lock();
+  void operator =(T* other) {
+    T* value = lock();
     if (other)
       other->AddRef();
     unlock(other);
@@ -159,28 +159,28 @@ class AtomicRef
   }
 
  private:
-  AtomicRef(const AtomicRef &other) = delete;
-  void operator =(const AtomicRef &other) = delete;
+  AtomicRef(const AtomicRef& other) = delete;
+  void operator =(const AtomicRef& other) = delete;
 
  private:
   // We represent a locked state with a tag bit.
-  void *tagged(void *ptr) {
-    return reinterpret_cast<void *>(uintptr_t(ptr) | 1);
+  void* tagged(void* ptr) {
+    return reinterpret_cast<void*>(uintptr_t(ptr) | 1);
   }
-  void *untagged(void *ptr) {
-    return reinterpret_cast<void *>(uintptr_t(ptr) & ~uintptr_t(1));
+  void* untagged(void* ptr) {
+    return reinterpret_cast<void*>(uintptr_t(ptr) & ~uintptr_t(1));
   }
 
-  T *lock() {
+  T* lock() {
     // Spin until we can replace an untagged ptr with the tagged version.
-    void *oldval = untagged(thing_);
+    void* oldval = untagged(thing_);
     while (CompareAndSwapPtr(&thing_, tagged(oldval), oldval) != oldval) {
       YieldProcessor();
       oldval = untagged(thing_);
     }
-    return reinterpret_cast<T *>(oldval);
+    return reinterpret_cast<T*>(oldval);
   }
-  void unlock(T *ptr) {
+  void unlock(T* ptr) {
     // Nothing should have mutated the value, and the new value should be
     // untagged.
     assert(thing_ == tagged(thing_));

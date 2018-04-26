@@ -36,7 +36,7 @@ template <typename T>
 class SaveAndSet
 {
  public:
-  SaveAndSet(T *location, const T &value)
+  SaveAndSet(T* location, const T& value)
    : location_(location),
      old_(*location)
   {
@@ -47,7 +47,7 @@ class SaveAndSet
   }
 
  private:
-  T *location_;
+  T* location_;
   T old_;
 };
 
@@ -55,11 +55,11 @@ template <typename T>
 class StackLinked
 {
  public:
-  StackLinked<T>(T **prevp)
+  StackLinked<T>(T** prevp)
    : prevp_(prevp),
      prev_(*prevp)
   {
-    *prevp_ = static_cast<T *>(this);
+    *prevp_ = static_cast<T*>(this);
   }
   virtual ~StackLinked() {
     assert(*prevp_ == this);
@@ -67,12 +67,12 @@ class StackLinked
   }
 
  protected:
-  T **prevp_;
-  T *prev_;
+  T** prevp_;
+  T* prev_;
 };
 
 template <typename T> T
-ReturnAndVoid(T &t)
+ReturnAndVoid(T& t)
 {
     T saved = t;
     t = T();

@@ -38,9 +38,9 @@ namespace ke {
 // C++11, we implement this as STL does for std::move.
 template <typename T>
 static inline typename remove_reference<T>::type &&
-Move(T &&t)
+Move(T&& t)
 {
-  return static_cast<typename remove_reference<T>::type &&>(t);
+  return static_cast<typename remove_reference<T>::type&&>(t);
 }
 
 // std::forward replacement. See:
@@ -48,21 +48,21 @@ Move(T &&t)
 //   http://thbecker.net/articles/rvalue_references/section_08.html
 template <typename T>
 static KE_CONSTEXPR inline T &&
-Forward(typename remove_reference<T>::type &t) KE_NOEXCEPT
+Forward(typename remove_reference<T>::type& t) KE_NOEXCEPT
 {
-  return static_cast<T &&>(t);
+  return static_cast<T&&>(t);
 }
 
 template <typename T>
 static KE_CONSTEXPR inline T &&
-Forward(typename remove_reference<T>::type &&t) KE_NOEXCEPT
+Forward(typename remove_reference<T>::type&& t) KE_NOEXCEPT
 {
-  return static_cast<T &&>(t);
+  return static_cast<T&&>(t);
 }
 
 template <typename T>
 static inline void
-MoveRange(T *dest, T *src, size_t length)
+MoveRange(T* dest, T* src, size_t length)
 {
   for (size_t i = 0; i < length; i++) {
     new (&dest[i]) T(ke::Move(src[i]));

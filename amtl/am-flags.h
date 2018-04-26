@@ -81,7 +81,7 @@ public:
   Flags operator |(const Flags& other) const {
     return Flags(static_cast<T>(bits() | other.bits()));
   }
-  Flags operator &(const Flags& other) const {
+  Flags operator&(const Flags& other) const {
     return Flags(static_cast<T>(bits() & other.bits()));
   }
   Flags operator ^(const Flags& other) const {

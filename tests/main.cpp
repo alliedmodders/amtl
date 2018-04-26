@@ -35,11 +35,11 @@
 
 using namespace ke;
 
-Test *Test::head = nullptr;
+Test* Test::head = nullptr;
 
-int main(int argc, char **argv)
+int main(int argc, char** argv)
 {
-  Test *test = Test::first();
+  Test* test = Test::first();
   while (test) {
     if (argc >= 2 && strcmp(argv[1], test->name()) != 0) {
       test = test->next();
@@ -62,22 +62,22 @@ extern "C" void __cxa_pure_virtual()
   abort();
 }
 
-void *operator new(size_t amount)
+void* operator new(size_t amount)
 {
   return malloc(amount);
 }
 
-void *operator new[](size_t amount)
+void* operator new[](size_t amount)
 {
   return malloc(amount);
 }
 
-void operator delete(void *p)
+void operator delete(void* p)
 {
   free(p);
 }
 
-void operator delete[](void *p)
+void operator delete[](void* p)
 {
   free(p);
 }
