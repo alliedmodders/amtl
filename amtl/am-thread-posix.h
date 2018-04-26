@@ -70,7 +70,7 @@ class Mutex : public Lockable
     pthread_mutex_unlock(&mutex_);
   }
   
-  pthread_mutex_t *raw() {
+  pthread_mutex_t* raw() {
     return &mutex_;
   }
 
@@ -166,8 +166,8 @@ class Thread
     char name[17];
   };
  public:
-  Thread(ke::Function<void()>&& callback, const char *name = nullptr) {
-    ThreadData *data = new ThreadData;
+  Thread(ke::Function<void()>&& callback, const char* name = nullptr) {
+    ThreadData* data = new ThreadData;
     data->callback = ke::Move(callback);
     snprintf(data->name, sizeof(data->name), "%s", name ? name : "");
 
@@ -193,14 +193,14 @@ class Thread
   }
 
  private:
-  static void *Main(void *arg) {
-    AutoPtr<ThreadData> data((ThreadData *)arg);
+  static void* Main(void* arg) {
+    AutoPtr<ThreadData> data((ThreadData*)arg);
 
     if (data->name[0]) {
 #if defined(__linux__)
       prctl(PR_SET_NAME, (unsigned long)data->name);
 #elif defined(__APPLE__)
-      int (*fn)(const char *) = (int (*)(const char *))dlsym(RTLD_DEFAULT, "pthread_setname_np");
+      int (*fn)(const char*) = (int (*)(const char*))dlsym(RTLD_DEFAULT, "pthread_setname_np");
       if (fn)
         fn(data->name);
 #endif

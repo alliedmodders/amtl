@@ -49,7 +49,7 @@ class AutoPtr
    : t_(nullptr)
   {
   }
-  explicit AutoPtr(T *t)
+  explicit AutoPtr(T* t)
    : t_(t)
   {
   }
@@ -57,23 +57,23 @@ class AutoPtr
    : t_(other.take())
   {
   }
-  AutoPtr(AutoPtr &&other)
+  AutoPtr(AutoPtr&& other)
    : t_(other.take())
   {
   }
   ~AutoPtr() {
     delete t_;
   }
-  T *get() const {
+  T* get() const {
     return t_;
   }
-  T *take() {
+  T* take() {
     return ReturnAndVoid(t_);
   }
-  T *operator *() const {
+  T* operator*() const {
     return t_;
   }
-  T *operator ->() const {
+  T* operator ->() const {
     return t_;
   }
   operator T* () const {
@@ -91,11 +91,11 @@ class AutoPtr
     assign(t);
     return *this;
   }
-  AutoPtr& operator =(AutoPtr &&other) {
+  AutoPtr& operator =(AutoPtr&& other) {
     assign(other.take());
     return *this;
   }
-  AutoPtr& operator =(UniquePtr<T> &&other) {
+  AutoPtr& operator =(UniquePtr<T>&& other) {
     assign(other.take());
     return *this;
   }
@@ -104,11 +104,11 @@ class AutoPtr
   }
 
  private:
-  AutoPtr(const AutoPtr &other) = delete;
-  AutoPtr &operator =(const AutoPtr &other) = delete;
+  AutoPtr(const AutoPtr& other) = delete;
+  AutoPtr& operator =(const AutoPtr& other) = delete;
 
  private:
-  T *t_;
+  T* t_;
 };
 
 // Wrapper that automatically deletes its contents. The pointer can be taken
@@ -129,20 +129,20 @@ class AutoPtr<T[]>
    : t_(other.take())
   {
   }
-  explicit AutoPtr(T *t)
+  explicit AutoPtr(T* t)
    : t_(t)
   {
   }
   ~AutoPtr() {
     delete [] t_;
   }
-  T *get() const {
+  T* get() const {
     return t_;
   }
-  T *take() {
+  T* take() {
     return ReturnAndVoid(t_);
   }
-  T *forget() {
+  T* forget() {
     return ReturnAndVoid(t_);
   }
   explicit operator bool() const {
@@ -176,7 +176,7 @@ class AutoPtr<T[]>
   AutoPtr& operator =(const AutoPtr& other) = delete;
 
  private:
-  T *t_;
+  T* t_;
 };
 
 } // namespace ke

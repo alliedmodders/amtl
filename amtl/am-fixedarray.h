@@ -40,7 +40,7 @@ class FixedArray : private AllocPolicy
  public:
   FixedArray(size_t length, AllocPolicy = AllocPolicy()) {
     length_ = length;
-    data_ = (T *)this->am_malloc(sizeof(T) * length_);
+    data_ = (T*)this->am_malloc(sizeof(T) * length_);
     if (!data_)
       return;
 
@@ -61,40 +61,40 @@ class FixedArray : private AllocPolicy
   size_t length() const {
     return length_;
   }
-  T &operator [](size_t index) {
+  T& operator [](size_t index) {
     return at(index);
   }
-  const T &operator [](size_t index) const {
+  const T& operator [](size_t index) const {
     return at(index);
   }
-  T &at(size_t index) {
+  T& at(size_t index) {
     assert(index < length());
     return data_[index];
   }
-  const T &at(size_t index) const {
+  const T& at(size_t index) const {
     assert(index < length());
     return data_[index];
   }
-  T &back() {
+  T& back() {
     assert(length() > 0);
     return data_[length() - 1];
   }
-  const T &back() const {
+  const T& back() const {
     assert(length() > 0);
     return data_[length() - 1];
   }
 
-  T *buffer() const {
+  T* buffer() const {
     return data_;
   }
 
  private:
-  FixedArray(const FixedArray &other) = delete;
-  FixedArray &operator =(const FixedArray &other) = delete;
+  FixedArray(const FixedArray& other) = delete;
+  FixedArray& operator =(const FixedArray& other) = delete;
 
  private:
   size_t length_;
-  T *data_;
+  T* data_;
 };
 
 } // namespace ke

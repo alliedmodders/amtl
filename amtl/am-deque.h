@@ -52,7 +52,7 @@ class Deque : private AllocPolicy
      last_(0)
   {
   }
-  Deque(Deque &&other)
+  Deque(Deque&& other)
    : AllocPolicy(Move(other)),
      buffer_(other.buffer_),
      maxlength_(other.maxlength_),
@@ -65,7 +65,7 @@ class Deque : private AllocPolicy
     zap();
   }
 
-  Deque &operator =(Deque &&other) {
+  Deque& operator =(Deque&& other) {
     zap();
     buffer_ = other.buffer_;
     maxlength_ = other.maxlength_;
@@ -80,7 +80,7 @@ class Deque : private AllocPolicy
   }
 
   template <typename U>
-  bool append(U &&other) {
+  bool append(U&& other) {
     size_t next = ensureCanAppend();
     if (next == kInvalidIndex)
       return false;
@@ -90,7 +90,7 @@ class Deque : private AllocPolicy
   }
 
   template <typename U>
-  bool prepend(U &&other) {
+  bool prepend(U&& other) {
     size_t prev = ensureCanPrepend();
     if (prev == kInvalidIndex)
       return false;
@@ -127,21 +127,21 @@ class Deque : private AllocPolicy
     return t;
   }
 
-  const T &front() const {
+  const T& front() const {
     assert(!empty());
     return buffer_[first_];
   }
-  T &front() {
+  T& front() {
     assert(!empty());
     return buffer_[first_];
   }
-  const T &back() const {
+  const T& back() const {
     assert(!empty());
     if (last_ == 0)
       return buffer_[maxlength_ - 1];
     return buffer_[last_ - 1];
   }
-  T &back() {
+  T& back() {
     assert(!empty());
     if (last_ == 0)
       return buffer_[maxlength_ - 1];
@@ -160,8 +160,8 @@ class Deque : private AllocPolicy
   }
 
  private:
-  Deque(const Deque &other) = delete;
-  Deque &operator =(const Deque &other) = delete;
+  Deque(const Deque& other) = delete;
+  Deque& operator =(const Deque& other) = delete;
 
   // Return the next value of first_.
   size_t ensureCanPrepend() {
@@ -203,7 +203,7 @@ class Deque : private AllocPolicy
     }
 
     size_t new_maxlength = maxlength_ ? maxlength_ * 2 : 8;
-    T *new_buffer = (T *)this->am_malloc(sizeof(T) * new_maxlength);
+    T* new_buffer = (T*)this->am_malloc(sizeof(T) * new_maxlength);
     if (!new_buffer)
       return false;
 
@@ -247,7 +247,7 @@ class Deque : private AllocPolicy
   }
 
  private:
-  T *buffer_;
+  T* buffer_;
   size_t maxlength_;
 
   // Always points to the first readable item.

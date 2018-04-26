@@ -41,11 +41,11 @@ struct remove_reference {
   typedef T type;
 };
 template <typename T>
-struct remove_reference<T &> {
+struct remove_reference<T&> {
   typedef T type;
 };
 template <typename T>
-struct remove_reference<T &&> {
+struct remove_reference<T&&> {
   typedef T type;
 };
 
@@ -120,9 +120,9 @@ template <typename T>
 struct is_function_ptr : false_type{};
 #if defined(_MSC_VER)
 template <typename ReturnType, typename ...ArgTypes>
-struct is_function_ptr<ReturnType (__cdecl *)(ArgTypes...)> : true_type{};
+struct is_function_ptr<ReturnType (__cdecl*)(ArgTypes...)> : true_type{};
 template <typename ReturnType, typename ...ArgTypes>
-struct is_function_ptr<ReturnType (__cdecl *)(ArgTypes..., ...)> : true_type{};
+struct is_function_ptr<ReturnType (__cdecl*)(ArgTypes..., ...)> : true_type{};
 #else
 template <typename ReturnType, typename ...ArgTypes>
 struct is_function_ptr<ReturnType (*)(ArgTypes...)> : true_type{};
@@ -131,7 +131,7 @@ struct is_function_ptr<ReturnType (*)(ArgTypes..., ...)> : true_type{};
 #endif
 
 template <typename T>
-struct is_function : public is_function_ptr<typename remove_cv<T>::type *>
+struct is_function : public is_function_ptr<typename remove_cv<T>::type*>
 {};
 
 template <typename T>

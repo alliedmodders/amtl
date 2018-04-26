@@ -39,7 +39,7 @@
 #if defined(KE_CXX_MSVC)
 extern "C" {
   void * __cdecl _InterlockedCompareExchangePointer(
-     void * volatile *Destination,
+     void * volatile* Destination,
      void * Exchange,
      void * Comparand
   );
@@ -70,14 +70,14 @@ extern "C" {
 namespace ke {
 
 #if defined(KE_CXX_MSVC)
-static inline void *
-CompareAndSwapPtr(void *volatile *Destination, void *Exchange, void *Comparand)
+static inline void*
+CompareAndSwapPtr(void* volatile* Destination, void* Exchange, void* Comparand)
 {
   return _InterlockedCompareExchangePointer(Destination, Exchange, Comparand);
 }
 #else
-static inline void *
-CompareAndSwapPtr(void *volatile *dest, void *newval, void *oldval)
+static inline void*
+CompareAndSwapPtr(void* volatile* dest, void* newval, void* oldval)
 {
   return __sync_val_compare_and_swap(dest, oldval, newval);
 }

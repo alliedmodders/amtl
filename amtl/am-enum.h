@@ -45,32 +45,32 @@ namespace ke {
 } // namespace ke
 
 #define KE_DEFINE_ENUM_OPERATORS(EnumName)                                          \
-  static inline EnumName operator |(const EnumName &left, const EnumName &right) {  \
+  static inline EnumName operator |(const EnumName& left, const EnumName& right) {  \
     typedef ke::enum_integral_type<EnumName>::type int_type;                        \
     return EnumName(int_type(left) | int_type(right));                              \
   }                                                                                 \
-  static inline EnumName operator &(const EnumName &left, const EnumName &right) {  \
+  static inline EnumName operator&(const EnumName& left, const EnumName& right) {  \
     typedef ke::enum_integral_type<EnumName>::type int_type;                        \
     return EnumName(int_type(left) & int_type(right));                              \
   }                                                                                 \
-  static inline EnumName operator ^(const EnumName &left, const EnumName &right) {  \
+  static inline EnumName operator ^(const EnumName& left, const EnumName& right) {  \
     typedef ke::enum_integral_type<EnumName>::type int_type;                        \
     return EnumName(int_type(left) ^ int_type(right));                              \
   }                                                                                 \
-  static inline EnumName operator ~(const EnumName &flags) {                        \
+  static inline EnumName operator ~(const EnumName& flags) {                        \
     typedef ke::enum_integral_type<EnumName>::type int_type;                        \
     return EnumName(~int_type(flags));                                              \
   }                                                                                 \
-  static inline EnumName & operator |=(EnumName &left, const EnumName &right) {     \
+  static inline EnumName & operator |=(EnumName& left, const EnumName& right) {     \
     return left = left | right;                                                     \
   }                                                                                 \
-  static inline EnumName & operator &=(EnumName &left, const EnumName &right) {     \
+  static inline EnumName & operator &=(EnumName& left, const EnumName& right) {     \
     return left = left & right;                                                     \
   }                                                                                 \
-  static inline EnumName & operator ^=(EnumName &left, const EnumName &right) {     \
+  static inline EnumName & operator ^=(EnumName& left, const EnumName& right) {     \
     return left = left ^ right;                                                     \
   }                                                                                 \
-  static inline bool operator !(const EnumName &obj) {                              \
+  static inline bool operator !(const EnumName& obj) {                              \
     typedef ke::enum_integral_type<EnumName>::type int_type;                        \
     return int_type(obj) == 0;                                                      \
   }

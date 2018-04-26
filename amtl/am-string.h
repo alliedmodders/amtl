@@ -69,7 +69,7 @@ class AString
   {
   }
 
-  explicit AString(const char *str) {
+  explicit AString(const char* str) {
     if (str && str[0]) {
       set(str, strlen(str));
     } else {
@@ -77,10 +77,10 @@ class AString
       length_ = 0;
     }
   }
-  AString(const char *str, size_t length) {
+  AString(const char* str, size_t length) {
     set(str, length);
   }
-  AString(const AString &other) {
+  AString(const AString& other) {
     if (other.length_)
       set(other.chars_.get(), other.length_);
     else
@@ -90,14 +90,14 @@ class AString
    : chars_(Move(ptr)),
      length_(length)
   {}
-  AString(AString &&other)
+  AString(AString&& other)
    : chars_(Move(other.chars_)),
      length_(other.length_)
   {
     other.length_ = 0;
   }
 
-  AString &operator =(const char *str) {
+  AString& operator =(const char* str) {
     if (str && str[0]) {
       set(str, strlen(str));
     } else {
@@ -106,7 +106,7 @@ class AString
     }
     return *this;
   }
-  AString &operator =(const AString &other) {
+  AString& operator =(const AString& other) {
     if (other.length_) {
       set(other.chars_.get(), other.length_);
     } else {
@@ -115,20 +115,20 @@ class AString
     }
     return *this;
   }
-  AString &operator =(AString &&other) {
+  AString& operator =(AString&& other) {
     chars_ = Move(other.chars_);
     length_ = other.length_;
     other.length_ = 0;
     return *this;
   }
 
-  int compare(const char *str) const {
+  int compare(const char* str) const {
     return strcmp(chars(), str);
   }
-  int compare(const AString &other) const {
+  int compare(const AString& other) const {
     return strcmp(chars(), other.chars());
   }
-  bool operator ==(const AString &other) const {
+  bool operator ==(const AString& other) const {
     return other.length() == length() &&
            memcmp(other.chars(), chars(), length()) == 0;
   }
@@ -156,7 +156,7 @@ class AString
   size_t length() const {
     return length_;
   }
-  const char *chars() const {
+  const char* chars() const {
     if (!chars_)
       return "";
     return chars_.get();
@@ -180,7 +180,7 @@ class AString
  private:
   static const size_t kInvalidLength = (size_t)-1;
 
-  void set(const char *str, size_t length) {
+  void set(const char* str, size_t length) {
     chars_ = MakeUnique<char[]>(length + 1);
     length_ = length;
     memcpy(chars_.get(), str, length);
@@ -201,8 +201,8 @@ class AString
 // Forward declare these functions since GCC will complain otherwise.
 static inline UniquePtr<char[]> SprintfArgs(const char* fmt, va_list ap) KE_PRINTF_FUNCTION(1, 0);
 static inline UniquePtr<char[]> Sprintf(const char* fmt, ...) KE_PRINTF_FUNCTION(1, 2);
-static inline size_t SafeVsprintf(char *buffer, size_t maxlength, const char *fmt, va_list ap) KE_PRINTF_FUNCTION(3, 0);
-static inline size_t SafeSprintf(char *buffer, size_t maxlength, const char *fmt, ...) KE_PRINTF_FUNCTION(3, 4);
+static inline size_t SafeVsprintf(char* buffer, size_t maxlength, const char* fmt, va_list ap) KE_PRINTF_FUNCTION(3, 0);
+static inline size_t SafeSprintf(char* buffer, size_t maxlength, const char* fmt, ...) KE_PRINTF_FUNCTION(3, 4);
 
 namespace detail {
 
@@ -313,7 +313,7 @@ AString::format(const char* fmt, ...)
 }
 
 static inline size_t
-SafeVsprintf(char *buffer, size_t maxlength, const char *fmt, va_list ap)
+SafeVsprintf(char* buffer, size_t maxlength, const char* fmt, va_list ap)
 {
   if (!maxlength)
     return 0;
@@ -329,7 +329,7 @@ SafeVsprintf(char *buffer, size_t maxlength, const char *fmt, va_list ap)
 }
 
 static inline size_t
-SafeSprintf(char *buffer, size_t maxlength, const char *fmt, ...)
+SafeSprintf(char* buffer, size_t maxlength, const char* fmt, ...)
 {
   va_list ap;
   va_start(ap, fmt);

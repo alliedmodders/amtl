@@ -35,19 +35,19 @@
 namespace ke {
 
 template <typename T> static inline T
-Min(const T &t1, const T &t2)
+Min(const T& t1, const T& t2)
 {
     return t1 < t2 ? t1 : t2;
 }
 
 template <typename T> static inline T
-Max(const T &t1, const T &t2)
+Max(const T& t1, const T& t2)
 {
     return t1 > t2 ? t1 : t2;
 }
 
 template <typename T> static inline void
-Swap(T &left, T &right)
+Swap(T& left, T& right)
 {
   T tmp(Move(left));
   left = Move(right);

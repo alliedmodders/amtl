@@ -33,7 +33,7 @@
 using namespace ke;
 
 static ThreadLocal<int> sThreadVar;
-static ThreadLocal<void *> sThreadVarPointer;
+static ThreadLocal<void*> sThreadVarPointer;
 
 class VarThread
 {

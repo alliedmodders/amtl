@@ -39,10 +39,10 @@ namespace ke {
 
 #if defined(KE_CXX_MSVC)
 extern "C" {
-  long __cdecl _InterlockedIncrement(long volatile *dest);
-  long __cdecl _InterlockedDecrement(long volatile *dest);
-  long long __cdecl _InterlockedIncrement64(long long volatile *dest);
-  long long __cdecl _InterlockedDecrement64(long long volatile *dest);
+  long __cdecl _InterlockedIncrement(long volatile* dest);
+  long __cdecl _InterlockedDecrement(long volatile* dest);
+  long long __cdecl _InterlockedIncrement64(long long volatile* dest);
+  long long __cdecl _InterlockedDecrement64(long long volatile* dest);
 }
 # pragma intrinsic(_InterlockedIncrement)
 # pragma intrinsic(_InterlockedDecrement)
@@ -61,10 +61,10 @@ struct AtomicOps<4>
 #if defined(KE_CXX_MSVC)
   typedef volatile long Type;
 
-  static Type Increment(Type *ptr) {
+  static Type Increment(Type* ptr) {
     return _InterlockedIncrement(ptr);
   }
-  static Type Decrement(Type *ptr) {
+  static Type Decrement(Type* ptr) {
     return _InterlockedDecrement(ptr);
   };
 #elif defined(KE_CXX_LIKE_GCC)
@@ -73,10 +73,10 @@ struct AtomicOps<4>
   // x86/x64 notes: When using GCC < 4.8, this will compile to a spinlock.
   // On 4.8+, or when using Clang, we'll get the more optimal "lock addl"
   // variant.
-  static Type Increment(Type *ptr) {
+  static Type Increment(Type* ptr) {
     return __sync_add_and_fetch(ptr, 1);
   }
-  static Type Decrement(Type *ptr) {
+  static Type Decrement(Type* ptr) {
     return __sync_sub_and_fetch(ptr, 1);
   }
 #endif
@@ -88,10 +88,10 @@ struct AtomicOps<8>
 #if defined(KE_CXX_MSVC)
   typedef volatile long long Type;
 
-  static Type Increment(Type *ptr) {
+  static Type Increment(Type* ptr) {
     return _InterlockedIncrement64(ptr);
   }
-  static Type Decrement(Type *ptr) {
+  static Type Decrement(Type* ptr) {
     return _InterlockedDecrement64(ptr);
   };
 #elif defined(KE_CXX_LIKE_GCC)
@@ -100,10 +100,10 @@ struct AtomicOps<8>
   // x86/x64 notes: When using GCC < 4.8, this will compile to a spinlock.
   // On 4.8+, or when using Clang, we'll get the more optimal "lock addl"
   // variant.
-  static Type Increment(Type *ptr) {
+  static Type Increment(Type* ptr) {
     return __sync_add_and_fetch(ptr, 1);
   }
-  static Type Decrement(Type *ptr) {
+  static Type Decrement(Type* ptr) {
     return __sync_sub_and_fetch(ptr, 1);
   }
 #endif

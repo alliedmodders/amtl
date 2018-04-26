@@ -41,7 +41,7 @@
 
 namespace ke {
 
-static const size_t kMallocAlignment = sizeof(void *) * 2;
+static const size_t kMallocAlignment = sizeof(void*) * 2;
 
 static const size_t kKB = 1024;
 static const size_t kMB = 1024 * kKB;
@@ -204,11 +204,11 @@ IsAligned(T addr, size_t alignment)
     return !(uintptr_t(addr) & (alignment - 1));
 }
 
-static inline void *
-AlignedBase(void *addr, size_t alignment)
+static inline void*
+AlignedBase(void* addr, size_t alignment)
 {
     assert(IsPowerOfTwo(alignment));
-    return reinterpret_cast<void *>(uintptr_t(addr) & ~(alignment - 1));
+    return reinterpret_cast<void*>(uintptr_t(addr) & ~(alignment - 1));
 }
 
 } // namespace ke

@@ -186,7 +186,7 @@ class Lockable
 class AutoLock
 {
  public:
-  AutoLock(Lockable *lock)
+  AutoLock(Lockable* lock)
    : lock_(lock)
   {
     lock_->Lock();
@@ -196,7 +196,7 @@ class AutoLock
   }
 
  private:
-  Lockable *lock_;
+  Lockable* lock_;
 };
 
 class AutoMaybeLock
@@ -204,7 +204,7 @@ class AutoMaybeLock
   friend class AutoMaybeUnlock;
 
  public:
-  AutoMaybeLock(Lockable *lock)
+  AutoMaybeLock(Lockable* lock)
    : lock_(lock)
   {
     if (lock_)
@@ -225,7 +225,7 @@ class AutoMaybeLock
   //     return helper(&lock);
   //   }
   //
-  // helper_while_locked(AutoMaybeLock *mlock) {
+  // helper_while_locked(AutoMaybeLock* mlock) {
   //   ...
   //   mlock->unlock();
   //   callback
@@ -241,13 +241,13 @@ class AutoMaybeLock
   }
 
  private:
-  Lockable *lock_;
+  Lockable* lock_;
 };
 
 class AutoMaybeUnlock
 {
  public:
-  AutoMaybeUnlock(Lockable *lock)
+  AutoMaybeUnlock(Lockable* lock)
    : lock_(lock)
   {
     if (lock_)
@@ -259,13 +259,13 @@ class AutoMaybeUnlock
   }
 
  private:
-  Lockable *lock_;
+  Lockable* lock_;
 };
 
 class AutoTryLock
 {
  public:
-  AutoTryLock(Lockable *lock) {
+  AutoTryLock(Lockable* lock) {
     lock_ = lock->TryLock() ? lock : nullptr;
   }
   ~AutoTryLock() {
@@ -278,14 +278,14 @@ class AutoTryLock
   }
 
  private:
-  Lockable *lock_;
+  Lockable* lock_;
 };
 
 // RAII for automatically unlocking and relocking an object.
 class AutoUnlock
 {
  public:
-  AutoUnlock(Lockable *lock)
+  AutoUnlock(Lockable* lock)
    : lock_(lock)
   {
     lock_->Unlock();
@@ -295,7 +295,7 @@ class AutoUnlock
   }
 
  private:
-  Lockable *lock_;
+  Lockable* lock_;
 };
 
 enum WaitResult {

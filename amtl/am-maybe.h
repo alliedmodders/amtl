@@ -81,7 +81,7 @@ class Maybe
     assert(isValid());
     return t_.address();
   }
-  T& operator *() {
+  T& operator*() {
     assert(isValid());
     return *t_.address();
   }
@@ -89,7 +89,7 @@ class Maybe
     assert(isValid());
     return t_.address();
   }
-  const T& operator *() const {
+  const T& operator*() const {
     assert(isValid());
     return *t_.address();
   }
