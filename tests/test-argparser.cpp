@@ -264,6 +264,27 @@ class TestArgparser : public Test
     return true;
   }
 
+  bool testStopArg() {
+    Parser parser("help");
+
+    StopOption show_version(parser,
+      "-v", "--version",
+      Some(false),
+      "Show the version and exit.");
+    StringOption required(parser,
+      "something_required",
+      "This is a required positional argument.");
+
+    if (!check(parser.parsev(nullptr) == false, "stop arg parse 1 failed"))
+      return false;
+    if (!check(parser.parsev("-v", nullptr) == true, "stop arg parse 2 succeeded"))
+      return false;
+    if (!check(show_version.value() == true, "show_version should be true"))
+      return false;
+
+    return true;
+  }
+
   bool Run() override
   {
     if (!testBasic())
@@ -277,6 +298,8 @@ class TestArgparser : public Test
     if (!testIntArg())
       return false;
     if (!testRepeatArg())
+      return false;
+    if (!testStopArg())
       return false;
     return true;
   };

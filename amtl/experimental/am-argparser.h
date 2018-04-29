@@ -33,6 +33,7 @@
 #include <amtl/am-vector.h>
 #include <amtl/am-maybe.h>
 #include <amtl/am-algorithm.h>
+#include <amtl/am-function.h>
 #include <assert.h>
 #include <stdio.h>
 
@@ -92,6 +93,9 @@ class IOption
     return false;
   }
   virtual bool repeatable() const {
+    return false;
+  }
+  virtual bool haltOnValue() const {
     return false;
   }
   virtual bool consumeValue(const char* arg) = 0;
@@ -274,6 +278,27 @@ class ToggleOption : public IOption
  private:
   bool default_value_;
   bool value_;
+};
+
+// This is a ToggleOption that will stop argument processing and force
+// parse_args to return true. It is the responsibility of the implementor
+// to check all StopOptions before any other options, as a true return
+// from parse_args() may have only filled one of them.
+class StopOption : public ToggleOption
+{
+ public:
+  StopOption(Parser& parser,
+               const char* short_form, const char* long_form,
+               const Maybe<bool>& default_value,
+               const char* help)
+   : ToggleOption(parser, short_form, long_form, default_value, help)
+  {
+  }
+
+ protected:
+  bool haltOnValue() const override {
+    return true;
+  }
 };
 
 // This is the base class for an option that can be repeated multiple times,
@@ -517,6 +542,9 @@ Parser::parse_impl(const Vector<const char*>& args)
       if (took_next_arg)
         i--;
     }
+
+    if (option->haltOnValue())
+      return true;
   }
 
   if (positional < positionals_.length())
