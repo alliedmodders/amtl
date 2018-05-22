@@ -31,6 +31,7 @@
 
 #include <amtl/am-allocator-policies.h>
 #include <amtl/am-moveable.h>
+#include <assert.h>
 
 namespace ke {
 
