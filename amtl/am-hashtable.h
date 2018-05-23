@@ -647,7 +647,7 @@ HashInteger<8>(uintptr_t value)
 }
 
 static inline uint32_t
-HashPointer(void* ptr)
+HashPointer(const void* ptr)
 {
   return HashInteger<sizeof(ptr)>(reinterpret_cast<uintptr_t>(ptr));
 }
