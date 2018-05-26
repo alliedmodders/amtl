@@ -145,16 +145,56 @@ class InlineList
     }
   };
 
+  class reverse_iterator {
+    friend class InlineList;
+    Node* iter_;
+
+   public:
+    reverse_iterator(Node* iter)
+      : iter_(iter)
+    {
+    }
+
+    iterator& operator ++() {
+      iter_ = iter_->prev_;
+      return *this;
+    }
+    iterator operator ++(int) {
+      iterator old(*this);
+      iter_ = iter_->prev_;
+      return old;
+    }
+    T * operator*() {
+      return static_cast<T*>(iter_);
+    }
+    T * operator ->() {
+      return static_cast<T*>(iter_);
+    }
+    bool operator !=(const iterator& where) const {
+      return iter_ != where.iter_;
+    }
+    bool operator ==(const iterator& where) const {
+      return iter_ == where.iter_;
+    }
+  };
+
   iterator begin() {
     return iterator(head_.next_);
+  }
+  reverse_iterator rbegin() {
+    return reverse_iterator(head_.prev_);
   }
 
   iterator end() {
     return iterator(&head_);
   }
+  reverse_iterator rend() {
+    return reverse_iterator(&head_);
+  }
 
-  iterator erase(iterator& at) {
-    iterator next = at;
+  template <typename IteratorType>
+  IteratorType erase(IteratorType& at) {
+    IteratorType next = at;
     next++;
 
     remove(at.iter_);
