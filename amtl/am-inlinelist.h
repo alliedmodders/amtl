@@ -155,12 +155,12 @@ class InlineList
     {
     }
 
-    iterator& operator ++() {
+    reverse_iterator& operator ++() {
       iter_ = iter_->prev_;
       return *this;
     }
-    iterator operator ++(int) {
-      iterator old(*this);
+    reverse_iterator operator ++(int) {
+      reverse_iterator old(*this);
       iter_ = iter_->prev_;
       return old;
     }
@@ -170,10 +170,10 @@ class InlineList
     T * operator ->() {
       return static_cast<T*>(iter_);
     }
-    bool operator !=(const iterator& where) const {
+    bool operator !=(const reverse_iterator& where) const {
       return iter_ != where.iter_;
     }
-    bool operator ==(const iterator& where) const {
+    bool operator ==(const reverse_iterator& where) const {
       return iter_ == where.iter_;
     }
   };
