@@ -89,6 +89,7 @@ class InlineList
   typedef InlineListNode<T> Node;
 
   Node head_;
+  size_t length_;
 
   // Work around a clang bug where we can't initialize with &head_ in the ctor.
   inline Node* head() {
@@ -97,7 +98,8 @@ class InlineList
 
  public:
   InlineList()
-    : head_(head(), head())
+   : head_(head(), head()),
+     length_(0)
   {
   }
 
@@ -212,6 +214,7 @@ class InlineList
   void remove(Node* t) {
     t->prev_->next_ = t->next_;
     t->next_->prev_ = t->prev_;
+    length_--;
 
 #if !defined(NDEBUG)
     t->next_ = nullptr;
@@ -227,10 +230,14 @@ class InlineList
     t->next_ = &head_;
     head_.prev_->next_ = t;
     head_.prev_ = t;
+    length_++;
+  }
+
+  size_t length() const {
+    return length_;
   }
 };
 
 }
 
 #endif // _include_amtl_inline_list_h_
-
