@@ -354,7 +354,7 @@ class RepeatOption : public VectorOption<T>
   RepeatOption(Parser& parser,
                const char* short_form, const char* long_form,
                const char* help)
-   : VectorOption<T>(parser, short_form, long_form, help)
+   : VectorOption(parser, short_form, long_form, help)
   {}
 };
 
