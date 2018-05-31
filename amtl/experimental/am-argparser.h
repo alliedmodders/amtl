@@ -347,14 +347,14 @@ class VectorOption : public IOption
 };
 
 // This is for an option can be repeated multiple times.
-template <typename T>
-class RepeatOption : public VectorOption<T>
+template <typename Type>
+class RepeatOption : public VectorOption<Type>
 {
  public:
   RepeatOption(Parser& parser,
                const char* short_form, const char* long_form,
                const char* help)
-   : VectorOption(parser, short_form, long_form, help)
+   : VectorOption<Type>(parser, short_form, long_form, help)
   {}
 };
 
