@@ -29,6 +29,7 @@
 #ifndef _include_amtl_am_argparser_h_
 #define _include_amtl_am_argparser_h_
 
+#include <amtl/am-cxx.h>
 #include <amtl/am-string.h>
 #include <amtl/am-vector.h>
 #include <amtl/am-maybe.h>
@@ -362,7 +363,7 @@ class RepeatOption : public VectorOption<Type>
 struct BaseValuePolicy
 { 
   // Return true if an argument of this type can omit a value.
-  static constexpr bool canOmitValue() {
+  static KE_CONSTEXPR bool canOmitValue() {
     return false;
   }
 };
@@ -370,7 +371,7 @@ struct BaseValuePolicy
 template <>
 struct ValuePolicy<bool>
 {
-  static constexpr bool canOmitValue() {
+  static KE_CONSTEXPR bool canOmitValue() {
     return true;
   }
 
