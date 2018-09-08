@@ -357,7 +357,7 @@ static inline int
 StrCaseCmp(const char* a, const char* b)
 {
 #if defined(_MSC_VER)
-  return strcmpi(a, b);
+  return _strcmpi(a, b);
 #else
   return strcasecmp(a, b);
 #endif
