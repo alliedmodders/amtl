@@ -531,7 +531,7 @@ Parser::parse_impl(const Vector<const char*>& args)
       if (i == args.length() - 1) {
         if (!option->canOmitValue())
           return option_needs_value(option);
-      } else {
+      } else if (!option->isToggle()) {
         value_ptr = args[++i];
         took_next_arg = true;
       }
