@@ -264,7 +264,7 @@ class TestArgparser : public Test
     return true;
   }
 
-  bool testStopArg() {
+  bool testStopArg1() {
     Parser parser("help");
 
     StopOption show_version(parser,
@@ -285,6 +285,28 @@ class TestArgparser : public Test
     return true;
   }
 
+  bool testStopArg2() {
+    Parser parser("help");
+
+    BoolOption disable_watchdog(parser,
+      "w", "disable-watchdog",
+      Some(false),
+      "Disable the watchdog timer.");
+    StopOption show_version(parser,
+      "-v", "--version",
+      Some(false),
+      "Show the version and exit.");
+    StringOption filename(parser,
+      "file",
+      "SMX file to execute.");
+
+    if (!check(parser.parsev("-v", "-w", nullptr), "parse should succeed"))
+      return false;
+    if (!check(show_version.value() == true, "-v should be true"))
+      return false;
+    return true;
+  }
+
   bool Run() override
   {
     if (!testBasic())
@@ -299,7 +321,9 @@ class TestArgparser : public Test
       return false;
     if (!testRepeatArg())
       return false;
-    if (!testStopArg())
+    if (!testStopArg1())
+      return false;
+    if (!testStopArg2())
       return false;
     return true;
   };
