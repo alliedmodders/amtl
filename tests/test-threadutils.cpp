@@ -30,6 +30,7 @@
 #include <am-thread-utils.h>
 #include <am-utility.h>
 #include <am-linkedlist.h>
+#include <gtest/gtest.h>
 #include "runner.h"
 
 using namespace ke;
@@ -108,50 +109,28 @@ class TestWorkerModel
   bool started_;
 };
 
-class TestThreading : public Test
+TEST(ThreadUtils, Worker)
 {
- public:
-  TestThreading()
-   : Test("ThreadUtils")
+  TestWorkerModel test;
+
+  ke::AutoPtr<Thread> thread(new Thread([&test] () -> void {
+    test.Run();
+  }, "TestWorkerModel"));
+  ASSERT_TRUE(thread->Succeeded());
+
   {
+    AutoLock lock(test.main());
+    ASSERT_TRUE(test.started() || test.main()->Wait(5000) == Wait_Signaled);
   }
 
-  bool testWorkerModel()
-  {
-    TestWorkerModel test;
-
-    ke::AutoPtr<Thread> thread(new Thread([&test] () -> void {
-      test.Run();
-    }, "TestWorkerModel"));
-    if (!check(thread->Succeeded(), "thread launched"))
-      return false;
-
-    {
-      AutoLock lock(test.main());
-      if (!check(test.started() || test.main()->Wait(5000) == Wait_Signaled, "thread started within five seconds"))
-        return false;
-    }
-
-    int total = 0;
-    for (int i = 0; i < 100000; i++) {
-      test.send(i);
-      total += i;
-    }
-
-    test.terminate();
-    thread->Join();
-
-    if (!check(test.result() == total, "thread returned correct result"))
-      return false;
-
-    return true;
+  int total = 0;
+  for (int i = 0; i < 100000; i++) {
+    test.send(i);
+    total += i;
   }
 
-  bool Run() override
-  {
-    if (!testWorkerModel())
-      return false;
-    return true;
-  }
-} sTestThreading;
+  test.terminate();
+  thread->Join();
 
+  EXPECT_EQ(test.result(), total);
+}

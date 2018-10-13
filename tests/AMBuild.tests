@@ -18,17 +18,29 @@
 #
 import os
 
+binary = KE.StaticLibrary(builder, 'libgtest')
+binary.compiler.includes += [
+  os.path.join(builder.sourcePath, 'third_party', 'googletest', 'googletest', 'include'),
+  os.path.join(builder.sourcePath, 'third_party', 'googletest', 'googletest'),
+]
+binary.sources += [
+  os.path.join('..', 'third_party', 'googletest', 'googletest', 'src', 'gtest-all.cc'),
+]
+libgtest = builder.Add(binary)
+
 binary = KE.Program(builder, 'testrunner')
 compiler = binary.compiler
 compiler.includes += [
   os.path.join(builder.sourcePath, 'amtl'),
   os.path.join(builder.sourcePath),
+  os.path.join(builder.sourcePath, 'third_party', 'googletest', 'googletest', 'include'),
 ]
 
 if compiler.like('msvc'):
   compiler.linkflags.append('/SUBSYSTEM:CONSOLE')
 if builder.target_platform == 'linux':
   compiler.linkflags.append('-ldl')
+compiler.linkflags.append(libgtest.binary)
 
 binary.sources += [
   'main.cpp',

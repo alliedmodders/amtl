@@ -37,67 +37,6 @@
 
 namespace ke {
 
-class Test
-{
- public:
-  Test(const char* name)
-   : name_(name),
-     next_(head)
-  {
-    head = this;
-  }
-
-  virtual bool Run() = 0;
-
-  const char* name() const {
-    return name_;
-  }
-  Test* next() const {
-    return next_;
-  }
-
-  static inline Test* first() {
-    return head;
-  }
-
- private:
-  static Test* head;
-
- private:
-  const char* name_;
-  Test* next_;
-};
-
-static inline bool
-check(bool condition, const char* fmt, ...)
-{
-  FILE* fp = condition ? stdout : stderr;
-  if (condition)
-    fprintf(fp, " -- Ok: ");
-  else
-    fprintf(fp, " -- Failure: ");
-  va_list ap;
-  va_start(ap, fmt);
-  vfprintf(fp, fmt, ap);
-  va_end(ap);
-  fprintf(fp, "\n");
-  return condition;
-}
-
-static inline bool
-check_silent(bool condition, const char* fmt, ...)
-{
-  if (condition)
-    return true;
-  fprintf(stderr, " -- Failure: ");
-  va_list ap;
-  va_start(ap, fmt);
-  vfprintf(stderr, fmt, ap);
-  va_end(ap);
-  fprintf(stderr, "\n");
-  return false;
-}
-
 class FallibleMalloc
 {
  public:
@@ -149,7 +88,7 @@ class FallibleMalloc
   size_t overflows_;
 };
 
-}
+} // namespace ke
 
 #endif // _include_amtl_runner_h_
 

@@ -154,6 +154,11 @@ class KEConfig(object):
     binary = compiler.Program(name)
     return binary
 
+  def StaticLibrary(self, context, name):
+    compiler = context.compiler.clone()
+    binary = compiler.StaticLibrary(name)
+    return binary
+
 KE = KEConfig()
 KE.configure()
 

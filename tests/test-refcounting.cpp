@@ -30,12 +30,13 @@
 #include <am-utility.h>
 #include <am-refcounting.h>
 #include <am-refcounting-threadsafe.h>
+#include <gtest/gtest.h>
 #include "runner.h"
 #include <stdlib.h>
 
 using namespace ke;
 
-static size_t sDtors = 0;
+static int sDtors = 0;
 
 class Counted : public Refcounted<Counted>
 {
@@ -63,87 +64,63 @@ PassThrough(const RefPtr<Counted>& obj)
   return obj;
 }
 
-class TestRefcounting : public Test
+TEST(RefPtr, Basic)
 {
- public:
-  TestRefcounting()
-   : Test("Refcounting")
   {
+    RefPtr<Counted> obj(new Counted());
   }
-
-  bool Run() override
+  EXPECT_EQ(sDtors, 1);
   {
-    {
-      RefPtr<Counted> obj(new Counted());
-    }
-    if (!check(sDtors == 1, "Ref/Newborn counted properly"))
-      return false;
-    {
-      RefPtr<Counted> obj(new Counted());
-    }
-    if (!check(sDtors == 2, "Ref/Newborn counted properly"))
-      return false;
-    {
-      Counted* counted = new Counted();
-      counted->AddRef();
-      RefPtr<Counted> obj(AdoptRef(counted));
-    }
-    if (!check(sDtors == 3, "Ref/Newborn counted properly"))
-      return false;
-
-    // Check that subclass assignment works.
-    {
-      RefPtr<Counted> obj(new SubCounted());
-      RefPtr<Counted> obj2(PassThrough(new SubCounted()));
-    }
-    if (!check(sDtors == 5, "Ref/Newborn counted properly"))
-      return false;
-
-    sDtors = 0;
-
-    {
-      RefPtr<Counted> obj(new Counted());
-      RefPtr<Counted> obj2 = PassThrough(obj);
-      RefPtr<Counted> obj3 = PassThrough(obj);
-      if (!check(sDtors == 0, "destructor not called early"))
-        return false;
-      RefPtr<Counted> obj4 = PassThrough(PassThrough(PassThrough(obj)));
-      if (!check(sDtors == 0, "destructor not called early"))
-        return false;
-    }
-    if (!check(sDtors == 1, "RefPtr counted properly"))
-      return false;
-
-    sDtors = 0;
-    {
-      AtomicRef<Counted> obj(new Counted());
-    }
-    if (!check(sDtors == 1, "AtomicRef released properly"))
-      return false;
-
-    sDtors = 0;
-    {
-      AtomicRef<Counted> obj;
-      obj = new Counted();
-      obj = new Counted();
-      obj = nullptr;
-    }
-    if (!check(sDtors == 2, "AtomicRef assignment released properly"))
-      return false;
-
-    sDtors = 0;
-    {
-      RefPtr<Counted> obj(new Counted());
-      AlreadyRefed<Counted> xfer = obj.take();
-      if (!check(!obj, "obj should have its ref taken"))
-        return false;
-      if (!check(!!xfer, "xfer should have received the ref"))
-        return false;
-    }
-    if (!check(sDtors == 1, "reference transfer should have resulted in one dtor"))
-      return false;
-
-    return true;
+    RefPtr<Counted> obj(new Counted());
   }
-} sTestRefcounting;
+  EXPECT_EQ(sDtors, 2);
+  {
+    Counted* counted = new Counted();
+    counted->AddRef();
+    RefPtr<Counted> obj(AdoptRef(counted));
+  }
+  EXPECT_EQ(sDtors, 3);
 
+  // Check that subclass assignment works.
+  {
+    RefPtr<Counted> obj(new SubCounted());
+    RefPtr<Counted> obj2(PassThrough(new SubCounted()));
+  }
+  EXPECT_EQ(sDtors, 5);
+
+  sDtors = 0;
+
+  {
+    RefPtr<Counted> obj(new Counted());
+    RefPtr<Counted> obj2 = PassThrough(obj);
+    RefPtr<Counted> obj3 = PassThrough(obj);
+    EXPECT_EQ(sDtors, 0);
+    RefPtr<Counted> obj4 = PassThrough(PassThrough(PassThrough(obj)));
+    EXPECT_EQ(sDtors, 0);
+  }
+  EXPECT_EQ(sDtors, 1);
+
+  sDtors = 0;
+  {
+    AtomicRef<Counted> obj(new Counted());
+  }
+  EXPECT_EQ(sDtors, 1);
+
+  sDtors = 0;
+  {
+    AtomicRef<Counted> obj;
+    obj = new Counted();
+    obj = new Counted();
+    obj = nullptr;
+  }
+  EXPECT_EQ(sDtors, 2);
+
+  sDtors = 0;
+  {
+    RefPtr<Counted> obj(new Counted());
+    AlreadyRefed<Counted> xfer = obj.take();
+    EXPECT_FALSE(obj);
+    EXPECT_TRUE(!!xfer);
+  }
+  EXPECT_EQ(sDtors, 1);
+}

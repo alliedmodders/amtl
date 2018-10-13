@@ -28,6 +28,7 @@
 // POSSIBILITY OF SUCH DAMAGE.
 
 #include <am-threadlocal.h>
+#include <gtest/gtest.h>
 #include "runner.h"
 
 using namespace ke;
@@ -44,12 +45,10 @@ class VarThread
   }
 
   void Run() {
-    if (!check(sThreadVar == 0, "value starts as 0 on new thread"))
-      return;
+    ASSERT_EQ(sThreadVar, 0);
 
     sThreadVar = 20;
-    if (!check(sThreadVar == 20, "value is set correctly"))
-      return;
+    ASSERT_EQ(sThreadVar, 20);
 
     succeeded_ = true;
   }
@@ -62,36 +61,21 @@ class VarThread
   bool succeeded_;
 };
 
-class TestThreadLocalThreaded : public Test
+TEST(ThreadLocal, Threaded)
 {
- public:
-  TestThreadLocalThreaded()
-   : Test("ThreadLocalThreaded")
-  {
-  }
+  sThreadVar = 10;
 
-  bool Run() override
-  {
-    sThreadVar = 10;
+  VarThread run;
+  ke::AutoPtr<Thread> thread(new Thread([&run] () -> void {
+    run.Run();
+  }, "TestThreadLocal"));
+  ASSERT_TRUE(thread->Succeeded());
+  thread->Join();
 
-    VarThread run;
-    ke::AutoPtr<Thread> thread(new Thread([&run] () -> void {
-      run.Run();
-    }, "TestThreadLocal"));
-    if (!check(thread->Succeeded(), "thread launched"))
-      return false;
-    thread->Join();
+  ASSERT_TRUE(run.succeeded());
+  EXPECT_EQ(sThreadVar, 10);
 
-    if (!check(run.succeeded(), "thread completed correctly"))
-      return false;
-    if (!check(sThreadVar == 10, "value did not change on main thread"))
-      return false;
-
-    // Check that pointers are allowed in T.
-    sThreadVarPointer = &run;
-    if (!check(sThreadVarPointer == &run, "pointer value sets properly"))
-      return false;
-
-    return true;
-  }
-} sTestThreadLocalThreaded;
+  // Check that pointers are allowed in T.
+  sThreadVarPointer = &run;
+  EXPECT_EQ(sThreadVarPointer, &run);
+}

@@ -28,304 +28,209 @@
 // POSSIBILITY OF SUCH DAMAGE.
 
 #include <experimental/am-argparser.h>
+#include <gtest/gtest.h>
 #include <limits.h>
 #include "runner.h"
 
 using namespace ke;
 using namespace ke::args;
 
-class TestArgparser : public Test
+TEST(ArgParser, Basic)
 {
- public:
-  TestArgparser()
-   : Test("Argparser")
-  {
-  }
+  Parser parser("help");
 
-  bool testBasic() {
-    Parser parser("help");
+  EXPECT_TRUE(parser.parsev(nullptr));
+  EXPECT_FALSE(parser.parsev("asdf", nullptr));
+  EXPECT_FALSE(parser.parsev("--asdf", nullptr));
+}
 
-    if (!check(parser.parsev(nullptr) == true, "parse no args"))
-      return false;
-    if (!check(parser.parsev("asdf", nullptr) == false, "error on parse extra args"))
-      return false;
-    if (!check(parser.parsev("--asdf", nullptr) == false, "error on parse unknown arg"))
-      return false;
-    return true;
-  }
+TEST(ArgParser, BoolArg)
+{
+  Parser parser("help");
 
-  bool testBoolArg() {
-    Parser parser("help");
+  BoolOption no_default(parser,
+    "b", "bool",
+    Nothing(),
+    "help");
+  BoolOption default_true(parser,
+    "t", "default-true",
+    Some(true),
+    "help");
+  BoolOption default_false(parser,
+    "f", "default-false",
+    Some(false),
+    "help");
 
-    BoolOption no_default(parser,
-      "b", "bool",
-      Nothing(),
-      "help");
-    BoolOption default_true(parser,
-      "t", "default-true",
-      Some(true),
-      "help");
-    BoolOption default_false(parser,
-      "f", "default-false",
-      Some(false),
-      "help");
+  EXPECT_TRUE(parser.parsev(nullptr));
+  EXPECT_FALSE(no_default.hasValue());
+  EXPECT_TRUE(default_true.hasValue());
+  EXPECT_FALSE(default_true.hasUserValue());
+  EXPECT_TRUE(default_true.value());
+  EXPECT_TRUE(default_false.hasValue());
+  EXPECT_FALSE(default_false.hasUserValue());
+  EXPECT_FALSE(default_false.value());
 
-    if (!check(parser.parsev(nullptr) == true, "parse 1 succeeded"))
-      return false;
-    if (!check(no_default.hasValue() == false, "no_default has no value"))
-      return false;
-    if (!check(default_true.hasValue() == true, "default_true has value"))
-      return false;
-    if (!check(default_true.hasUserValue() == false, "default_true has no user value"))
-      return false;
-    if (!check(default_true.value() == true, "default_true is true"))
-      return false;
-    if (!check(default_false.hasValue() == true, "default_false has value"))
-      return false;
-    if (!check(default_false.hasUserValue() == false, "default_false has no user value"))
-      return false;
-    if (!check(default_false.value() == false, "default_false is false"))
-      return false;
+  parser.reset();
+  EXPECT_TRUE(parser.parsev("-b", nullptr));
+  EXPECT_TRUE(no_default.hasValue());
+  EXPECT_TRUE(no_default.value());
+  EXPECT_FALSE(default_true.hasUserValue());
+  EXPECT_FALSE(default_false.hasUserValue());
 
-    parser.reset();
-    if (!check(parser.parsev("-b", nullptr) == true, "parse 2 succeeded"))
-      return false;
-    if (!check(no_default.hasValue() == true, "no_default has value"))
-      return false;
-    if (!check(no_default.value() == true, "no_default is true"))
-      return false;
-    if (!check(default_true.hasUserValue() == false, "default_true has no user value"))
-      return false;
-    if (!check(default_false.hasUserValue() == false, "default_false has no user value"))
-      return false;
+  parser.reset();
+  EXPECT_TRUE(parser.parsev("--bool=false", nullptr));
+  EXPECT_FALSE(no_default.value());
 
-    parser.reset();
-    if (!check(parser.parsev("--bool=false", nullptr) == true, "parse 3 succeeded"))
-      return false;
-    if (!check(no_default.value() == false, "no_default is false"))
-      return false;
+  parser.reset();
+  EXPECT_TRUE(parser.parsev("--bool", "false", nullptr));
+  EXPECT_FALSE(no_default.value());
 
-    parser.reset();
-    if (!check(parser.parsev("--bool", "false", nullptr) == true, "parse 4 succeeded"))
-      return false;
-    if (!check(no_default.value() == false, "no_default is false"))
-      return false;
+  parser.reset();
+  EXPECT_TRUE(parser.parsev("-b", "true", nullptr));
+  EXPECT_TRUE(no_default.value());
 
-    parser.reset();
-    if (!check(parser.parsev("-b", "true", nullptr) == true, "parse 5 succeeded"))
-      return false;
-    if (!check(no_default.value() == true, "no_default is false"))
-      return false;
+  parser.reset();
+  EXPECT_TRUE(parser.parsev("-f", nullptr));
+  EXPECT_TRUE(default_false.value());
 
-    parser.reset();
-    if (!check(parser.parsev("-f", nullptr) == true, "parse 6 succeeded"))
-      return false;
-    if (!check(default_false.value() == true, "default_false is true"))
-      return false;
+  parser.reset();
+  EXPECT_TRUE(parser.parsev("--default-true=false", nullptr));
+  EXPECT_FALSE(default_true.value());
+}
 
-    parser.reset();
-    if (!check(parser.parsev("--default-true=false", nullptr) == true, "parse 7 succeeded"))
-      return false;
-    if (!check(default_true.value() == false, "default_true is false"))
-      return false;
+TEST(ArgParser, ToggleArg)
+{
+  Parser parser("help");
 
-    return true;
-  }
+  ToggleOption x(parser,
+    "x", nullptr,
+    Nothing(),
+    "help");
+  ToggleOption y(parser,
+    "y", nullptr,
+    Some(true),
+    "help");
+  ToggleOption z(parser,
+    "z", nullptr,
+    Some(false),
+    "help");
 
-  bool testToggleArg() {
-    Parser parser("help");
+  parser.reset();
+  EXPECT_TRUE(parser.parsev(nullptr));
+  EXPECT_FALSE(x.value());
 
-    ToggleOption x(parser,
-      "x", nullptr,
-      Nothing(),
-      "help");
-    ToggleOption y(parser,
-      "y", nullptr,
-      Some(true),
-      "help");
-    ToggleOption z(parser,
-      "z", nullptr,
-      Some(false),
-      "help");
+  parser.reset();
+  EXPECT_TRUE(parser.parsev("-x", nullptr));
+  EXPECT_TRUE(x.value());
 
-    parser.reset();
-    if (!check(parser.parsev(nullptr) == true, "toggle parse 1 succeeded"))
-      return false;
-    if (!check(x.value() == false, "x is false"))
-      return false;
+  parser.reset();
+  EXPECT_TRUE(parser.parsev("-y", nullptr));
+  EXPECT_FALSE(y.value());
 
-    parser.reset();
-    if (!check(parser.parsev("-x", nullptr) == true, "toggle parse 2 succeeded"))
-      return false;
-    if (!check(x.value() == true, "x is true"))
-      return false;
+  parser.reset();
+  EXPECT_TRUE(parser.parsev("-z", nullptr));
+  EXPECT_TRUE(z.value());
 
-    parser.reset();
-    if (!check(parser.parsev("-y", nullptr) == true, "toggle parse 3 succeeded"))
-      return false;
-    if (!check(y.value() == false, "y is false"))
-      return false;
+  parser.reset();
+  EXPECT_FALSE(parser.parsev("-z=false", nullptr));
+}
 
-    parser.reset();
-    if (!check(parser.parsev("-z", nullptr) == true, "toggle parse 4 succeeded"))
-      return false;
-    if (!check(z.value() == true, "z is true"))
-      return false;
+TEST(ArgParser, StringArg)
+{
+  Parser parser("help");
 
-    parser.reset();
-    if (!check(parser.parsev("-z=false", nullptr) == false, "toggle parse 5 failed"))
-      return false;
+  StringOption s(parser,
+    "s", "string",
+    Nothing(),
+    "help");
+  StringOption t(parser,
+    "t", "ttt",
+    Some(AString("whatever")),
+    "help");
+  StringOption mode(parser, "mode", "help");
 
-    return true;
-  }
+  parser.reset();
+  EXPECT_FALSE(parser.parsev(nullptr));
 
-  bool testStringArg() {
-    Parser parser("help");
+  parser.reset();
+  EXPECT_TRUE(parser.parsev("crab", nullptr));
+  EXPECT_FALSE(s.hasValue());
+  EXPECT_EQ(t.value().compare("whatever"), 0);
+  EXPECT_EQ(mode.value().compare("crab"), 0);
 
-    StringOption s(parser,
-      "s", "string",
-      Nothing(),
-      "help");
-    StringOption t(parser,
-      "t", "ttt",
-      Some(AString("whatever")),
-      "help");
-    StringOption mode(parser, "mode", "help");
+  parser.reset();
+  EXPECT_TRUE(parser.parsev("-s", "yam", "egg", nullptr));
+  EXPECT_EQ(s.value().compare("yam"), 0);
+  EXPECT_EQ(mode.value().compare("egg"), 0);
+}
 
-    parser.reset();
-    if (!check(parser.parsev(nullptr) == false, "string parse 1 failed"))
-      return false;
+TEST(ArgParser, IntArg)
+{
+  Parser parser("help");
 
-    parser.reset();
-    if (!check(parser.parsev("crab", nullptr) == true, "string parse 2 succeeded"))
-      return false;
-    if (!check(s.hasValue() == false, "string is false"))
-      return false;
-    if (!check(t.value().compare("whatever") == 0, "ttt is 'whatever'"))
-      return false;
-    if (!check(mode.value().compare("crab") == 0, "mode is 'crab'"))
-      return false;
+  IntOption val1(parser,
+    nullptr, "val",
+    Nothing(),
+    "help");
 
-    parser.reset();
-    if (!check(parser.parsev("-s", "yam", "egg", nullptr) == true, "string parse 3 succeeded"))
-      return false;
-    if (!check(s.value().compare("yam") == 0, "string is 'yam'"))
-      return false;
-    if (!check(mode.value().compare("egg") == 0, "mode is 'crab'"))
-      return false;
+  parser.reset();
+  EXPECT_TRUE(parser.parsev("--val", "308", nullptr));
+  EXPECT_EQ(val1.value(), 308);
 
-    return true;
-  }
+  parser.reset();
+  EXPECT_FALSE(parser.parsev("--val", "30x", nullptr));
+}
 
-  bool testIntArg() {
-    Parser parser("help");
+TEST(ArgParser, RepeatArg)
+{
+  Parser parser("help");
 
-    IntOption val1(parser,
-      nullptr, "val",
-      Nothing(),
-      "help");
+  RepeatOption<AString> inc(parser,
+    "-i", "--include-path",
+    "Include path.");
 
-    parser.reset();
-    if (!check(parser.parsev("--val", "308", nullptr) == true, "int parse 1 succeeded"))
-      return false;
-    if (!check(val1.value() == 308, "value is 308"))
-      return false;
+  ASSERT_TRUE(parser.parsev("-i", "blah", "-i", "crab", "--include-path=yam", nullptr));
 
-    parser.reset();
-    if (!check(parser.parsev("--val", "30x", nullptr) == false, "int parse 2 failed"))
-      return false;
+  Vector<AString> values = Move(inc.values());
+  ASSERT_EQ(values.length(), (size_t)3);
+  EXPECT_EQ(values[0].compare("blah"), 0);
+  EXPECT_EQ(values[1].compare("crab"), 0);
+  EXPECT_EQ(values[2].compare("yam"), 0);
+}
 
-    return true;
-  }
+TEST(ArgParser, StopArg1)
+{
+  Parser parser("help");
 
-  bool testRepeatArg() {
-    Parser parser("help");
+  StopOption show_version(parser,
+    "-v", "--version",
+    Some(false),
+    "Show the version and exit.");
+  StringOption required(parser,
+    "something_required",
+    "This is a required positional argument.");
 
-    RepeatOption<AString> inc(parser,
-      "-i", "--include-path",
-      "Include path.");
+  EXPECT_FALSE(parser.parsev(nullptr));
+  EXPECT_TRUE(parser.parsev("-v", nullptr));
+  EXPECT_TRUE(show_version.value());
+}
 
-    if (!check(parser.parsev("-i", "blah", "-i", "crab", "--include-path=yam", nullptr) == true,
-               "repeat parse 1 succeeded"))
-    {
-      parser.usage(stderr, 0, nullptr);
-      return false;
-    }
+TEST(ArgParser, StopArg2)
+{
+  Parser parser("help");
 
-    Vector<AString> values = Move(inc.values());
-    if (!check(values.length() == 3, "values should be 3"))
-      return false;
-    if (!check(values[0].compare("blah") == 0, "value 0 should be blah"))
-      return false;
-    if (!check(values[1].compare("crab") == 0, "value 1 should be crab"))
-      return false;
-    if (!check(values[2].compare("yam") == 0, "value 2 should be yam"))
-      return false;
-    return true;
-  }
+  BoolOption disable_watchdog(parser,
+    "w", "disable-watchdog",
+    Some(false),
+    "Disable the watchdog timer.");
+  StopOption show_version(parser,
+    "-v", "--version",
+    Some(false),
+    "Show the version and exit.");
+  StringOption filename(parser,
+    "file",
+    "SMX file to execute.");
 
-  bool testStopArg1() {
-    Parser parser("help");
-
-    StopOption show_version(parser,
-      "-v", "--version",
-      Some(false),
-      "Show the version and exit.");
-    StringOption required(parser,
-      "something_required",
-      "This is a required positional argument.");
-
-    if (!check(parser.parsev(nullptr) == false, "stop arg parse 1 failed"))
-      return false;
-    if (!check(parser.parsev("-v", nullptr) == true, "stop arg parse 2 succeeded"))
-      return false;
-    if (!check(show_version.value() == true, "show_version should be true"))
-      return false;
-
-    return true;
-  }
-
-  bool testStopArg2() {
-    Parser parser("help");
-
-    BoolOption disable_watchdog(parser,
-      "w", "disable-watchdog",
-      Some(false),
-      "Disable the watchdog timer.");
-    StopOption show_version(parser,
-      "-v", "--version",
-      Some(false),
-      "Show the version and exit.");
-    StringOption filename(parser,
-      "file",
-      "SMX file to execute.");
-
-    if (!check(parser.parsev("-v", "-w", nullptr), "parse should succeed"))
-      return false;
-    if (!check(show_version.value() == true, "-v should be true"))
-      return false;
-    return true;
-  }
-
-  bool Run() override
-  {
-    if (!testBasic())
-      return false;
-    if (!testBoolArg())
-      return false;
-    if (!testToggleArg())
-      return false;
-    if (!testStringArg())
-      return false;
-    if (!testIntArg())
-      return false;
-    if (!testRepeatArg())
-      return false;
-    if (!testStopArg1())
-      return false;
-    if (!testStopArg2())
-      return false;
-    return true;
-  };
-} sTestArgparser;
-
+  EXPECT_TRUE(parser.parsev("-v", "-w", nullptr));
+  EXPECT_TRUE(show_version.value());
+}

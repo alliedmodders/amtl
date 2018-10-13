@@ -31,29 +31,15 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <gtest/gtest.h>
 #include "runner.h"
 
 using namespace ke;
 
-Test* Test::head = nullptr;
-
 int main(int argc, char** argv)
 {
-  Test* test = Test::first();
-  while (test) {
-    if (argc >= 2 && strcmp(argv[1], test->name()) != 0) {
-      test = test->next();
-      continue;
-    }
-    fprintf(stdout, "Testing %s... \n", test->name());
-    if (!test->Run()) {
-      fprintf(stdout, "TEST:%s FAIL\n", test->name());
-      return 1;
-    }
-    fprintf(stdout, "TEST:%s OK\n", test->name());
-    test = test->next();
-  }
-  return 0;
+  ::testing::InitGoogleTest(&argc, argv);
+  return RUN_ALL_TESTS();
 }
 
 #if defined(__GNUC__)

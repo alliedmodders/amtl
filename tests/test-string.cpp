@@ -28,137 +28,89 @@
 // POSSIBILITY OF SUCH DAMAGE.
 
 #include <am-string.h>
+#include <gtest/gtest.h>
 #include <limits.h>
 #include "runner.h"
 
 using namespace ke;
 
-class TestString : public Test
+TEST(String, Sprintf)
 {
- public:
-  TestString()
-   : Test("String")
-  {
+  int64_t x = 1234;
+  char buffer[256];
+  SafeSprintf(buffer, sizeof(buffer), "%" KE_FMT_I64, x);
+  ASSERT_EQ(strcmp(buffer, "1234"), 0);
+}
+
+TEST(String, Allocating)
+{
+  int a = INT_MAX;
+  const char* value = "Hello this is a test.";
+  const char* expect = "A: 2147483647 B: Hello this is a test.";
+  UniquePtr<char[]> ptr = Sprintf("A: %d B: %s", a, value);
+  EXPECT_EQ(strcmp(ptr.get(), expect), 0);
+
+  UniquePtr<AString> str = AString::Sprintf("A: %d B: %s", a, value);
+  EXPECT_EQ(str->compare(expect), 0);
+}
+
+TEST(String, Split)
+{
+  Vector<AString> out = Split("     ", " ");
+  EXPECT_EQ(out.length(), (size_t)6);
+  for (size_t i = 0; i < out.length(); i++) {
+    EXPECT_EQ(out[i].length(), (size_t)0);
   }
 
-  bool testSprintf() const {
-    int64_t x = 1234;
-    char buffer[256];
-    SafeSprintf(buffer, sizeof(buffer), "%" KE_FMT_I64, x);
-    if (!check(strcmp(buffer, "1234") == 0, "buffer should == \"1234\""))
-      return false;
-    return true;
-  }
+  out = Split("egg", " ");
+  EXPECT_EQ(out.length(), (size_t)1);
+  EXPECT_EQ(out[0].compare("egg"), 0);
 
-  bool testAllocating() const {
-    int a = INT_MAX;
-    const char* value = "Hello this is a test.";
-    const char* expect = "A: 2147483647 B: Hello this is a test.";
-    UniquePtr<char[]> ptr = Sprintf("A: %d B: %s", a, value);
-    if (!check(strcmp(ptr.get(), expect) == 0, expect))
-      return false;
+  out = Split("", "egg");
+  EXPECT_EQ(out.length(), (size_t)0);
 
-    UniquePtr<AString> str = AString::Sprintf("A: %d B: %s", a, value);
-    if (!check(str->compare(expect) == 0, expect))
-      return false;
-    return true;
-  }
+  out = Split("xaba", "a");
+  EXPECT_EQ(out.length(), (size_t)3);
+  EXPECT_EQ(out[0].compare("x"), 0);
+  EXPECT_EQ(out[1].compare("b"), 0);
+  EXPECT_EQ(out[2].compare(""), 0);
 
-  bool testSplit() const {
-    Vector<AString> out = Split("     ", " ");
-    if (!check(out.length() == 6, "length should be 6"))
-      return false;
-    for (size_t i = 0; i < out.length(); i++) {
-      if (!check(out[i].length() == 0, "string should be empty"))
-        return false;
-    }
+  out = Split("egg ham", " ");
+  EXPECT_EQ(out.length(), (size_t)2);
+  EXPECT_EQ(out[0].compare("egg"), 0);
+  EXPECT_EQ(out[1].compare("ham"), 0);
+}
 
-    out = Split("egg", " ");
-    if (!check(out.length() == 1, "length should be 1"))
-      return false;
-    if (!check(out[0].compare("egg") == 0, "item should be egg"))
-      return false;
+TEST(String, Join)
+{
+  Vector<AString> in;
 
-    out = Split("", "egg");
-    if (!check(out.length() == 0, "length should be 0"))
-      return false;
+  AString result = Join(in, "x");
+  EXPECT_EQ(result.compare(""), 0);
 
-    out = Split("xaba", "a");
-    if (!check(out.length() == 3, "length should be 3"))
-      return false;
-    if (!check(out[0].compare("x") == 0, "first item should be 'x'"))
-      return false;
-    if (!check(out[1].compare("b") == 0, "second item should be 'b'"))
-      return false;
-    if (!check(out[2].compare("") == 0, "third item should be empty"))
-      return false;
+  in.append("abc");
+  result = Join(in, "x");
+  EXPECT_EQ(result.compare("abc"), 0);
 
-    out = Split("egg ham", " ");
-    if (!check(out.length() == 2, "length should be 2"))
-      return false;
-    if (!check(out[0].compare("egg") == 0, "first item should be 'egg'"))
-      return false;
-    if (!check(out[1].compare("ham") == 0, "second item should be 'ham'"))
-      return false;
+  in.append("xyz");
+  result = Join(in, "T");
+  EXPECT_EQ(result.compare("abcTxyz"), 0);
 
-    return true;
-  }
+  in.append("def");
+  result = Join(in, "");
+  EXPECT_EQ(result.compare("abcxyzdef"), 0);
+}
 
-  bool testJoin() const {
-    Vector<AString> in;
+TEST(String, Case)
+{
+  AString str("samPle1.com");
+  str = str.uppercase();
+  EXPECT_EQ(str.compare("SAMPLE1.COM"), 0);
 
-    AString result = Join(in, "x");
-    if (!check(result.compare("") == 0, "string should be empty"))
-      return false;
+  str = str.lowercase();
+  EXPECT_EQ(str.compare("sample1.com"), 0);
 
-    in.append("abc");
-    result = Join(in, "x");
-    if (!check(result.compare("abc") == 0, "string should be 'abc'"))
-      return false;
-
-    in.append("xyz");
-    result = Join(in, "T");
-    if (!check(result.compare("abcTxyz") == 0, "string should be 'abcTxyz'"))
-      return false;
-
-    in.append("def");
-    result = Join(in, "");
-    if (!check(result.compare("abcxyzdef") == 0, "string should be 'abcxyzdef'"))
-      return false;
-
-    return true;
-  }
-
-  bool testCase() {
-    AString str("samPle1.com");
-    str = str.uppercase();
-    if (!check(str.compare("SAMPLE1.COM") == 0, "string should be uppercase"))
-      return false;
-
-    str = str.lowercase();
-    if (!check(str.compare("sample1.com") == 0, "string should be lowercase"))
-      return false;
-
-    str = AString();
-    str = str.lowercase();
-    if (!check(str.compare("") == 0, "empty string"))
-      return false;
-    return true;
-  }
-
-  bool Run() override
-  {
-    if (!testSprintf())
-      return false;
-    if (!testAllocating())
-      return false;
-    if (!testSplit())
-      return false;
-    if (!testJoin())
-      return false;
-    if (!testCase())
-      return false;
-    return true;
-  };
-} sTestString;
-
+  str = AString();
+  str = str.lowercase();
+  EXPECT_EQ(str.compare(""), 0);
+}

@@ -28,6 +28,7 @@
 // POSSIBILITY OF SUCH DAMAGE.
 
 #include <am-flags.h>
+#include <gtest/gtest.h>
 #include <stdint.h>
 #include "runner.h"
 
@@ -42,55 +43,30 @@ enum class Scoped : uint32_t
 };
 KE_DEFINE_ENUM_OPERATORS(Scoped)
 
-class TestFlags : public Test
+TEST(Flags, Basic)
 {
- public:
-  TestFlags()
-    : Test("Flags")
-  {}
+  Flags<Scoped> flags;
+  ASSERT_TRUE(!flags);
+  ASSERT_FALSE(flags);
 
-  bool Run() override {
-    if (!testBasic())
-      return false;
-    return true;
-  }
+  flags += Scoped::Flag0;
+  ASSERT_TRUE((bool)flags);
 
- private:
-  bool testBasic() {
-    Flags<Scoped> flags;
-    if (!check(!flags, "empty flags is false"))
-      return false;
-    if (flags && !check(false, "empty flags is false 2"))
-      return false;
+  flags += Scoped::Flag1;
 
-    flags += Scoped::Flag0;
-    if (!check((bool)flags, "empty flags is true"))
-      return false;
+  Flags<Scoped> other(Scoped::Flag1 | Scoped::Flag2);
+  ASSERT_NE(flags, other);
+  ASSERT_EQ(other.bits(), (uint32_t)0x6);
 
-    flags += Scoped::Flag1;
+  flags -= other;
+  ASSERT_EQ(flags, Scoped::Flag0);
 
-    Flags<Scoped> other(Scoped::Flag1 | Scoped::Flag2);
-    if (!check(flags != other, "different flags are not equal"))
-      return false;
-    if (!check(other.bits() == 0x6, "flag bits == 0x6"))
-      return false;
+  uint32_t value = flags.bits();
+  ASSERT_EQ(value, (uint32_t)0x1);
 
-    flags -= other;
-    if (!check(flags == Scoped::Flag0, "operator -="))
-      return false;
+  flags |= other;
+  ASSERT_EQ(flags.bits(), (uint32_t)0x7);
 
-    uint32_t value = flags.bits();
-    if (!check(value == 0x1, "flag bits are 0x1"))
-      return false;
-
-    flags |= other;
-    if (!check(flags.bits() == 0x7, "flag bits are 0x7 after adding"))
-      return false;
-
-    flags &= other;
-    if (!check(flags.bits() == 0x6, "flag bits are 0x6 after anding"))
-      return false;
-
-    return true;
-  }
-} sTestFlags;
+  flags &= other;
+  ASSERT_EQ(flags.bits(), (uint32_t)0x6);
+}
