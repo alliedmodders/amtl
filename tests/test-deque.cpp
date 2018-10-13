@@ -28,158 +28,101 @@
 // POSSIBILITY OF SUCH DAMAGE.
 #include <am-deque.h>
 #include <assert.h>
+#include <gtest/gtest.h>
 #include "runner.h"
 
 using namespace ke;
 
-class TestDeque : public Test
+TEST(Deque, Basic)
 {
- public:
-  TestDeque()
-   : Test("Deque")
-  {
+  Deque<int> dq;
+
+  for (int i = 0; i < 4; i++) {
+    ASSERT_TRUE(dq.append(i));
+    ASSERT_EQ(dq.length(), size_t(i + 1));
+  }
+  for (int i = 0; i < 4; i++) {
+    ASSERT_TRUE(dq.prepend(i + 4));
+    ASSERT_EQ(dq.length(), size_t(i + 5));
   }
 
-  bool test_basic() {
-    Deque<int> dq;
+  EXPECT_EQ(dq.back(), 3);
+  EXPECT_EQ(dq.front(), 7);
+  dq.popBack();
+  dq.popFront();
+  EXPECT_EQ(dq.popFrontCopy(), 6);
+  EXPECT_EQ(dq.popBackCopy(), 2);
 
-    for (int i = 0; i < 4; i++) {
-      if (!check(dq.append(i), "append %d", i))
-        return false;
-      if (!check(dq.length() == size_t(i + 1), "length should be %d", i + 1))
-        return false;
-    }
-    for (int i = 0; i < 4; i++) {
-      if (!check(dq.prepend(i + 4), "prepend %d", i))
-        return false;
-      if (!check(dq.length() == size_t(i + 5), "length should be %d", i + 5))
-        return false;
-    }
+  EXPECT_EQ(dq.length(), (size_t)4);
 
-    if (!check(dq.back() == 3, "back() should == 3"))
-      return false;
-    if (!check(dq.front() == 7, "front() should == 7"))
-      return false;
+  while (!dq.empty())
     dq.popBack();
+  EXPECT_EQ(dq.length(), (size_t)0);
+}
+
+TEST(Deque, PrependEmpty)
+{
+  Deque<int> dq;
+
+  for (int i = 0; i < 8; i++) {
+    if (i % 2 == 0) {
+      ASSERT_TRUE(dq.prepend(i));
+    } else {
+      ASSERT_TRUE(dq.append(i));
+    }
+    EXPECT_EQ(dq.length(), size_t(i + 1));
+  }
+
+  while (!dq.empty())
     dq.popFront();
-    if (!check(dq.popFrontCopy() == 6, "popFrontCopy() should == 5"))
-      return false;
-    if (!check(dq.popBackCopy() == 2, "popFrontCopy() should == 1"))
-      return false;
+  EXPECT_EQ(dq.length(), (size_t)0);
+}
 
-    if (!check(dq.length() == 4, "length should be 4"))
-      return false;
-
-    while (!dq.empty())
-      dq.popBack();
-    if (!check(dq.length() == 0, "length should be 0"))
-      return false;
-
-    return true;
+TEST(Deque, Resize)
+{
+  Deque<int> dq;
+  for (int i = 0; i < 387; i++) {
+    ASSERT_TRUE(dq.prepend(i));
+  }
+  for (int i = 0; i < 293; i++) {
+    ASSERT_TRUE(dq.append(i));
   }
 
-  bool test_prepend_empty() {
-    Deque<int> dq;
+  ASSERT_EQ(dq.length(), size_t(293 + 387));
 
-    for (int i = 0; i < 8; i++) {
-      if (i % 2 == 0) {
-        if (!check(dq.prepend(i), "prepend %d", i))
-          return false;
-      } else {
-        if (!check(dq.append(i), "append %d", i))
-          return false;
-      }
-      if (!check(dq.length() == size_t(i + 1), "length should be %d", i + 1))
-        return false;
-    }
-
-    while (!dq.empty())
-      dq.popFront();
-    if (!check(dq.length() == 0, "length should be 0"))
-      return false;
-
-    return true;
+  for (int i = 292; i >= 0; i--) {
+    EXPECT_EQ(dq.popBackCopy(), i);
+  }
+  for (int i = 386; i >= 0; i--) {
+    EXPECT_EQ(dq.popFrontCopy(), i);
   }
 
-  bool test_resize() {
-    Deque<int> dq;
-    for (int i = 0; i < 387; i++) {
-      if (!check_silent(dq.prepend(i), "prepend"))
-        return false;
-    }
-    for (int i = 0; i < 293; i++) {
-      if (!check_silent(dq.append(i), "append"))
-        return false;
-    }
+  // Check that we can still add.
+  ASSERT_TRUE(dq.append(5));
+  ASSERT_EQ(dq.popFrontCopy(), 5);
+  ASSERT_TRUE(dq.append(6));
+  ASSERT_EQ(dq.popBackCopy(), 6);
 
-    if (!check(dq.length() == 293 + 387, "length should be %d", 293 + 387))
-      return false;
+  ASSERT_TRUE(dq.prepend(7));
+  ASSERT_EQ(dq.popBackCopy(), 7);
+  ASSERT_TRUE(dq.prepend(8));
+  ASSERT_EQ(dq.popFrontCopy(), 8);
+}
 
-    for (int i = 292; i >= 0; i--) {
-      if (!check_silent(dq.popBackCopy() == i, "popBack %d", i))
-        return false;
-    }
-    for (int i = 386; i >= 0; i--) {
-      if (!check_silent(dq.popFrontCopy() == i, "popFront %d", i))
-        return false;
-    }
+TEST(Deque, Move)
+{
+  Deque<int> dq1;
 
-    // Check that we can still add.
-    if (!check(dq.append(5), "append 5"))
-      return false;
-    if (!check(dq.popFrontCopy() == 5, "popFrontCopy == 5"))
-      return false;
-    if (!check(dq.append(6), "append 6"))
-      return false;
-    if (!check(dq.popBackCopy() == 6, "popBackCopy == 6"))
-      return false;
+  ASSERT_TRUE(dq1.append(10));
 
-    if (!check(dq.prepend(7), "prepend 7"))
-      return false;
-    if (!check(dq.popBackCopy() == 7, "popBackCopy == 7"))
-      return false;
-    if (!check(dq.prepend(8), "prepend 8"))
-      return false;
-    if (!check(dq.popFrontCopy() == 8, "popFrontCopy == 8"))
-      return false;
-
-    return true;
+  {
+    Deque<int> dq2 = ke::Move(dq1);
+    ASSERT_EQ(dq2.length(), (size_t)1);
+    ASSERT_EQ(dq2.popFrontCopy(), 10);
   }
 
-  bool test_move() {
-    Deque<int> dq1;
+  ASSERT_EQ(dq1.length(), (size_t)0);
 
-    if (!check_silent(dq1.append(10), "append 10"))
-      return false;
-
-    {
-      Deque<int> dq2 = ke::Move(dq1);
-      if (!check(dq2.length() == 1, "copied length should be 1"))
-        return false;
-      if (!check(dq2.popFrontCopy() == 10, "copied popFrontCopy should == 2"))
-        return false;
-    }
-
-    if (!check(dq1.length() == 0, "moved length should == 0"))
-      return false;
-
-    // Append so we can make sure that it's not holding a deleted pointer.
-    if (!check_silent(dq1.append(11), "append 11"))
-      return false;
-
-    return true;
-  }
-
-  bool Run() override {
-    if (!test_basic())
-      return false;
-    if (!test_prepend_empty())
-      return false;
-    if (!test_resize())
-      return false;
-    if (!test_move())
-      return false;
-    return true;
-  }
-} sTestDeque;
-
+  // Append so we can make sure that it's not holding a deleted pointer.
+  ASSERT_TRUE(dq1.append(11));
+}

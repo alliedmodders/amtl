@@ -29,51 +29,26 @@
 
 #include <amtl/am-priority-queue.h>
 #include <assert.h>
+#include <gtest/gtest.h>
 #include "runner.h"
 
 using namespace ke;
 
-class TestPriorityQueue : public Test
+TEST(PriorityQueue, Basic)
 {
- public:
-  TestPriorityQueue()
-   : Test("PriorityQueue")
-  {
-  }
+  PriorityQueue<int> pq;
+  pq.add(16);
+  pq.add(16);
+  pq.add(16);
+  pq.add(9);
+  pq.add(77);
+  pq.add(3);
 
-  bool testBasic()
-  {
-    PriorityQueue<int> pq;
-    pq.add(16);
-    pq.add(16);
-    pq.add(16);
-    pq.add(9);
-    pq.add(77);
-    pq.add(3);
-
-    if (!check(pq.popCopy() == 3, "should pop 3"))
-      return false;
-    if (!check(pq.popCopy() == 9, "should pop 9"))
-      return false;
-    if (!check(pq.popCopy() == 16, "should pop 16"))
-      return false;
-    if (!check(pq.popCopy() == 16, "should pop 16"))
-      return false;
-    if (!check(pq.popCopy() == 16, "should pop 16"))
-      return false;
-    if (!check(pq.popCopy() == 77, "should pop 77"))
-      return false;
-    if (!check(pq.empty(), "should be empty"))
-      return false;
-
-    return true;
-  }
-
-  bool Run() override
-  {
-    if (!testBasic())
-      return false;
-    return true;
-  }
-} sTestPriorityQueue;
-
+  EXPECT_EQ(pq.popCopy(), 3);
+  EXPECT_EQ(pq.popCopy(), 9);
+  EXPECT_EQ(pq.popCopy(), 16);
+  EXPECT_EQ(pq.popCopy(), 16);
+  EXPECT_EQ(pq.popCopy(), 16);
+  EXPECT_EQ(pq.popCopy(), 77);
+  EXPECT_TRUE(pq.empty());
+}

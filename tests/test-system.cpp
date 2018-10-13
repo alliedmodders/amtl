@@ -28,69 +28,44 @@
 // POSSIBILITY OF SUCH DAMAGE.
 #include "runner.h"
 #include <am-platform.h>
+#include <gtest/gtest.h>
 #include <os/am-shared-library.h>
 #include <os/am-path.h>
 
 using namespace ke;
 
-class TestSystem : public Test
+TEST(System, SharedLibs)
 {
- public:
-  TestSystem()
-   : Test("System")
-  {
-  }
-
-  bool Run() override
-  {
-    if (!testSharedLibs())
-      return false;
-    if (!testPaths())
-      return false;
-    return true;
-  }
-
-  bool testSharedLibs()
-  {
-    const char* libname = "unknown-library";
+  const char* libname = "unknown-library";
 #if defined(KE_WINDOWS)
-    const char* symbol = "GetProcAddress";
-    libname = "kernel32.dll";
+  const char* symbol = "GetProcAddress";
+  libname = "kernel32.dll";
 #elif defined(KE_POSIX)
-    const char* symbol = "malloc";
+  const char* symbol = "malloc";
 # if defined(KE_MACOSX)
-    libname = "libc.dylib";
+  libname = "libc.dylib";
 # elif defined(KE_LINUX)
-    libname = "libc.so.6";
+  libname = "libc.so.6";
 # endif
 #endif
 
-    RefPtr<SharedLib> lib = SharedLib::Open(libname, nullptr, 0);
-    if (!check(!!lib, "should have opened shared library"))
-      return false;
-    if (!check(!!lib->lookup(symbol), "should have found symbol"))
-      return false;
-    if (!check(!!lib->get<void*>(symbol), "should have found symbol"))
-      return false;
+  RefPtr<SharedLib> lib = SharedLib::Open(libname, nullptr, 0);
+  EXPECT_TRUE(lib);
+  EXPECT_NE(lib->lookup(symbol), nullptr);
+  EXPECT_NE(lib->get<void*>(symbol), nullptr);
+}
 
-    return true;
-  }
-
-  bool testPaths()
-  {
+TEST(System, Paths)
+{
 #if defined(KE_WINDOWS)
-    const char* bad = "C:/egg.txt";
-    const char* good = "C:\\egg.txt";
+  const char* bad = "C:/egg.txt";
+  const char* good = "C:\\egg.txt";
 #else
-    const char* bad = "\\egg.txt";
-    const char* good = "/egg.txt";
+  const char* bad = "\\egg.txt";
+  const char* good = "/egg.txt";
 #endif
 
-    char buffer[255];
-    path::Format(buffer, sizeof(buffer), "%s", bad);
-    if (!check(strcmp(buffer, good) == 0, "path should be formatted correctly"))
-      return false;
-
-    return true;
-  }
-} sTestSystem;
+  char buffer[255];
+  path::Format(buffer, sizeof(buffer), "%s", bad);
+  EXPECT_EQ(strcmp(buffer, good), 0);
+}

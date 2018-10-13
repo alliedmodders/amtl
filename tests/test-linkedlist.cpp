@@ -29,17 +29,26 @@
 
 #include <am-linkedlist.h>
 #include <assert.h>
+#include <gtest/gtest.h>
 #include "runner.h"
 
 using namespace ke;
 
-static size_t sCtors = 0;
-static size_t sCopyCtors = 0;
-static size_t sMovingCtors = 0;
-static size_t sMovedDtors = 0;
-static size_t sDtors = 0;
+static int sCtors = 0;
+static int sCopyCtors = 0;
+static int sMovingCtors = 0;
+static int sMovedDtors = 0;
+static int sDtors = 0;
 
 namespace {
+
+static void ResetGlobals() {
+  sCtors = 0;
+  sCopyCtors = 0;
+  sMovingCtors = 0;
+  sMovedDtors = 0;
+  sDtors = 0;
+}
 
 class BasicThing
 {
@@ -87,195 +96,121 @@ class MovingThing
 
 } // anonymous namespace
 
-class TestLinkedList : public Test
+TEST(LinkedList, Ints)
 {
- public:
-  TestLinkedList()
-   : Test("LinkedList")
+  LinkedList<int> list;
+
+  EXPECT_TRUE(list.empty());
+  EXPECT_EQ(list.begin(), list.end());
+
+  list.append(5);
+  list.append(7);
+  list.append(9);
+  EXPECT_TRUE(!list.empty());
+  EXPECT_EQ(list.length(), (size_t)3);
+
+  LinkedList<int>::iterator iter = list.begin();
+  EXPECT_TRUE(iter != list.end());
+  EXPECT_EQ(*iter, 5);
+  iter++;
+  EXPECT_TRUE(iter != list.end());
+  EXPECT_EQ(*iter, 7);
+  iter++;
+  EXPECT_TRUE(iter != list.end());
+  EXPECT_EQ(*iter, 9);
+  iter++;
+  EXPECT_EQ(iter, list.end());
+
+  iter = list.begin();
+  iter++;
+  iter++;
+  iter = list.erase(iter);
+  EXPECT_EQ(iter, list.end());
+  list.append(11);
+
+  iter = list.begin();
+  iter = list.erase(iter);
+  EXPECT_TRUE(iter != list.end());
+  EXPECT_EQ(*iter, 7);
+  iter++;
+  EXPECT_EQ(*iter, 11);
+  EXPECT_EQ(list.length(), (size_t)2);
+
+  list.prepend(1);
+  iter = list.begin();
+  EXPECT_EQ(*iter, 1);
+  iter++;
+  EXPECT_EQ(*iter, 7);
+  EXPECT_EQ(list.length(), (size_t)3);
+
+  list.clear();
+  EXPECT_TRUE(list.empty());
+  EXPECT_EQ(list.begin(), list.end());
+
+  list.append(1);
+  list.append(2);
+  list.append(3);
+  list.append(4);
+  list.append(5);
+  list.append(5);
+  iter = list.find(3);
+  EXPECT_TRUE(iter != list.end());
+  EXPECT_EQ(*iter, 3);
+  list.remove(3);
+  iter = list.find(3);
+  EXPECT_EQ(iter, list.end());
+  iter = list.find(5);
+  EXPECT_TRUE(iter != list.end());
+  EXPECT_EQ(*iter, 5);
+  list.remove(5);
+  iter = list.find(5);
+  EXPECT_TRUE(iter != list.end());
+  EXPECT_EQ(*iter, 5);
+  list.remove(5);
+  list.remove(5);
+  iter = list.find(5);
+  EXPECT_EQ(iter, list.end());
+}
+
+TEST(LinkedList, Destructors)
+{
+  ResetGlobals();
   {
+    LinkedList<BasicThing> list;
+    list.append(BasicThing());
+    list.append(BasicThing());
+    list.append(BasicThing());
+  }
+  EXPECT_EQ(sCtors, 3);
+  EXPECT_EQ(sCopyCtors, 3);
+  EXPECT_EQ(sDtors, 6);
+}
+
+TEST(LinkedList, Moving)
+{
+  ResetGlobals();
+  {
+    LinkedList<MovingThing> list;
+    MovingThing a, b, c;
+    list.append(ke::Move(a));
+    list.append(ke::Move(b));
+    list.append(ke::Move(c));
   }
 
-  bool testInts()
-  {
-    LinkedList<int> list;
+  EXPECT_EQ(sCtors, 3);
+  EXPECT_EQ(sMovingCtors, 3);
+  EXPECT_EQ(sMovedDtors, 3);
+  EXPECT_EQ(sDtors, 6);
+}
 
-    if (!check(list.empty(), "list should be empty"))
-      return false;
-    if (!check(list.begin() == list.end(), "list iterator should be empty"))
-      return false;
-
-    list.append(5);
-    list.append(7);
-    list.append(9);
-    if (!check(!list.empty(), "list should not be empty"))
-      return false;
-    if (!check(list.length() == 3, "list size should be 3"))
-      return false;
-
-    LinkedList<int>::iterator iter = list.begin();
-    if (!check(iter != list.end(), "list iterator should not have ended"))
-      return false;
-    if (!check(*iter == 5, "item 1 should be 5"))
-      return false;
-    iter++;
-    if (!check(iter != list.end(), "list iterator should not have ended"))
-      return false;
-    if (!check(*iter == 7, "item 2 should be 7"))
-      return false;
-    iter++;
-    if (!check(iter != list.end(), "list iterator should not have ended"))
-      return false;
-    if (!check(*iter == 9, "item 3 should be 9"))
-      return false;
-    iter++;
-    if (!check(iter == list.end(), "list iterator should have ended"))
-      return false;
-
-    iter = list.begin();
-    iter++;
-    iter++;
-    iter = list.erase(iter);
-    if (!check(iter == list.end(), "erasure should have returned ended iterator"))
-      return false;
-    list.append(11);
-
-    iter = list.begin();
-    iter = list.erase(iter);
-    if (!check(iter != list.end(), "erasure should not have ended iterator"))
-      return false;
-    if (!check(*iter == 7, "erasure should have returned item 2"))
-      return false;
-    iter++;
-    if (!check(*iter == 11, "second item should be 11"))
-      return false;
-    if (!check(list.length() == 2, "list should have two items"))
-      return false;
-
-    list.prepend(1);
-    iter = list.begin();
-    if (!check(*iter == 1, "new item should have been prepended"))
-      return false;
-    iter++;
-    if (!check(*iter == 7, "second item should be 7"))
-      return false;
-    if (!check(list.length() == 3, "list should have three items"))
-      return false;
-
-    list.clear();
-    if (!check(list.empty(), "cleared list should be empty"))
-      return false;
-    if (!check(list.begin() == list.end(), "cleared list iterator should be empty"))
-      return false;
-
-    list.append(1);
-    list.append(2);
-    list.append(3);
-    list.append(4);
-    list.append(5);
-    list.append(5);
-    iter = list.find(3);
-    if (!check(iter != list.end(), "should have found a 3"))
-      return false;
-    if (!check(*iter == 3, "should have found 3"))
-      return false;
-    list.remove(3);
-    iter = list.find(3);
-    if (!check(iter == list.end(), "should not have found a 3"))
-      return false;
-    iter = list.find(5);
-    if (!check(iter != list.end(), "should have found a 5"))
-      return false;
-    if (!check(*iter == 5, "should have found 5"))
-      return false;
-    list.remove(5);
-    iter = list.find(5);
-    if (!check(iter != list.end(), "should have found a second 5"))
-      return false;
-    if (!check(*iter == 5, "should have found a second 5"))
-      return false;
-    list.remove(5);
-    list.remove(5);
-    iter = list.find(5);
-    if (!check(iter == list.end(), "should not have found a third 5"))
-      return false;
-
-    return true;
-  }
-
-  bool testDestructors()
-  {
-    {
-      LinkedList<BasicThing> list;
-      list.append(BasicThing());
-      list.append(BasicThing());
-      list.append(BasicThing());
-    }
-    if (!check(sCtors == 3, "should get 3 normal constructors"))
-      return false;
-    if (!check(sCopyCtors == 3, "should get 3 copy constructors"))
-      return false;
-    if (!check(sDtors == 6, "should get 6 destructors"))
-      return false;
-
-    sCtors = 0;
-    sCopyCtors = 0;
-    sDtors = 0;
-    return true;
-  }
-
-  bool testMoving()
-  {
-    {
-      LinkedList<MovingThing> list;
-      MovingThing a, b, c;
-      list.append(ke::Move(a));
-      list.append(ke::Move(b));
-      list.append(ke::Move(c));
-    }
-
-    if (!check(sCtors == 3, "should get 3 normal constructors"))
-      return false;
-    if (!check(sMovingCtors == 3, "sould get 3 move constructors"))
-      return false;
-    if (!check(sMovedDtors == 3, "sould get 3 moved destructors"))
-      return false;
-    if (!check(sDtors == 6, "should get 6 destructors"))
-      return false;
-
-    sCtors = 0;
-    sMovingCtors = 0;
-    sMovedDtors = 0;
-    sDtors = 0;
-    return true;
-  }
-
-  bool testFallibleMalloc()
-  {
-    LinkedList<int, FallibleMalloc> list;
-    list.append(5);
-    list.append(6);
-    list.allocPolicy().setOutOfMemory(true);
-    if (!check(!list.append(7), "list handled out-of-memory"))
-      return false;
-    list.allocPolicy().setOutOfMemory(false);
-    if (!check(list.append(8), "list recovered out-of-memory"))
-      return false;
-    if (!check(list.allocPolicy().ooms() == 1, "list received 1 oom"))
-      return false;
-    return true;
-  }
-
-  bool Run() override
-  {
-    if (!testInts())
-      return false;
-    if (!testDestructors())
-      return false;
-    if (!testMoving())
-      return false;
-    if (!testFallibleMalloc())
-      return false;
-    return true;
-  }
-} sTestLinkedList;
-
+TEST(LinkedList, FallibleMalloc)
+{
+  LinkedList<int, FallibleMalloc> list;
+  list.append(5);
+  list.append(6);
+  list.allocPolicy().setOutOfMemory(true);
+  EXPECT_FALSE(list.append(7));
+  list.allocPolicy().setOutOfMemory(false);
+  ASSERT_TRUE(list.append(8));
+  EXPECT_EQ(list.allocPolicy().ooms(), (size_t)1);
+}

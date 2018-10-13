@@ -30,6 +30,7 @@
 #include <am-hashmap.h>
 #include <am-utility.h>
 #include <am-string.h>
+#include <gtest/gtest.h>
 #include "runner.h"
 
 using namespace ke;
@@ -44,119 +45,84 @@ struct StringPolicy
   }
 };
 
-class TestHashMap : public Test
+TEST(HashMap, Basic)
 {
- public:
-  TestHashMap()
-   : Test("HashMap")
+  typedef HashMap<AString, int, StringPolicy> Map;
+  Map map;
+
+  ASSERT_TRUE(map.init());
+
+  Map::Result r = map.find("cat");
+  ASSERT_FALSE(r.found());
+
+  Map::Insert i = map.findForAdd("cat");
+  ASSERT_FALSE(i.found());
+  ASSERT_TRUE(map.add(i, AString("cat"), 5));
+  EXPECT_EQ(r->value, 5);
+
+  Map::iterator iter = map.iter();
+  EXPECT_EQ(iter->key.compare("cat"), 0);
+  EXPECT_EQ(iter->value, 5);
+  iter.next();
+  EXPECT_TRUE(iter.empty());
+
+  i = map.findForAdd("cat");
+  EXPECT_TRUE(i.found());
+
+  r = map.find("dog");
+  EXPECT_FALSE(r.found());
+
+  r = map.find("cat");
+  ASSERT_TRUE(r.found());
+  EXPECT_EQ(r->value, 5);
+  map.remove(r);
+
+  r = map.find("cat");
+  EXPECT_FALSE(r.found());
+}
+
+TEST(HashMap, Bug6527)
+{
+  typedef HashMap<AString, int, StringPolicy> Map;
+  Map map;
+
+  ASSERT_TRUE(map.init(16));
+
   {
+    char key[] = "bb";
+    Map::Insert p = map.findForAdd(key);
+    ASSERT_FALSE(p.found());
+    ASSERT_TRUE(map.add(p, key));
+    p->value = 0xabab;
   }
 
-  bool testBasics() {
-    typedef HashMap<AString, int, StringPolicy> Map;
-    Map map;
-
-    if (!check(map.init(), "initialized"))
-      return false;
-
-    Map::Result r = map.find("cat");
-    if (!check(!r.found(), "cat not found"))
-      return false;
-
-    Map::Insert i = map.findForAdd("cat");
-    if (!check(!i.found(), "cat not found for add"))
-      return false;
-    if (!check(map.add(i, AString("cat"), 5), "cat added"))
-      return false;
-    if (!check(r->value == 5, "cat is 5"))
-      return false;
-
-    Map::iterator iter = map.iter();
-    if (!check(iter->key.compare("cat") == 0, "iterator got key cat"))
-      return false;
-    if (!check(iter->value == 5, "iterator got value 5"))
-      return false;
-    iter.next();
-    if (!check(iter.empty(), "iterator should be finished"))
-      return false;
-
-    i = map.findForAdd("cat");
-    if (!check(i.found(), "cat found through insert"))
-      return false;
-
-    r = map.find("dog");
-    if (!check(!r.found(), "dog not found"))
-      return false;
-
-    r = map.find("cat");
-    if (!check(r.found(), "cat found"))
-      return false;
-    if (!check(r->value == 5, "cat is 5"))
-      return false;
-    map.remove(r);
-
-    r = map.find("cat");
-    if (!check(!r.found(), "cat ran away"))
-      return false;
-
-    return true;
-  }
-
-  bool testBug6527() {
-    typedef HashMap<AString, int, StringPolicy> Map;
-    Map map;
-
-    if (!check(map.init(16), "initialized"))
-      return false;
-
-    {
-      char key[] = "bb";
-      Map::Insert p = map.findForAdd(key);
-      if (!p.found())
-        map.add(p, key);
-      p->value = 0xabab;
-    }
-
-    {
-      char key[] = "dddd";
-      Map::Insert p = map.findForAdd(key);
-      if (!p.found())
-        map.add(p, key);
-      p->value = 0xacac;
-    }
-
-    {
-      char key[] = "bb";
-      map.removeIfExists(key);
-    }
-
-    {
-      char key[] = "dddd";
-      Map::Insert p = map.findForAdd(key);
-      if (!p.found())
-        map.add(p, key);
-      p->value = 0xadad;
-    }
-
-    bool found = false;
-    for (Map::iterator iter = map.iter(); !iter.empty(); iter.next()) {
-      if (iter->key.compare("dddd") == 0) {
-        if (!check(!found, "dddd occurs only once in map"))
-          return false;
-        found = true;
-      }
-    }
-
-    return true;
-  }
-
-  bool Run() override
   {
-    if (!testBasics())
-      return false;
-    if (!testBug6527())
-      return false;
-    return true;
+    char key[] = "dddd";
+    Map::Insert p = map.findForAdd(key);
+    ASSERT_FALSE(p.found());
+    ASSERT_TRUE(map.add(p, key));
+    p->value = 0xacac;
   }
-} sTestHashMap;
 
+  {
+    char key[] = "bb";
+    map.removeIfExists(key);
+  }
+
+  {
+    char key[] = "dddd";
+    Map::Insert p = map.findForAdd(key);
+    if (!p.found())
+      map.add(p, key);
+    p->value = 0xadad;
+  }
+
+  bool found = false;
+  for (Map::iterator iter = map.iter(); !iter.empty(); iter.next()) {
+    if (iter->key.compare("dddd") == 0) {
+      // Should only occur once.
+      EXPECT_FALSE(found);
+      found = true;
+    }
+  }
+}

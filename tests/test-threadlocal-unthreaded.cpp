@@ -29,27 +29,16 @@
 
 #define KE_SINGLE_THREADED
 #include <am-threadlocal.h>
+#include <gtest/gtest.h>
 #include "runner.h"
 
 using namespace ke;
 
 static ThreadLocal<int> sVar;
 
-class TestThreadLocalSingleThreaded : public Test
+TEST(ThreadLocal, Unthreaded)
 {
- public:
-  TestThreadLocalSingleThreaded()
-   : Test("TestThreadLocalSingleThreaded")
-  {
-  }
-
-  bool Run() override
-  {
-    if (!check(sVar == 0, "variable is initialized"))
-      return false;
-    sVar = 10;
-    if (!check(sVar == 10, "variable is set correctly"))
-      return false;
-    return true;
-  }
-} sTestThreadLocalSingleThreaded;
+  EXPECT_EQ(sVar, 0);
+  sVar = 10;
+  EXPECT_EQ(sVar, 10);
+}

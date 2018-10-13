@@ -29,6 +29,7 @@
 
 #include <am-function.h>
 #include <am-vector.h>
+#include <gtest/gtest.h>
 #include "runner.h"
 
 using namespace ke;
@@ -68,220 +69,162 @@ class CallableObj
   }
 };
 
-class TestCallable : public Test
+TEST(Callable, BasicLambda)
 {
- public:
-  TestCallable()
-   : Test("Callable")
-  {
-  }
-
-  bool testLambdaBasic() {
-    int egg = 20;
-    auto fn = [&egg](int x) -> int {
-      return egg + x + 1;
-    };
-    
-    Lambda<int(int)> ptr(fn);
-    if (!check(ptr(10) == 31, "capture local variable in Lambda"))
-      return false;
-
-    ptr = [](int x) -> int {
-      return x + 15;
-    };
-    if (!check(ptr(7) == 22, "assign new function to Lambda"))
-      return false;
-
-    ptr = test_old_fn;
-    if (!check(ptr(10) == 109, "assign static function to Lambda"))
-      return false;
-
-    CallableObj obj;
-    ptr = obj;
-    if (!check(ptr(66) == 100, "assign callable obj to Lambda"))
-      return false;
-
-    Lambda<unsigned(MoveObj&& obj)> ptr2 = [](MoveObj&& obj) -> unsigned {
-      MoveObj other(ke::Move(obj));
-      return other.count();
-    };
-
-    MoveObj moveObj;
-    if (!check(ptr2(ke::Move(moveObj)) == 1, "moved Lambda arguments"))
-      return false;
-
-    return true;
-  }
-
-  bool testInlineStorage() {
-    Lambda<int()> ptr = []() -> int {
-      return 10;
-    };
-
-    if (!check(ptr.usingInlineStorage(), "small lambda should be using inline storage"))
-      return false;
-    if (!check(ptr() == 10, "small lambda should have correct function"))
-      return false;
-
-    static size_t dtors = 0;
-    struct CallDtorObj {
-      ~CallDtorObj() {
-        dtors++;
-      }
-    };
-
-    struct {
-      int a;
-      void* b, *c, *d, *e, *f, *g;
-      void* h, *j, *k, *m, *n, *o, *p;
-    } huge_struct = { 20 };
-    CallDtorObj test_dtor;
-    ptr = [huge_struct, test_dtor]() -> int {
-      return huge_struct.a;
-    };
-    if (!check(!ptr.usingInlineStorage(), "huge lambda should not be using inline storage"))
-      return false;
-    if (!check(ptr() == 20, "huge lambda should have correct function"))
-      return false;
-
-    ptr = nullptr;
-    if (!check(dtors == 2, "got 2 destructors"))
-      return false;
-
-    return true;
-  }
-
-  bool testMove() {
-    static size_t ctors = 0;
-    static size_t copyctors = 0;
-    static size_t movectors = 0;
-    static size_t dtors = 0;
-    struct CallDtorObj {
-      CallDtorObj() {
-        ctors++;
-      }
-      CallDtorObj(const CallDtorObj& other) {
-        copyctors++;
-      }
-      CallDtorObj(CallDtorObj&& other) {
-        movectors++;
-      }
-      ~CallDtorObj() {
-        dtors++;
-      }
-    };
-
-    CallDtorObj test_dtor;
-    Lambda<void()> ptr = [test_dtor] {
-    };
-
-    if (!check(dtors == 1, "got 1 destructor"))
-      return false;
-
-    ctors = 0;
-    copyctors = 0;
-    movectors = 0;
-    dtors = 0;
-
-    Lambda<void()> ptr2 = ptr;
-    if (!check(ctors == 0, "no constructors called"))
-      return false;
-    if (!check(copyctors == 1, "got one copy constructor"))
-      return false;
-    if (!check(movectors == 0, "no move constructors called"))
-      return false;
-    if (!check(dtors == 0, "no destructors called"))
-      return false;
-
-    copyctors = 0;
-
-    Lambda<void()> ptr3 = ke::Move(ptr2);
-    if (!check(ctors == 0, "no constructors called"))
-      return false;
-    if (!check(copyctors == 0, "no copy constructors called"))
-      return false;
-    if (!check(movectors == 0, "no move constructors called"))
-      return false;
-    if (!check(dtors == 0, "no destructors called"))
-      return false;
-
-    copyctors = 0;
-
-    auto fn = [test_dtor]{};
-    Lambda<void()> ptr4 = ke::Move(fn);
-    if (!check(ctors == 0, "no constructors called"))
-      return false;
-#if !defined(_MSC_VER) || (_MSC_VER >= 1900)
-    if (!check(copyctors == 1, "no copy constructors called"))
-      return false;
-    if (!check(movectors == 1, "no move constructors called"))
-      return false;
-#else
-    // Older Microsoft compilers do not implement move semantics for lambda
-    // types, unfortunately.
-    if (!check(copyctors == 2, "no copy constructors called"))
-      return false;
-    if (!check(movectors == 0, "no move constructors called"))
-      return false;
-#endif
-    if (!check(dtors == 0, "no destructors called"))
-      return false;
-
-    return true;
-  }
-
-  bool testFuncPtr() {
-    FuncPtr<int(int)> ptr = test_old_fn;
-
-    if (!check(ptr(1) == 100, "FuncPtr called static function"))
-      return false;
-
-    auto fn = [](int x) -> int {
-      return x + 2;
-    };
-    ptr = &fn;
-
-    if (!check(ptr(10) == 12, "FuncPtr called lambda"))
-      return false;
-
-    CallableObj obj;
-    ptr = &obj;
-    if (!check(ptr(7) == 41, "FuncPtr called callable object"))
-      return false;
-
-    return true;
-  }
-
-  bool testMoveUncopyable() {
-#if defined(KE_CXX_HAS_GENERIC_LAMBDA_CAPTURES)
-    Vector<int> v;
-
-    auto lambda = [v = Move(v)]() -> size_t {
-      return v.length();
-    };
-
-    v.append(10);
-    Function<size_t()> f = ke::Move(lambda);
-
-    if (!check(f() == 0, "f() should have returned 0"))
-      return false;
-#endif
-
-    return true;
-  }
-
-  bool Run() override
-  {
-    if (!testLambdaBasic())
-      return false;
-    if (!testInlineStorage())
-      return false;
-    if (!testMove())
-      return false;
-    if (!testFuncPtr())
-      return false;
-    if (!testMoveUncopyable())
-      return false;
-    return true;
+  int egg = 20;
+  auto fn = [&egg](int x) -> int {
+    return egg + x + 1;
   };
-} sTestCallable;
+  
+  Lambda<int(int)> ptr(fn);
+  EXPECT_EQ(ptr(10), 31);
+
+  ptr = [](int x) -> int {
+    return x + 15;
+  };
+  EXPECT_EQ(ptr(7), 22);
+
+  ptr = test_old_fn;
+  EXPECT_EQ(ptr(10), 109);
+
+  CallableObj obj;
+  ptr = obj;
+  EXPECT_EQ(ptr(66), 100);
+
+  Lambda<unsigned(MoveObj&& obj)> ptr2 = [](MoveObj&& obj) -> unsigned {
+    MoveObj other(ke::Move(obj));
+    return other.count();
+  };
+
+  MoveObj moveObj;
+  EXPECT_EQ(ptr2(ke::Move(moveObj)), (unsigned)1);
+}
+
+TEST(Callable, InlineStorage)
+{
+  Lambda<int()> ptr = []() -> int {
+    return 10;
+  };
+
+  EXPECT_TRUE(ptr.usingInlineStorage());
+  EXPECT_EQ(ptr(), 10);
+
+  static size_t dtors = 0;
+  struct CallDtorObj {
+    ~CallDtorObj() {
+      dtors++;
+    }
+  };
+
+  struct {
+    int a;
+    void* b, *c, *d, *e, *f, *g;
+    void* h, *j, *k, *m, *n, *o, *p;
+  } huge_struct = { 20 };
+  CallDtorObj test_dtor;
+  ptr = [huge_struct, test_dtor]() -> int {
+    return huge_struct.a;
+  };
+  EXPECT_FALSE(ptr.usingInlineStorage());
+  EXPECT_EQ(ptr(), 20);
+
+  ptr = nullptr;
+  EXPECT_EQ(dtors, (size_t)2);
+}
+
+TEST(Callable, Move)
+{
+  static size_t ctors = 0;
+  static size_t copyctors = 0;
+  static size_t movectors = 0;
+  static size_t dtors = 0;
+  struct CallDtorObj {
+    CallDtorObj() {
+      ctors++;
+    }
+    CallDtorObj(const CallDtorObj& other) {
+      copyctors++;
+    }
+    CallDtorObj(CallDtorObj&& other) {
+      movectors++;
+    }
+    ~CallDtorObj() {
+      dtors++;
+    }
+  };
+
+  CallDtorObj test_dtor;
+  Lambda<void()> ptr = [test_dtor] {
+  };
+
+  EXPECT_EQ(dtors, (size_t)1);
+
+  ctors = 0;
+  copyctors = 0;
+  movectors = 0;
+  dtors = 0;
+
+  Lambda<void()> ptr2 = ptr;
+  EXPECT_EQ(ctors, (size_t)0);
+  EXPECT_EQ(copyctors, (size_t)1);
+  EXPECT_EQ(movectors, (size_t)0);
+  EXPECT_EQ(dtors, (size_t)0);
+
+  copyctors = 0;
+
+  Lambda<void()> ptr3 = ke::Move(ptr2);
+  EXPECT_EQ(ctors, (size_t)0);
+  EXPECT_EQ(copyctors, (size_t)0);
+  EXPECT_EQ(movectors, (size_t)0);
+  EXPECT_EQ(dtors, (size_t)0);
+
+  copyctors = 0;
+
+  auto fn = [test_dtor]{};
+  Lambda<void()> ptr4 = ke::Move(fn);
+  EXPECT_EQ(ctors, (size_t)0);
+#if !defined(_MSC_VER) || (_MSC_VER >= 1900)
+  EXPECT_EQ(copyctors, (size_t)1);
+  EXPECT_EQ(movectors, (size_t)1);
+#else
+  // Older Microsoft compilers do not implement move semantics for lambda
+  // types, unfortunately.
+  EXPECT_EQ(copyctors, (size_t)2);
+  EXPECT_EQ(movectors, (size_t)0);
+#endif
+  EXPECT_EQ(dtors, (size_t)0);
+}
+
+TEST(Callable, FuncPtr)
+{
+  FuncPtr<int(int)> ptr = test_old_fn;
+
+  EXPECT_EQ(ptr(1), 100);
+
+  auto fn = [](int x) -> int {
+    return x + 2;
+  };
+  ptr = &fn;
+
+  EXPECT_EQ(ptr(10), 12);
+
+  CallableObj obj;
+  ptr = &obj;
+  EXPECT_EQ(ptr(7), 41);
+}
+
+TEST(Callable, MoveUncopyable)
+{
+#if defined(KE_CXX_HAS_GENERIC_LAMBDA_CAPTURES)
+  Vector<int> v;
+
+  auto lambda = [v = Move(v)]() -> size_t {
+    return v.length();
+  };
+
+  v.append(10);
+  Function<size_t()> f = ke::Move(lambda);
+
+  EXPECT_EQ(f(), (size_t)0);
+#endif
+}

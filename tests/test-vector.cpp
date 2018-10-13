@@ -30,17 +30,26 @@
 #include <am-vector.h>
 #include <amtl/am-refcounting.h>
 #include <assert.h>
+#include <gtest/gtest.h>
 #include "runner.h"
 
 using namespace ke;
 
-static size_t sCtors = 0;
-static size_t sCopyCtors = 0;
-static size_t sMovingCtors = 0;
-static size_t sMovedDtors = 0;
-static size_t sDtors = 0;
+static int sCtors = 0;
+static int sCopyCtors = 0;
+static int sMovingCtors = 0;
+static int sMovedDtors = 0;
+static int sDtors = 0;
 
 namespace {
+
+static void ResetGlobals() {
+  sCtors = 0;
+  sCopyCtors = 0;
+  sMovingCtors = 0;
+  sMovedDtors = 0;
+  sDtors = 0;
+}
 
 class BasicThing
 {
@@ -98,302 +107,213 @@ class MovingThing
 
 } // anonymous namespace
 
-class TestVector : public Test
+TEST(Vector, Ints)
 {
- public:
-  TestVector()
-   : Test("Vector")
-  {
+  Vector<int> vector;
+
+  EXPECT_TRUE(vector.empty());
+  EXPECT_EQ(vector.length(), (size_t)0);
+
+  vector.append(1);
+  vector.append(2);
+  vector.append(3);
+  vector.append(4);
+  vector.append(5); 
+  for (int i = 0; i < 5; i++) { 
+    EXPECT_EQ(vector[i], i + 1);
   }
+  EXPECT_EQ(vector.length(), (size_t)5);
+  EXPECT_FALSE(vector.empty());
+  
+  EXPECT_EQ(vector.popCopy(), 5);
+  EXPECT_EQ(vector.popCopy(), 4);
+  EXPECT_EQ(vector.length(), (size_t)3);
+  
+  vector.insert(0, 88);
+  vector.insert(0, 99);
+  vector.insert(4, 111);
+  EXPECT_EQ(vector[0], 99);
+  EXPECT_EQ(vector[1], 88);
+  EXPECT_EQ(vector[2], 1);
+  EXPECT_EQ(vector[3], 2);
+  EXPECT_EQ(vector[4], 111);
+  EXPECT_EQ(vector[5], 3);
+  EXPECT_EQ(vector.length(), (size_t)6);
 
-  bool testInts()
-  {
-    Vector<int> vector;
+  vector.remove(5);
+  EXPECT_EQ(vector[4], 111);
+  vector.remove(0);
+  EXPECT_EQ(vector[0], 88);
+  EXPECT_EQ(vector[3], 111);
+  EXPECT_EQ(vector.length(), (size_t)4);
 
-    if (!check(vector.empty(), "vector should be empty"))
-      return false;
-    if (!check(vector.length() == 0, "vector length should be 0"))
-      return false;
+  while (!vector.empty())
+    vector.pop();
 
-    vector.append(1);
-    vector.append(2);
-    vector.append(3);
-    vector.append(4);
-    vector.append(5);
-    for (int i = 0; i < 5; i++) {
-      if (!check(vector[i] == i + 1, "vector[%d] is %d", i, i))
-        return false;
-    }
-    if (!check(vector.length() == 5, "vector length is 5"))
-      return false;
-    if (!check(!vector.empty(), "vector is not empty"))
-      return false;
+  EXPECT_TRUE(vector.empty());
+  EXPECT_TRUE(vector.ensure(128));
+  EXPECT_TRUE(vector.empty());
 
-    if (!check(vector.popCopy() == 5, "popped 5"))
-      return false;
-    if (!check(vector.popCopy() == 4, "popped 4"))
-      return false;
-    if (!check(vector.length() == 3, "vector length is 3"))
-      return false;
+  for (int i = 0; i < 128; i++)
+    vector.append(i);
+  EXPECT_EQ(vector.length(), (size_t)128);
 
-    vector.insert(0, 88);
-    vector.insert(0, 99);
-    vector.insert(4, 111);
-    if (!check(vector[0] == 99, "[0] should be 99"))
-      return false;
-    if (!check(vector[1] == 88, "[1] should be 88"))
-      return false;
-    if (!check(vector[2] == 1, "[2] should be 1"))
-      return false;
-    if (!check(vector[3] == 2, "[3] should be 2"))
-      return false;
-    if (!check(vector[4] == 111, "[4] should be 111"))
-      return false;
-    if (!check(vector[5] == 3, "[5] should be 3"))
-      return false;
-    if (!check(vector.length() == 6, "length should be 6"))
-      return false;
+  vector.clear();
+  EXPECT_TRUE(vector.empty());
+}
 
-    vector.remove(5);
-    if (!check(vector[4] == 111, "[4] should still be 111"))
-      return false;
-    vector.remove(0);
-    if (!check(vector[0] == 88, "[0] should be 88"))
-      return false;
-    if (!check(vector[3] == 111, "[3] should be 111"))
-      return false;
-    if (!check(vector.length() == 4, "length should be 4"))
-      return false;
+TEST(Vector, Destructors)
+{
+  ResetGlobals();
 
-    while (!vector.empty())
-      vector.pop();
-
-    if (!check(vector.empty(), "vector should be empty"))
-      return false;
-    if (!check(vector.ensure(128), "vector size ensured"))
-      return false;
-    if (!check(vector.empty(), "vector should be empty"))
-      return false;
-
-    for (int i = 0; i < 128; i++)
-      vector.append(i);
-    if (!check(vector.length() == 128, "vector length should be 128"))
-      return false;
-
+  { 
+    Vector<BasicThing> vector;
+    vector.append(BasicThing());
+    vector.append(BasicThing());
+    vector.append(BasicThing());
+  }
+  EXPECT_EQ(sCtors, 3);
+  EXPECT_EQ(sCopyCtors, 3);
+  EXPECT_EQ(sDtors, 6);
+  
+  sDtors = 0;
+  { 
+    Vector<BasicThing> vector;
+    vector.append(BasicThing());
     vector.clear();
-    if (!check(vector.empty(), "vector should be empty"))
-      return false;
-
-    return true;
   }
+  EXPECT_EQ(sDtors, 2);
+}
 
-  bool testDestructors()
+TEST(Vector, Moving)
+{
+  ResetGlobals();
+	{
+		Vector<MovingThing> vector;
+		MovingThing a, b, c;
+		vector.append(ke::Move(a));
+		vector.append(ke::Move(b));
+		vector.append(ke::Move(c));
+	}
+
+	EXPECT_EQ(sCtors, 3);
+	EXPECT_EQ(sMovingCtors, 3);
+	EXPECT_EQ(sMovedDtors, 3);
+	EXPECT_EQ(sDtors, 6);
+
+	sCtors = 0;
+	sMovingCtors = 0;
+	sMovedDtors = 0;
+	sDtors = 0;
+
+	Vector<int> v1;
+	v1.append(10);
+	Vector<int> v2(Move(v1));
+	EXPECT_EQ(v2.length(), (size_t)1);
+	EXPECT_EQ(v1.length(), (size_t)0);
+}
+
+TEST(Vector, FallibleMalloc)
+{
+  Vector<int, FallibleMalloc> vector;
+  vector.allocPolicy().setOutOfMemory(true);
+  EXPECT_FALSE(vector.append(7));
+  vector.allocPolicy().setOutOfMemory(false);
+  EXPECT_TRUE(vector.append(8));
+  EXPECT_EQ(vector.allocPolicy().ooms(), (size_t)1);
+}
+
+TEST(Vector, MoveDuringInsert)
+{
+  Vector<MovingThing> vector;
+  for (size_t i = 1; i <= 8; i++) {
+    MovingThing x;
+    vector.append(Move(x));
+  }
   {
-    {
-      Vector<BasicThing> vector;
-      vector.append(BasicThing());
-      vector.append(BasicThing());
-      vector.append(BasicThing());
-    }
-    if (!check(sCtors == 3, "should get 3 normal constructors"))
-      return false;
-    if (!check(sCopyCtors == 3, "should get 3 copy constructors"))
-      return false;
-    if (!check(sDtors == 6, "should get 6 destructors"))
-      return false;
-
-    sDtors = 0;
-    {
-      Vector<BasicThing> vector;
-      vector.append(BasicThing());
-      vector.clear();
-    }
-    if (!check(sDtors == 2, "should get 2 destructors"))
-      return false;
-
-    sCtors = 0;
-    sCopyCtors = 0;
-    sDtors = 0;
-    return true;
+    MovingThing x;
+    vector.insert(0, Move(x));
   }
+  for (size_t i = 0; i < vector.length(); i++) {
+    EXPECT_FALSE(vector[i].moved());
+  }
+}
 
-  bool testMoving()
-  {
-    {
-      Vector<MovingThing> vector;
-      MovingThing a, b, c;
-      vector.append(ke::Move(a));
-      vector.append(ke::Move(b));
-      vector.append(ke::Move(c));
+TEST(Vector, Resize)
+{
+  Vector<bool> vector;
+  vector.append(true);
+  vector.resize(100);
+  EXPECT_EQ(vector.length(), (size_t)100);
+  EXPECT_TRUE(vector[0]);
+  for (size_t i = 1; i < 100; i++) {
+    EXPECT_FALSE(vector[i]);
+  }
+  vector.resize(1);
+  ASSERT_EQ(vector.length(), (size_t)1);
+  for (size_t i = 0; i < 1; i++) {
+    EXPECT_TRUE(vector[i]);
+  }
+}
+
+TEST(Vector, Remove)
+{
+  class HeldThing {
+   public:
+    HeldThing()
+     : refcount(0)
+    {}
+    virtual ~HeldThing()
+    {}
+
+    void AddRef() {
+      refcount++;
+    }
+    void Release() {
+      if (--refcount == 0)
+        delete this;
     }
 
-    if (!check(sCtors == 3, "should get 3 normal constructors"))
-      return false;
-    if (!check(sMovingCtors == 3, "sould get 3 move constructors"))
-      return false;
-    if (!check(sMovedDtors == 3, "sould get 3 moved destructors"))
-      return false;
-    if (!check(sDtors == 6, "should get 6 destructors"))
-      return false;
+    uintptr_t refcount;
+  };
 
-    sCtors = 0;
-    sMovingCtors = 0;
-    sMovedDtors = 0;
-    sDtors = 0;
-
-    Vector<int> v1;
-    v1.append(10);
-    Vector<int> v2(Move(v1));
-    if (!check(v2.length() == 1, "should have moved vector"))
-      return false;
-    if (!check(v1.length() == 0, "should have gutted vector"))
-      return false;
-
-    return true;
-  }
-
-  bool testFallibleMalloc()
-  {
-    Vector<int, FallibleMalloc> vector;
-    vector.allocPolicy().setOutOfMemory(true);
-    if (!check(!vector.append(7), "vector handled out-of-memory"))
-      return false;
-    vector.allocPolicy().setOutOfMemory(false);
-    if (!check(vector.append(8), "vector recovered out-of-memory"))
-      return false;
-    if (!check(vector.allocPolicy().ooms() == 1, "vector received 1 oom"))
-      return false;
-    return true;
-  }
-
-  bool testMoveDuringInsert()
-  {
-    Vector<MovingThing> vector;
-    for (size_t i = 1; i <= 8; i++) {
-      MovingThing x;
-      vector.append(Move(x));
+  class WrappedThing {
+   public:
+    WrappedThing(HeldThing* thing)
+     : thing(thing)
+    {}
+    WrappedThing(WrappedThing&& other)
+     : thing(ke::Move(other.thing))
+    {}
+    WrappedThing& operator=(WrappedThing&& other) {
+      thing = ke::Move(other.thing);
+      return *this;
     }
-    {
-      MovingThing x;
-      vector.insert(0, Move(x));
-    }
-    for (size_t i = 0; i < vector.length(); i++) {
-      if (!check(vector[i].moved() == false, "vector element was illegally moved"))
-        return false;
-    }
-    return true;
-  }
 
-  bool testResize()
-  {
-    Vector<bool> vector;
-    vector.append(true);
-    vector.resize(100);
-    if (!check(vector.length() == 100, "vector length should be 100"))
-      return false;
-    if (!check(vector[0] == true, "vector element should be true"))
-      return false;
-    for (size_t i = 1; i < 100; i++) {
-      if (!check(vector[i] == false, "vector element should be false"))
-        return false;
-    }
-    vector.resize(1);
-    if (!check(vector.length() == 1, "vector length should be 1"))
-      return false;
-    for (size_t i = 0; i < 1; i++) {
-      if (!check(vector[i] == true, "vector element should be true"))
-        return false;
-    }
-    return true;
-  }
+    ke::RefPtr<HeldThing> thing;
 
-  bool testRemove()
-  {
-    class HeldThing {
-     public:
-      HeldThing()
-       : refcount(0)
-      {}
-      virtual ~HeldThing()
-      {}
+   private:
+    WrappedThing(const WrappedThing& other) = delete;
+    void operator =(const WrappedThing& other) = delete;
+  };
 
-      void AddRef() {
-        refcount++;
-      }
-      void Release() {
-        if (--refcount == 0)
-          delete this;
-      }
+  ke::RefPtr<HeldThing> thing1(new HeldThing);
+  ke::RefPtr<HeldThing> thing2(new HeldThing);
 
-      uintptr_t refcount;
-    };
+  Vector<WrappedThing> things;
+  things.append(WrappedThing(thing1));
+  things.append(WrappedThing(thing2));
 
-    class WrappedThing {
-     public:
-      WrappedThing(HeldThing* thing)
-       : thing(thing)
-      {}
-      WrappedThing(WrappedThing&& other)
-       : thing(ke::Move(other.thing))
-      {}
-      WrappedThing& operator=(WrappedThing&& other) {
-        thing = ke::Move(other.thing);
-        return *this;
-      }
+  EXPECT_EQ(thing1->refcount, (size_t)2);
+  EXPECT_EQ(thing2->refcount, (size_t)2);
 
-      ke::RefPtr<HeldThing> thing;
+  things.remove(0);
 
-     private:
-      WrappedThing(const WrappedThing& other) = delete;
-      void operator =(const WrappedThing& other) = delete;
-    };
+  EXPECT_EQ(thing1->refcount, (size_t)1);
+  EXPECT_EQ(thing2->refcount, (size_t)2);
 
-    ke::RefPtr<HeldThing> thing1(new HeldThing);
-    ke::RefPtr<HeldThing> thing2(new HeldThing);
+  things.remove(0);
 
-    Vector<WrappedThing> things;
-    things.append(WrappedThing(thing1));
-    things.append(WrappedThing(thing2));
-
-    if (!check(thing1->refcount == 2, "thing1 refcount should be 2"))
-      return false;
-    if (!check(thing2->refcount == 2, "thing2 refcount should be 2"))
-      return false;
-
-    things.remove(0);
-
-    if (!check(thing1->refcount == 1, "thing1 refcount should be 1"))
-      return false;
-    if (!check(thing2->refcount == 2, "thing2 refcount should be 2"))
-      return false;
-
-    things.remove(0);
-
-    if (!check(thing1->refcount == 1, "thing1 refcount should be 1"))
-      return false;
-    if (!check(thing2->refcount == 1, "thing2 refcount should be 1"))
-      return false;
-
-    return true;
-  }
-
-  bool Run() override
-  {
-    if (!testInts())
-      return false;
-    if (!testDestructors())
-      return false;
-    if (!testMoving())
-      return false;
-    if (!testFallibleMalloc())
-      return false;
-    if (!testMoveDuringInsert())
-      return false;
-    if (!testResize())
-      return false;
-    if (!testRemove())
-      return false;
-    return true;
-  }
-} sTestVector;
-
+  EXPECT_EQ(thing1->refcount, (size_t)1);
+  EXPECT_EQ(thing2->refcount, (size_t)1);
+}

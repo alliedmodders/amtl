@@ -29,6 +29,7 @@
 
 #include <am-inlinelist.h>
 #include <am-utility.h>
+#include <gtest/gtest.h>
 #include "runner.h"
 
 using namespace ke;
@@ -51,89 +52,60 @@ class IntThing : public InlineListNode<IntThing>
   int value_;
 };
 
-class TestInlineList : public Test
+TEST(InlineList, Basic)
 {
- public:
-  TestInlineList()
-   : Test("InlineList")
+  IntThing thing1(1);
+  IntThing thing2(2);
+  IntThing thing3(3);
+  IntThing thing4(4);
+  IntThing thing5(5);
+
+  // Do these test twice. InlineList does not take ownership of pointers,
+  // so we should be guaranteed we can keep moving them in between lists.
+  for (size_t i = 0; i <= 1; i++)
   {
-  }
+    InlineList<IntThing> list;
 
-  bool testBasic()
-  {
-    IntThing thing1(1);
-    IntThing thing2(2);
-    IntThing thing3(3);
-    IntThing thing4(4);
-    IntThing thing5(5);
+    InlineList<IntThing>::iterator iter = list.begin();
+    ASSERT_EQ(iter, list.end());
+    
+    list.append(&thing1);
+    list.append(&thing2);
+    list.append(&thing3);
+    list.append(&thing4);
+    list.append(&thing5);
 
-    // Do these test twice. InlineList does not take ownership of pointers,
-    // so we should be guaranteed we can keep moving them in between lists.
-    for (size_t i = 0; i <= 1; i++)
-    {
-      InlineList<IntThing> list;
-
-      InlineList<IntThing>::iterator iter = list.begin();
-      if (!check(iter == list.end(), "list should be empty"))
-        return false;
-      
-      list.append(&thing1);
-      list.append(&thing2);
-      list.append(&thing3);
-      list.append(&thing4);
-      list.append(&thing5);
-
-      iter = list.begin();
-      for (int n = 1; n <= 5; n++) {
-        if (!check(iter->value() == n, "value %d should be %d", iter->value(), n))
-          return false;
-        iter++;
-      }
-      if (!check(iter == list.end(), "iterator should have ended"))
-        return false;
-
-      list.remove(&thing1);
-      iter = list.begin();
-      if (!check(iter->value() == 2, "list should start at 2 after removal"))
-        return false;
-
-      list.remove(&thing5);
-      iter = list.begin();
+    iter = list.begin();
+    for (int n = 1; n <= 5; n++) {
+      EXPECT_EQ(iter->value(), n);
       iter++;
-      iter++;
-      if (!check(iter->value() == 4, "list should end at 4 after removal"))
-        return false;
-      iter++;
-      if (!check(iter == list.end(), "iterator should have ended"))
-        return false;
-
-      list.remove(&thing3);
-      iter = list.begin();
-      if (!check(iter->value() == 2, "first value should be 2 after removal"))
-        return false;
-      iter++;
-      if (!check(iter->value() == 4, "second value should be 4 after removal"))
-        return false;
-      iter++;
-      if (!check(iter == list.end(), "iterator should have ended"))
-        return false;
-
-      iter = list.begin();
-      while (iter != list.end())
-        iter = list.erase(iter);
-
-      if (!check(list.begin() == list.end(), "list should be empty"))
-        return false;
     }
+    EXPECT_EQ(iter, list.end());
 
-    return true;
+    list.remove(&thing1);
+    iter = list.begin();
+    EXPECT_EQ(iter->value(), 2);
+
+    list.remove(&thing5);
+    iter = list.begin();
+    iter++;
+    iter++;
+    EXPECT_EQ(iter->value(), 4);
+    iter++;
+    EXPECT_EQ(iter, list.end());
+
+    list.remove(&thing3);
+    iter = list.begin();
+    EXPECT_EQ(iter->value(), 2);
+    iter++;
+    EXPECT_EQ(iter->value(), 4);
+    iter++;
+    EXPECT_EQ(iter, list.end());
+
+    iter = list.begin();
+    while (iter != list.end())
+      iter = list.erase(iter);
+
+    EXPECT_EQ(list.begin(), list.end());
   }
-
-  bool Run() override
-  {
-    if (!testBasic())
-      return false;
-    return true;
-  }
-} sTestInlineList;
-
+}

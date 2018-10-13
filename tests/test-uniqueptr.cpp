@@ -28,12 +28,13 @@
 // POSSIBILITY OF SUCH DAMAGE.
 
 #include <am-uniqueptr.h>
+#include <gtest/gtest.h>
 #include "runner.h"
 
 using namespace ke;
 
-static size_t sBrahCtors = 0;
-static size_t sBrahDtors = 0;
+static int sBrahCtors = 0;
+static int sBrahDtors = 0;
 struct Brah {
   Brah() {
     sBrahCtors++;
@@ -43,50 +44,25 @@ struct Brah {
   }
 };
 
-class TestUniquePtr : public Test
+TEST(UniquePtr, Single)
 {
- public:
-  TestUniquePtr()
-   : Test("UniquePtr")
+  UniquePtr<int> five = MakeUnique<int>(5);
+  EXPECT_EQ(*five.get(), 5);
+
+  five = nullptr;
+  EXPECT_FALSE(five);
+
   {
+    UniquePtr<Brah> blah = MakeUnique<Brah>();
+    EXPECT_EQ(sBrahCtors, 1);
   }
+  EXPECT_EQ(sBrahDtors, 1);
 
-  bool Run() override
+  sBrahCtors = 0;
+  sBrahDtors = 0;
   {
-    if (!testSingle())
-      return false;
-    return true;
-  };
-
- private:
-  bool testSingle() {
-    UniquePtr<int> five = MakeUnique<int>(5);
-    if (!check(*five.get() == 5, "pointer should contain 5"))
-      return false;
-
-    five = nullptr;
-    if (!check(!five, "pointer should be null"))
-      return false;
-
-    {
-      UniquePtr<Brah> blah = MakeUnique<Brah>();
-      if (!check(sBrahCtors == 1, "called Brah::Brah"))
-        return false;
-    }
-    if (!check(sBrahDtors == 1, "called Brah::~Brah"))
-      return false;
-
-    sBrahCtors = 0;
-    sBrahDtors = 0;
-    {
-      UniquePtr<Brah[]> blah = MakeUnique<Brah[]>(20);
-      if (!check(sBrahCtors == 20, "called Brah::Brah 20 times"))
-        return false;
-    }
-    if (!check(sBrahDtors == 20, "called Brah::~Brah 20 times"))
-      return false;
-
-    return true;
+    UniquePtr<Brah[]> blah = MakeUnique<Brah[]>(20);
+    EXPECT_EQ(sBrahCtors, 20);
   }
-
-} sTestUniquePtr;
+  EXPECT_EQ(sBrahDtors, 20);
+}

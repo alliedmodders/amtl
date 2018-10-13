@@ -28,6 +28,7 @@
 // POSSIBILITY OF SUCH DAMAGE.
 
 #include <am-autoptr.h>
+#include <gtest/gtest.h>
 #include "runner.h"
 
 using namespace ke;
@@ -43,56 +44,30 @@ struct Blah {
   }
 };
 
-class TestAutoPtr : public Test
+TEST(AutoPtr, Single)
 {
- public:
-  TestAutoPtr()
-   : Test("AutoPtr")
+  AutoPtr<int> intp(new int(5));
+  EXPECT_EQ(*intp.get(),  5);
+
+  intp = MakeUnique<int>(7);
+  EXPECT_EQ(*intp.get(), 7);
+
+  intp = new int(2);
+  EXPECT_EQ(*intp.get(), 2);
+
   {
+    AutoPtr<Blah> blah(new Blah());
+    EXPECT_EQ(sBlahCtors, (size_t)1);
   }
+  EXPECT_EQ(sBlahDtors, (size_t)1);
 
-  bool Run() override
+  sBlahCtors = 0;
+  sBlahDtors = 0;
   {
-    if (!testSingle())
-      return false;
-    return true;
-  };
+    AutoPtr<Blah[]> blah(new Blah[20]);
+    EXPECT_EQ(sBlahCtors, (size_t)20);
 
- private:
-  bool testSingle() {
-    AutoPtr<int> intp(new int(5));
-    if (!check(*intp.get() == 5, "pointer should contain 5"))
-      return false;
-
-    intp = MakeUnique<int>(7);
-    if (!check(*intp.get() == 7, "pointer should contain 7"))
-      return false;
-
-    intp = new int(2);
-    if (!check(*intp.get() == 2, "pointer should contain 2"))
-      return false;
-
-    {
-      AutoPtr<Blah> blah(new Blah());
-      if (!check(sBlahCtors == 1, "called Blah::Blah"))
-        return false;
-    }
-    if (!check(sBlahDtors == 1, "called Blah::~Blah"))
-      return false;
-
-    sBlahCtors = 0;
-    sBlahDtors = 0;
-    {
-      AutoPtr<Blah[]> blah(new Blah[20]);
-      if (!check(sBlahCtors == 20, "called Blah::Blah 20 times"))
-        return false;
-
-      blah = MakeUnique<Blah[]>(15);
-    }
-    if (!check(sBlahDtors == 35, "called Blah::~Blah 35 times"))
-      return false;
-
-    return true;
+    blah = MakeUnique<Blah[]>(15);
   }
-
-} sTestAutoPtr;
+  EXPECT_EQ(sBlahDtors, (size_t)35);
+}
