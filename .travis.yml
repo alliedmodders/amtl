@@ -8,7 +8,6 @@ addons:
       - libc6-dev-i386
       - g++-multilib
       - g++-4.8
-      - g++-4.7
 language: cpp
 sudo: false
 compiler:
@@ -25,18 +24,6 @@ script:
 
   - mkdir build-clang-debug && cd build-clang-debug
   - python ../configure.py --enable-debug
-  - ambuild
-  - ./tests/testrunner/testrunner
-  - cd ..
-
-  - mkdir build-gcc47-opt && cd build-clang-opt
-  - CC="gcc-4.7" CXX="g++-4.7" python ../configure.py --enable-optimize
-  - ambuild
-  - ./tests/testrunner/testrunner
-  - cd ..
-
-  - mkdir build-gcc47-debug && cd build-clang-debug
-  - CC="gcc-4.7" CXX="g++-4.7" python ../configure.py --enable-debug
   - ambuild
   - ./tests/testrunner/testrunner
   - cd ..
