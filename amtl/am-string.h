@@ -353,6 +353,22 @@ SafeStrcpy(char* dest, size_t maxlength, const char* src)
   return iter - dest;
 }
 
+// Same as SafeStrcpy, but only copy up to n chars.
+static inline size_t
+SafeStrcpyN(char* dest, size_t maxlength, const char* src, size_t n)
+{
+  if (!dest || !maxlength || !n)
+    return 0;
+
+  char* iter = dest;
+  size_t count = maxlength;
+  while (--count && n--)
+    *iter++ = *src++;
+  *iter = '\0';
+
+  return iter - dest;
+}
+
 static inline int
 StrCaseCmp(const char* a, const char* b)
 {
