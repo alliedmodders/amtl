@@ -114,3 +114,20 @@ TEST(String, Case)
   str = str.lowercase();
   EXPECT_EQ(str.compare(""), 0);
 }
+
+TEST(String, StrCpy)
+{
+  char buffer[6];
+
+  SafeStrcpy(buffer, sizeof(buffer), "hello");
+  EXPECT_EQ(strcmp(buffer, "hello"), 0);
+
+  SafeStrcpy(buffer, sizeof(buffer), "hello, crab");
+  EXPECT_EQ(strcmp(buffer, "hello"), 0);
+
+  SafeStrcpyN(buffer, sizeof(buffer), "asdfasdf", 8);
+  EXPECT_EQ(strcmp(buffer, "asdfa"), 0);
+
+  SafeStrcpyN(buffer, sizeof(buffer), "qwertyuiop", 3);
+  EXPECT_EQ(strcmp(buffer, "qwe"), 0);
+}
