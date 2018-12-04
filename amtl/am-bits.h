@@ -175,7 +175,7 @@ IsUintMultiplySafe(const T& a, const T& b)
 
   size_t log2_a = Log2(a);
   size_t log2_b = Log2(b);
-  return log2_a + log2_b <= sizeof(T) * 8;
+  return log2_a + log2_b < sizeof(T) * 8;
 }
 
 static inline bool
