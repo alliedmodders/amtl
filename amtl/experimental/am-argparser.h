@@ -363,7 +363,7 @@ class RepeatOption : public VectorOption<Type>
 struct BaseValuePolicy
 { 
   // Return true if an argument of this type can omit a value.
-  static KE_CONSTEXPR bool canOmitValue() {
+  static constexpr bool canOmitValue() {
     return false;
   }
 };
@@ -371,7 +371,7 @@ struct BaseValuePolicy
 template <>
 struct ValuePolicy<bool>
 {
-  static KE_CONSTEXPR bool canOmitValue() {
+  static constexpr bool canOmitValue() {
     return true;
   }
 

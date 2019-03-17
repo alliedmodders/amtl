@@ -38,7 +38,7 @@ static ThreadLocal<int> sVar;
 
 TEST(ThreadLocal, Unthreaded)
 {
-  EXPECT_EQ(sVar, 0);
+  EXPECT_EQ(sVar.get(), 0);
   sVar = 10;
-  EXPECT_EQ(sVar, 10);
+  EXPECT_EQ(sVar.get(), 10);
 }

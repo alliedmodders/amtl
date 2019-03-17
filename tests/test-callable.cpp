@@ -183,15 +183,8 @@ TEST(Callable, Move)
   auto fn = [test_dtor]{};
   Lambda<void()> ptr4 = ke::Move(fn);
   EXPECT_EQ(ctors, (size_t)0);
-#if !defined(_MSC_VER) || (_MSC_VER >= 1900)
   EXPECT_EQ(copyctors, (size_t)1);
   EXPECT_EQ(movectors, (size_t)1);
-#else
-  // Older Microsoft compilers do not implement move semantics for lambda
-  // types, unfortunately.
-  EXPECT_EQ(copyctors, (size_t)2);
-  EXPECT_EQ(movectors, (size_t)0);
-#endif
   EXPECT_EQ(dtors, (size_t)0);
 }
 
@@ -215,7 +208,6 @@ TEST(Callable, FuncPtr)
 
 TEST(Callable, MoveUncopyable)
 {
-#if defined(KE_CXX_HAS_GENERIC_LAMBDA_CAPTURES)
   Vector<int> v;
 
   auto lambda = [v = Move(v)]() -> size_t {
@@ -226,5 +218,4 @@ TEST(Callable, MoveUncopyable)
   Function<size_t()> f = ke::Move(lambda);
 
   EXPECT_EQ(f(), (size_t)0);
-#endif
 }

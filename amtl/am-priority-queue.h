@@ -127,16 +127,16 @@ class PriorityQueue final
     }
   }
 
-  static KE_CONSTEXPR size_t parentOf(size_t at) {
+  static constexpr size_t parentOf(size_t at) {
 #if __cplusplus >= 201402L
     assert(at > 0);
 #endif
     return (at - 1) / 2;
   }
-  static KE_CONSTEXPR size_t leftChildOf(size_t at) {
+  static constexpr size_t leftChildOf(size_t at) {
     return (at * 2) + 1;
   }
-  static KE_CONSTEXPR size_t rightChildOf(size_t at) {
+  static constexpr size_t rightChildOf(size_t at) {
     return (at * 2) + 2;
   }
 
