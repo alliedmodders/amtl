@@ -7,7 +7,7 @@ addons:
       - lib32z1-dev
       - libc6-dev-i386
       - g++-multilib
-      - g++-4.8
+      - g++-4.9
 language: cpp
 sudo: false
 compiler:
@@ -28,14 +28,14 @@ script:
   - ./tests/testrunner/testrunner
   - cd ..
 
-  - mkdir build-gcc48-opt && cd build-clang-opt
-  - CC="gcc-4.8" CXX="g++-4.8" python ../configure.py --enable-optimize
+  - mkdir build-gcc49-opt && cd build-clang-opt
+  - CC="gcc-4.9" CXX="g++-4.9" python ../configure.py --enable-optimize
   - ambuild
   - ./tests/testrunner/testrunner
   - cd ..
 
-  - mkdir build-gcc48-debug && cd build-clang-debug
-  - CC="gcc-4.8" CXX="g++-4.8" python ../configure.py --enable-debug
+  - mkdir build-gcc49-debug && cd build-clang-debug
+  - CC="gcc-4.9" CXX="g++-4.9" python ../configure.py --enable-debug
   - ambuild
   - ./tests/testrunner/testrunner
   - cd ..
