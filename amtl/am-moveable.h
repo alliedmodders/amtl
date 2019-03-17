@@ -47,15 +47,15 @@ Move(T&& t)
 //   http://thbecker.net/articles/rvalue_references/section_07.html and
 //   http://thbecker.net/articles/rvalue_references/section_08.html
 template <typename T>
-static KE_CONSTEXPR inline T &&
-Forward(typename remove_reference<T>::type& t) KE_NOEXCEPT
+static constexpr inline T &&
+Forward(typename remove_reference<T>::type& t) noexcept
 {
   return static_cast<T&&>(t);
 }
 
 template <typename T>
-static KE_CONSTEXPR inline T &&
-Forward(typename remove_reference<T>::type&& t) KE_NOEXCEPT
+static constexpr inline T &&
+Forward(typename remove_reference<T>::type&& t) noexcept
 {
   return static_cast<T&&>(t);
 }

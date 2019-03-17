@@ -45,10 +45,10 @@ class VarThread
   }
 
   void Run() {
-    ASSERT_EQ(sThreadVar, 0);
+    ASSERT_EQ(sThreadVar.get(), 0);
 
     sThreadVar = 20;
-    ASSERT_EQ(sThreadVar, 20);
+    ASSERT_EQ(sThreadVar.get(), 20);
 
     succeeded_ = true;
   }
@@ -73,9 +73,9 @@ TEST(ThreadLocal, Threaded)
   thread->Join();
 
   ASSERT_TRUE(run.succeeded());
-  EXPECT_EQ(sThreadVar, 10);
+  EXPECT_EQ(sThreadVar.get(), 10);
 
   // Check that pointers are allowed in T.
   sThreadVarPointer = &run;
-  EXPECT_EQ(sThreadVarPointer, &run);
+  EXPECT_EQ(sThreadVarPointer.get(), &run);
 }

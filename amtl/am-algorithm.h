@@ -57,7 +57,7 @@ Swap(T& left, T& right)
 template <typename T>
 struct LessThan
 {
-  KE_CONSTEXPR bool operator ()(const T& left, const T& right) const {
+  constexpr bool operator ()(const T& left, const T& right) const {
     return left < right;
   }
 };
@@ -65,7 +65,7 @@ struct LessThan
 template <typename T>
 struct GreaterThan
 {
-  KE_CONSTEXPR bool operator ()(const T& left, const T& right) const {
+  constexpr bool operator ()(const T& left, const T& right) const {
     return left > right;
   }
 };

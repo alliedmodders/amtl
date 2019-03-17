@@ -68,130 +68,26 @@
 # define KE_CLANG_AT_LEAST(x, y) \
    ((__clang_major__ > (x)) || (__clang_major__ == x && __clang_minor__ >= y))
 
-# if KE_CLANG_AT_LEAST(2, 9)
-#  define KE_CXX_HAS_RVAL_REFS 30
-#  define KE_CXX_HAS_DELETE
-#  define KE_CXX_HAS_STATIC_ASSERT
-#  define KE_CXX_HAS_DOUBLE_GT
-#  define KE_CXX_HAS_ENUM_CLASS
-# endif
-# if KE_CLANG_AT_LEAST(3, 0)
-#  define KE_CXX_HAS_OVERRIDE
-#  define KE_CXX_HAS_EXPLICIT_BOOL
-#  define KE_CXX_HAS_NULLPTR
-#  define KE_CXX_HAS_NOEXCEPT
-# endif
-# if KE_CLANG_AT_LEAST(3, 1)
-#  define KE_CXX_HAS_CONSTEXPR
-# endif
-# if KE_CLANG_AT_LEAST(3, 4)
-#  define KE_CXX_HAS_GENERIC_LAMBDA_CAPTURES
+# if !KE_CLANG_AT_LEAST(3, 4)
+#  error "AMTL requires clang 3.4 or higher"
 # endif
 
 #elif defined(__GNUC__)
 # define KE_GCC_AT_LEAST(x, y) ((__GNUC__ > (x)) || (__GNUC__ == x && __GNUC_MINOR__ >= y))
 
-# if KE_GCC_AT_LEAST(4, 3)
-#  define KE_CXX_HAS_RVAL_REFS 10
-#  define KE_CXX_HAS_STATIC_ASSERT
-#  define KE_CXX_HAS_DOUBLE_GT
-# endif
-# if KE_GCC_AT_LEAST(4, 4)
-#  define KE_CXX_HAS_DELETE
-#  define KE_CXX_HAS_ENUM_CLASS
-# endif
-# if KE_GCC_AT_LEAST(4, 5)
-#  define KE_CXX_HAS_EXPLICIT_BOOL
-#  undef KE_CXX_HAS_RVAL_REFS
-#  define KE_CXX_HAS_RVAL_REFS 21
-# endif
-# if KE_GCC_AT_LEAST(4, 6)
-#  define KE_CXX_HAS_NULLPTR
-#  define KE_CXX_HAS_NOEXCEPT
-#  define KE_CXX_HAS_CONSTEXPR
-#  undef KE_CXX_HAS_RVAL_REFS
-#  define KE_CXX_HAS_RVAL_REFS 30
-# endif
-# if KE_GCC_AT_LEAST(4, 7)
-#  define KE_CXX_HAS_OVERRIDE
-# endif
-# if KE_GCC_AT_LEAST(4, 9)
-#  define KE_CXX_HAS_GENERIC_LAMBDA_CAPTURES
+# if !KE_GCC_AT_LEAST(4, 9)
+#  error "AMTL requires GCC 4.9 or higher"
 # endif
 
 #elif defined(_MSC_VER)
-# if _MSC_VER >= 1600
-#  define KE_CXX_HAS_RVAL_REFS 20
-#  define KE_CXX_HAS_STATIC_ASSERT
-#  define KE_CXX_HAS_DOUBLE_GT
-#  define KE_CXX_HAS_NULLPTR
-# endif
-# if _MSC_VER >= 1700
-#  undef KE_CXX_HAS_RVAL_REFS
-#  define KE_CXX_HAS_RVAL_REFS 21
-#  define KE_CXX_HAS_OVERRIDE
-#  define KE_CXX_HAS_ENUM_CLASS
-# endif
-# if _MSC_VER >= 1800
-#  define KE_CXX_HAS_DELETE
-#  define KE_CXX_HAS_EXPLICIT_BOOL
-# endif
-# if _MSC_VER == 1800 && _MSC_FULL_VER == 180021114
-#  define KE_CXX_HAS_CONSTEXPR
-# endif
-# if _MSC_VER >= 1900
-#  define KE_CXX_HAS_CONSTEXPR
-#  define KE_CXX_HAS_NOEXCEPT
-#  define KE_CXX_HAS_GENERIC_LAMBDA_CAPTURES
+# if _MSC_VER < 1900
+#  error "AMTL requires Microsoft Visual Studio 2015 or higher"
 # endif
 #else
-# error Unrecognized compiler.
+# error "Unrecognized compiler."
 #endif
 
 // Done with compiler feature detection.
-
-#if !defined(KE_CXX_HAS_OVERRIDE)
-# error "AMTL requires C++11 override"
-#endif
-#if !defined(KE_CXX_HAS_DELETE)
-# error "AMTL requires C++11 method deletion"
-#endif
-#if !defined(KE_CXX_HAS_EXPLICIT_BOOL)
-# error "AMTL requires C++11 explicit bool"
-#endif
-
-#if defined(KE_CXX_HAS_NOEXCEPT)
-# define KE_NOEXCEPT noexcept
-#else
-# define KE_NOEXCEPT
-#endif
-
-#if defined(KE_CXX_HAS_CONSTEXPR)
-# define KE_CONSTEXPR constexpr
-#else
-# define KE_CONSTEXPR
-#endif
-
-#if defined(KE_CXX_HAS_STATIC_ASSERT)
-# define KE_STATIC_ASSERT(cond) static_assert(cond, #cond)
-#else
-# define KE_STATIC_ASSERT(cond) extern int static_assert_f(int a[(cond) ? 1 : -1])
-#endif
-
-#if !defined(KE_CXX_HAS_RVAL_REFS) || KE_CXX_HAS_RVAL_REFS < 21
-//# error AMTL requires rvalue reference 2.1 support (N2844+)
-#endif
-#if !defined(KE_CXX_HAS_DOUBLE_GT)
-# error AMTL requires support for >> in template names
-#endif
-#if !defined(KE_CXX_HAS_NULLPTR)
-# if defined(__GNUC__) && !defined(__clang__)
-#  define nullptr __null
-#  define KE_CXX_HAS_NULLPTR
-# else
-#  error AMTL requires nullptr support
-# endif
-#endif
 
 #if defined(_MSC_VER)
 // This feature has been around for long enough that we shouldn't have to
