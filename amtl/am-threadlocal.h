@@ -2,10 +2,10 @@
 //
 // Copyright (C) 2013, David Anderson and AlliedModders LLC
 // All rights reserved.
-// 
+//
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
-// 
+//
 //  * Redistributions of source code must retain the above copyright notice, this
 //    list of conditions and the following disclaimer.
 //  * Redistributions in binary form must reproduce the above copyright notice,
@@ -59,118 +59,118 @@ namespace ke {
 template <typename T>
 class ThreadLocal
 {
- public:
-  void operator =(const T& other) {
-    set(other);
-  }
+  public:
+    void operator =(const T& other) {
+        set(other);
+    }
 
-  T operator*() const {
-    return get();
-  }
-  T operator ->() const {
-    return get();
-  }
-  bool operator !() const {
-    return !get();
-  }
-  bool operator ==(const T& other) const {
-    return get() == other;
-  }
-  bool operator !=(const T& other) const {
-    return get() != other;
-  }
+    T operator *() const {
+        return get();
+    }
+    T operator ->() const {
+        return get();
+    }
+    bool operator !() const {
+        return !get();
+    }
+    bool operator ==(const T& other) const {
+        return get() == other;
+    }
+    bool operator !=(const T& other) const {
+        return get() != other;
+    }
 
- private:
-  ThreadLocal(const ThreadLocal& other) = delete;
-  ThreadLocal& operator =(const ThreadLocal& other) = delete;
+  private:
+    ThreadLocal(const ThreadLocal& other) = delete;
+    ThreadLocal& operator =(const ThreadLocal& other) = delete;
 
 #if !defined(KE_SINGLE_THREADED)
- private:
-  volatile int allocated_;
+  private:
+    volatile int allocated_;
 
- public:
-  ThreadLocal() {
-    allocated_ = 0;
-  }
-
-  T get() const {
-    if (!allocated_)
-      return T();
-    return internalGet();
-  }
-  void set(const T& t) {
-    if (!allocated_ && !allocate()) {
-      fprintf(stderr, "could not allocate thread-local storage\n");
-      abort();
+  public:
+    ThreadLocal() {
+        allocated_ = 0;
     }
-    internalSet(t);
-  }
 
-# if defined(_MSC_VER)
-  ~ThreadLocal() {
-    if (allocated_)
-      TlsFree(key_);
-  }
+    T get() const {
+        if (!allocated_)
+            return T();
+        return internalGet();
+    }
+    void set(const T& t) {
+        if (!allocated_ && !allocate()) {
+            fprintf(stderr, "could not allocate thread-local storage\n");
+            abort();
+        }
+        internalSet(t);
+    }
 
- private:
-  T internalGet() const {
-    return reinterpret_cast<T>(TlsGetValue(key_));
-  }
-  void internalSet(const T& t) {
-    TlsSetValue(key_, reinterpret_cast<LPVOID>(t));
-  }
-  bool allocate() {
-    if (InterlockedCompareExchange((volatile LONG*)&allocated_, 1, 0) == 1)
-      return true;
-    key_ = TlsAlloc();
-    return key_ != TLS_OUT_OF_INDEXES;
-  }
+#    if defined(_MSC_VER)
+    ~ThreadLocal() {
+        if (allocated_)
+            TlsFree(key_);
+    }
 
-  DWORD key_;
+  private:
+    T internalGet() const {
+        return reinterpret_cast<T>(TlsGetValue(key_));
+    }
+    void internalSet(const T& t) {
+        TlsSetValue(key_, reinterpret_cast<LPVOID>(t));
+    }
+    bool allocate() {
+        if (InterlockedCompareExchange((volatile LONG*)&allocated_, 1, 0) == 1)
+            return true;
+        key_ = TlsAlloc();
+        return key_ != TLS_OUT_OF_INDEXES;
+    }
 
-# else
- public:
-  ~ThreadLocal() {
-    if (allocated_)
-      pthread_key_delete(key_);
-  }
+    DWORD key_;
 
-  bool allocate() {
-    if (!__sync_bool_compare_and_swap(&allocated_, 0, 1))
-      return true;
-    return pthread_key_create(&key_, nullptr) == 0;
-  }
+#    else
+  public:
+    ~ThreadLocal() {
+        if (allocated_)
+            pthread_key_delete(key_);
+    }
 
- private:
-  T internalGet() const {
-    return (T)reinterpret_cast<uintptr_t>(pthread_getspecific(key_));
-  }
-  void internalSet(const T& t) {
-    pthread_setspecific(key_, reinterpret_cast<void*>(t));
-  }
+    bool allocate() {
+        if (!__sync_bool_compare_and_swap(&allocated_, 0, 1))
+            return true;
+        return pthread_key_create(&key_, nullptr) == 0;
+    }
 
-  pthread_key_t key_;
-# endif // !_MSC_VER
+  private:
+    T internalGet() const {
+        return (T) reinterpret_cast<uintptr_t>(pthread_getspecific(key_));
+    }
+    void internalSet(const T& t) {
+        pthread_setspecific(key_, reinterpret_cast<void*>(t));
+    }
+
+    pthread_key_t key_;
+#    endif // !_MSC_VER
 
 #else // KE_SINGLE_THREADED
- public:
-  ThreadLocal() {
-    t_ = T();
-  }
+  public:
+    ThreadLocal() {
+        t_ = T();
+    }
 
-  bool allocate() {
-    return true;
-  }
+    bool allocate() {
+        return true;
+    }
 
-  T get() const {
-    return t_;
-  }
-  void set(const T& t) {
-    t_ = t;
-  }
+    T get() const {
+        return t_;
+    }
+    void set(const T& t) {
+        t_ = t;
+    }
 
- private:
-  T t_;
+  private:
+    T t_;
 #endif
 };
 

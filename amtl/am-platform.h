@@ -2,10 +2,10 @@
 //
 // Copyright (C) 2013, David Anderson and AlliedModders LLC
 // All rights reserved.
-// 
+//
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
-// 
+//
 //  * Redistributions of source code must retain the above copyright notice, this
 //    list of conditions and the following disclaimer.
 //  * Redistributions in binary form must reproduce the above copyright notice,
@@ -32,69 +32,62 @@
 namespace ke {
 
 #if defined(__EMSCRIPTEN__)
-# define KE_EMSCRIPTEN
-# define KE_POSIX
+#    define KE_EMSCRIPTEN
+#    define KE_POSIX
 #elif defined(__NetBSD__)
-# define KE_NETBSD
-# define KE_BSD
+#    define KE_NETBSD
+#    define KE_BSD
 #elif defined(__FreeBSD__)
-# define KE_FREEBSD
-# define KE_BSD
+#    define KE_FREEBSD
+#    define KE_BSD
 #elif defined(__OpenBSD__)
-# define KE_OPENBSD
-# define KE_BSD
+#    define KE_OPENBSD
+#    define KE_BSD
 #elif defined(__APPLE__)
-# define KE_MACOSX
-# define KE_MACH
-# define KE_BSD
+#    define KE_MACOSX
+#    define KE_MACH
+#    define KE_BSD
 #elif defined(__MACH__)
-# define KE_MACH
-# define KE_BSD
+#    define KE_MACH
+#    define KE_BSD
 #elif defined(_WIN32)
-# define KE_WINDOWS
+#    define KE_WINDOWS
 #elif defined(__linux__)
-# define KE_LINUX
-# define KE_POSIX
+#    define KE_LINUX
+#    define KE_POSIX
 #elif defined(__sun__)
-# define KE_SOLARIS
-# define KE_POSIX
+#    define KE_SOLARIS
+#    define KE_POSIX
 #endif
 
 #if defined(KE_BSD)
-# define KE_POSIX
+#    define KE_POSIX
 #endif
 
-#if defined(__x86_64) ||   \
-    defined(__x86_64__) || \
-    defined(__amd64__) ||  \
-    defined(__amd64) ||    \
+#if defined(__x86_64) || defined(__x86_64__) || defined(__amd64__) || defined(__amd64) || \
     (defined(_MSC_VER) && defined(_M_X64))
-# define KE_ARCH_X64
-#elif defined(__i686) ||   \
-      defined(__i686__) || \
-      defined(__i386) ||   \
-      defined(__i386__) || \
-      defined(i386) ||     \
-      (defined(_MSC_VER) && defined(_M_IX86))
-# define KE_ARCH_X86
+#    define KE_ARCH_X64
+#elif defined(__i686) || defined(__i686__) || defined(__i386) || defined(__i386__) || \
+    defined(i386) || (defined(_MSC_VER) && defined(_M_IX86))
+#    define KE_ARCH_X86
 #else
-# define KE_ARCH_UNKNOWN
+#    define KE_ARCH_UNKNOWN
 #endif
 
 // Create macros that exactly match the compiler - peeking past any tricks
 // vendors play for interoperability.
 #if defined(__clang__)
-# define KE_CXX_CLANG
+#    define KE_CXX_CLANG
 #elif defined(__GNUC__)
-# define KE_CXX_GCC
+#    define KE_CXX_GCC
 #elif defined(_MSC_VER)
-# define KE_CXX_MSVC
+#    define KE_CXX_MSVC
 #endif
 
 #if defined(KE_CXX_CLANG) || defined(KE_CXX_GCC)
-# define KE_CXX_LIKE_GCC
+#    define KE_CXX_LIKE_GCC
 #endif
 
-} // ke
+} // namespace ke
 
 #endif // _include_amtl_platform_h_

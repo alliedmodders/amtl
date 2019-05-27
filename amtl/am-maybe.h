@@ -2,10 +2,10 @@
 //
 // Copyright (C) 2013-2014, David Anderson and AlliedModders LLC
 // All rights reserved.
-// 
+//
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
-// 
+//
 //  * Redistributions of source code must retain the above copyright notice, this
 //    list of conditions and the following disclaimer.
 //  * Redistributions in binary form must reproduce the above copyright notice,
@@ -41,100 +41,99 @@ struct Nothing {};
 template <typename T>
 class Maybe
 {
- public:
-  Maybe()
-   : initialized_(false)
-  {}
-  Maybe(const Maybe& other)
-   : initialized_(false)
-  {
-    copyFrom(other);
-  }
-  Maybe(Maybe&& other)
-   : initialized_(false)
-  {
-    moveFrom(ke::Move(other));
-  }
-  Maybe(Nothing)
-   : initialized_(false)
-  {}
-
-  ~Maybe() {
-    if (isValid())
-      t_.address()->~T();
-  }
-
-  template <typename ... ArgTypes>
-  void init(ArgTypes&&... argv) {
-    if (isValid())
-      t_.address()->~T();
-
-    new (t_.address()) T(Forward<ArgTypes>(argv)...);
-    initialized_ = true;
-  }
-
-  bool isValid() const {
-    return initialized_;
-  }
-
-  T& operator ->() {
-    assert(isValid());
-    return t_.address();
-  }
-  T& operator*() {
-    assert(isValid());
-    return *t_.address();
-  }
-  const T& operator ->() const {
-    assert(isValid());
-    return t_.address();
-  }
-  const T& operator*() const {
-    assert(isValid());
-    return *t_.address();
-  }
-
-  explicit operator bool() const {
-    return isValid();
-  }
-
-  Maybe& operator =(const Maybe& other) {
-    initialized_ = false;
-    copyFrom(other);
-    return *this;
-  }
-  Maybe& operator =(Maybe&& other) {
-    initialized_ = false;
-    moveFrom(ke::Move(other));
-    return *this;
-  }
-
- private:
-  void copyFrom(const Maybe& other) {
-    if (other.initialized_) {
-      init(*other.t_.address());
+  public:
+    Maybe()
+     : initialized_(false)
+    {}
+    Maybe(const Maybe& other)
+     : initialized_(false)
+    {
+        copyFrom(other);
     }
-  }
-  void moveFrom(Maybe&& other) {
-    if (other.initialized_) {
-      init(ke::Move(*other.t_.address()));
-      other.initialized_ = false;
+    Maybe(Maybe&& other)
+     : initialized_(false)
+    {
+        moveFrom(ke::Move(other));
     }
-  }
+    Maybe(Nothing)
+     : initialized_(false)
+    {}
 
- private:
-  bool initialized_;
-  StorageBuffer<T> t_;
+    ~Maybe() {
+        if (isValid())
+            t_.address()->~T();
+    }
+
+    template <typename... ArgTypes>
+    void init(ArgTypes&&... argv) {
+        if (isValid())
+            t_.address()->~T();
+
+        new (t_.address()) T(Forward<ArgTypes>(argv)...);
+        initialized_ = true;
+    }
+
+    bool isValid() const {
+        return initialized_;
+    }
+
+    T& operator ->() {
+        assert(isValid());
+        return t_.address();
+    }
+    T& operator *() {
+        assert(isValid());
+        return *t_.address();
+    }
+    const T& operator ->() const {
+        assert(isValid());
+        return t_.address();
+    }
+    const T& operator *() const {
+        assert(isValid());
+        return *t_.address();
+    }
+
+    explicit operator bool() const {
+        return isValid();
+    }
+
+    Maybe& operator =(const Maybe& other) {
+        initialized_ = false;
+        copyFrom(other);
+        return *this;
+    }
+    Maybe& operator =(Maybe&& other) {
+        initialized_ = false;
+        moveFrom(ke::Move(other));
+        return *this;
+    }
+
+  private:
+    void copyFrom(const Maybe& other) {
+        if (other.initialized_) {
+            init(*other.t_.address());
+        }
+    }
+    void moveFrom(Maybe&& other) {
+        if (other.initialized_) {
+            init(ke::Move(*other.t_.address()));
+            other.initialized_ = false;
+        }
+    }
+
+  private:
+    bool initialized_;
+    StorageBuffer<T> t_;
 };
 
-template <typename T,
-          typename U = typename remove_cv<typename remove_reference<T>::type>::type>
+template <typename T, typename U = typename remove_cv<typename remove_reference<T>::type>::type>
 static inline Maybe<U>
 Some(T&& value)
 {
-  Maybe<U> m;
-  m.init(ke::Forward<T>(value));
-  return m;
+    Maybe<U> m;
+    m.init(ke::Forward<T>(value));
+    return m;
 }
 
 } // namespace ke

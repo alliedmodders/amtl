@@ -2,10 +2,10 @@
 //
 // Copyright (C) 2013, David Anderson and AlliedModders LLC
 // All rights reserved.
-// 
+//
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
-// 
+//
 //  * Redistributions of source code must retain the above copyright notice, this
 //    list of conditions and the following disclaimer.
 //  * Redistributions in binary form must reproduce the above copyright notice,
@@ -34,39 +34,37 @@
 
 using namespace ke;
 
-enum class Scoped : uint32_t
-{
-  Flag0 = (1 << 0),
-  Flag1 = (1 << 1),
-  Flag2 = (1 << 2),
-  Flag3 = (1 << 3)
+enum class Scoped : uint32_t {
+    Flag0 = (1 << 0),
+    Flag1 = (1 << 1),
+    Flag2 = (1 << 2),
+    Flag3 = (1 << 3)
 };
 KE_DEFINE_ENUM_OPERATORS(Scoped)
 
-TEST(Flags, Basic)
-{
-  Flags<Scoped> flags;
-  ASSERT_TRUE(!flags);
-  ASSERT_FALSE(flags);
+TEST(Flags, Basic) {
+    Flags<Scoped> flags;
+    ASSERT_TRUE(!flags);
+    ASSERT_FALSE(flags);
 
-  flags += Scoped::Flag0;
-  ASSERT_TRUE((bool)flags);
+    flags += Scoped::Flag0;
+    ASSERT_TRUE((bool)flags);
 
-  flags += Scoped::Flag1;
+    flags += Scoped::Flag1;
 
-  Flags<Scoped> other(Scoped::Flag1 | Scoped::Flag2);
-  ASSERT_NE(flags, other);
-  ASSERT_EQ(other.bits(), (uint32_t)0x6);
+    Flags<Scoped> other(Scoped::Flag1 | Scoped::Flag2);
+    ASSERT_NE(flags, other);
+    ASSERT_EQ(other.bits(), (uint32_t)0x6);
 
-  flags -= other;
-  ASSERT_EQ(flags, Scoped::Flag0);
+    flags -= other;
+    ASSERT_EQ(flags, Scoped::Flag0);
 
-  uint32_t value = flags.bits();
-  ASSERT_EQ(value, (uint32_t)0x1);
+    uint32_t value = flags.bits();
+    ASSERT_EQ(value, (uint32_t)0x1);
 
-  flags |= other;
-  ASSERT_EQ(flags.bits(), (uint32_t)0x7);
+    flags |= other;
+    ASSERT_EQ(flags.bits(), (uint32_t)0x7);
 
-  flags &= other;
-  ASSERT_EQ(flags.bits(), (uint32_t)0x6);
+    flags &= other;
+    ASSERT_EQ(flags.bits(), (uint32_t)0x6);
 }

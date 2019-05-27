@@ -39,97 +39,94 @@ namespace ke {
 
 #if defined(KE_CXX_MSVC)
 extern "C" {
-  long __cdecl _InterlockedIncrement(long volatile* dest);
-  long __cdecl _InterlockedDecrement(long volatile* dest);
-  long long __cdecl _InterlockedIncrement64(long long volatile* dest);
-  long long __cdecl _InterlockedDecrement64(long long volatile* dest);
+long __cdecl _InterlockedIncrement(long volatile* dest);
+long __cdecl _InterlockedDecrement(long volatile* dest);
+long long __cdecl _InterlockedIncrement64(long long volatile* dest);
+long long __cdecl _InterlockedDecrement64(long long volatile* dest);
 }
-# pragma intrinsic(_InterlockedIncrement)
-# pragma intrinsic(_InterlockedDecrement)
-# if defined(_WIN64)
-#  pragma intrinsic(_InterlockedIncrement64)
-#  pragma intrinsic(_InterlockedDecrement64)
-# endif
+#    pragma intrinsic(_InterlockedIncrement)
+#    pragma intrinsic(_InterlockedDecrement)
+#    if defined(_WIN64)
+#        pragma intrinsic(_InterlockedIncrement64)
+#        pragma intrinsic(_InterlockedDecrement64)
+#    endif
 #endif
 
 template <size_t Width>
 struct AtomicOps;
 
 template <>
-struct AtomicOps<4>
-{
+struct AtomicOps<4> {
 #if defined(KE_CXX_MSVC)
-  typedef volatile long Type;
+    typedef volatile long Type;
 
-  static Type Increment(Type* ptr) {
-    return _InterlockedIncrement(ptr);
-  }
-  static Type Decrement(Type* ptr) {
-    return _InterlockedDecrement(ptr);
-  };
+    static Type Increment(Type* ptr) {
+        return _InterlockedIncrement(ptr);
+    }
+    static Type Decrement(Type* ptr) {
+        return _InterlockedDecrement(ptr);
+    };
 #elif defined(KE_CXX_LIKE_GCC)
-  typedef volatile int Type;
+    typedef volatile int Type;
 
-  // x86/x64 notes: When using GCC < 4.8, this will compile to a spinlock.
-  // On 4.8+, or when using Clang, we'll get the more optimal "lock addl"
-  // variant.
-  static Type Increment(Type* ptr) {
-    return __sync_add_and_fetch(ptr, 1);
-  }
-  static Type Decrement(Type* ptr) {
-    return __sync_sub_and_fetch(ptr, 1);
-  }
+    // x86/x64 notes: When using GCC < 4.8, this will compile to a spinlock.
+    // On 4.8+, or when using Clang, we'll get the more optimal "lock addl"
+    // variant.
+    static Type Increment(Type* ptr) {
+        return __sync_add_and_fetch(ptr, 1);
+    }
+    static Type Decrement(Type* ptr) {
+        return __sync_sub_and_fetch(ptr, 1);
+    }
 #endif
 };
 
 template <>
-struct AtomicOps<8>
-{
+struct AtomicOps<8> {
 #if defined(KE_CXX_MSVC)
-  typedef volatile long long Type;
+    typedef volatile long long Type;
 
-  static Type Increment(Type* ptr) {
-    return _InterlockedIncrement64(ptr);
-  }
-  static Type Decrement(Type* ptr) {
-    return _InterlockedDecrement64(ptr);
-  };
+    static Type Increment(Type* ptr) {
+        return _InterlockedIncrement64(ptr);
+    }
+    static Type Decrement(Type* ptr) {
+        return _InterlockedDecrement64(ptr);
+    };
 #elif defined(KE_CXX_LIKE_GCC)
-  typedef volatile int64_t Type;
+    typedef volatile int64_t Type;
 
-  // x86/x64 notes: When using GCC < 4.8, this will compile to a spinlock.
-  // On 4.8+, or when using Clang, we'll get the more optimal "lock addl"
-  // variant.
-  static Type Increment(Type* ptr) {
-    return __sync_add_and_fetch(ptr, 1);
-  }
-  static Type Decrement(Type* ptr) {
-    return __sync_sub_and_fetch(ptr, 1);
-  }
+    // x86/x64 notes: When using GCC < 4.8, this will compile to a spinlock.
+    // On 4.8+, or when using Clang, we'll get the more optimal "lock addl"
+    // variant.
+    static Type Increment(Type* ptr) {
+        return __sync_add_and_fetch(ptr, 1);
+    }
+    static Type Decrement(Type* ptr) {
+        return __sync_sub_and_fetch(ptr, 1);
+    }
 #endif
 };
 
 class AtomicRefcount
 {
-  typedef AtomicOps<sizeof(uintptr_t)> Ops;
+    typedef AtomicOps<sizeof(uintptr_t)> Ops;
 
- public:
-  explicit AtomicRefcount(uintptr_t value)
-   : value_(value)
-  {
-  }
+  public:
+    explicit AtomicRefcount(uintptr_t value)
+     : value_(value)
+    {}
 
-  void increment() {
-    Ops::Increment(&value_);
-  }
+    void increment() {
+        Ops::Increment(&value_);
+    }
 
-  // Return false if all references are gone.
-  bool decrement() {
-    return Ops::Decrement(&value_) != 0;
-  }
+    // Return false if all references are gone.
+    bool decrement() {
+        return Ops::Decrement(&value_) != 0;
+    }
 
- private:
-  Ops::Type value_;
+  private:
+    Ops::Type value_;
 };
 
 } // namespace ke

@@ -2,10 +2,10 @@
 //
 // Copyright (C) 2013, David Anderson and AlliedModders LLC
 // All rights reserved.
-// 
+//
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
-// 
+//
 //  * Redistributions of source code must retain the above copyright notice, this
 //    list of conditions and the following disclaimer.
 //  * Redistributions in binary form must reproduce the above copyright notice,
@@ -36,9 +36,8 @@ using namespace ke;
 
 static ThreadLocal<int> sVar;
 
-TEST(ThreadLocal, Unthreaded)
-{
-  EXPECT_EQ(sVar.get(), 0);
-  sVar = 10;
-  EXPECT_EQ(sVar.get(), 10);
+TEST(ThreadLocal, Unthreaded) {
+    EXPECT_EQ(sVar.get(), 0);
+    sVar = 10;
+    EXPECT_EQ(sVar.get(), 10);
 }

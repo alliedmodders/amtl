@@ -2,10 +2,10 @@
 //
 // Copyright (C) 2013, David Anderson and AlliedModders LLC
 // All rights reserved.
-// 
+//
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
-// 
+//
 //  * Redistributions of source code must retain the above copyright notice, this
 //    list of conditions and the following disclaimer.
 //  * Redistributions in binary form must reproduce the above copyright notice,
@@ -30,65 +30,63 @@
 #ifndef _include_amtl_runner_h_
 #define _include_amtl_runner_h_
 
+#include <amtl/am-cxx.h>
+#include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <stdarg.h>
-#include <amtl/am-cxx.h>
 
 namespace ke {
 
 class FallibleMalloc
 {
- public:
-  FallibleMalloc()
-   : shouldOutOfMemory_(false),
-     ooms_(0),
-     overflows_(0)
-  {
-  }
+  public:
+    FallibleMalloc()
+     : shouldOutOfMemory_(false),
+       ooms_(0),
+       overflows_(0)
+    {}
 
-  void* am_malloc(size_t amount) {
-    if (shouldOutOfMemory_) {
-      reportOutOfMemory();
-      return nullptr;
+    void* am_malloc(size_t amount) {
+        if (shouldOutOfMemory_) {
+            reportOutOfMemory();
+            return nullptr;
+        }
+#if defined(_DEBUG) && defined(_CRTDBG_MAP_ALLOC)
+        return malloc(amount);
+#else
+        return ::malloc(amount);
+#endif
     }
+    void am_free(void* p) {
 #if defined(_DEBUG) && defined(_CRTDBG_MAP_ALLOC)
-    return malloc(amount);
+        return free(p);
 #else
-    return ::malloc(amount);
+        return ::free(p);
 #endif
-  }
-  void am_free(void* p) {
-#if defined(_DEBUG) && defined(_CRTDBG_MAP_ALLOC)
-    return free(p);
-#else
-    return ::free(p);
-#endif
-  }
-  void reportOutOfMemory() {
-    ooms_++;
-  }
-  void reportAllocationOverflow() {
-    overflows_++;
-  }
+    }
+    void reportOutOfMemory() {
+        ooms_++;
+    }
+    void reportAllocationOverflow() {
+        overflows_++;
+    }
 
-  void setOutOfMemory(bool oom) {
-    shouldOutOfMemory_ = oom;
-  }
-  size_t ooms() const {
-    return ooms_;
-  }
-  size_t overflows() const {
-    return overflows_;
-  }
+    void setOutOfMemory(bool oom) {
+        shouldOutOfMemory_ = oom;
+    }
+    size_t ooms() const {
+        return ooms_;
+    }
+    size_t overflows() const {
+        return overflows_;
+    }
 
- private:
-  bool shouldOutOfMemory_;
-  size_t ooms_;
-  size_t overflows_;
+  private:
+    bool shouldOutOfMemory_;
+    size_t ooms_;
+    size_t overflows_;
 };
 
 } // namespace ke
 
 #endif // _include_amtl_runner_h_
-

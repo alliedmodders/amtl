@@ -31,17 +31,17 @@
 #define _include_amtl_utility_h_
 
 #define __STDC_FORMAT_MACROS
+#include <amtl/am-algorithm.h>
+#include <amtl/am-cxx.h>
+#include <amtl/am-moveable.h>
 #include <assert.h>
 #include <stddef.h>
-#include <stdlib.h>
 #include <stdint.h>
-#include <amtl/am-moveable.h>
-#include <amtl/am-cxx.h>
-#include <amtl/am-algorithm.h>
+#include <stdlib.h>
 
 #if defined(_MSC_VER)
 // Mac file format warning.
-# pragma warning(disable:4355)
+#    pragma warning(disable : 4355)
 #endif
 
 namespace ke {
@@ -49,18 +49,17 @@ namespace ke {
 // Zero out a non-array pointer.
 template <typename T>
 static inline void
-MemsetZero(T* t)
-{
-  memset(t, 0, sizeof(*t));
+MemsetZero(T* t) {
+    memset(t, 0, sizeof(*t));
 }
 
 #define ARRAY_LENGTH(array) (sizeof(array) / sizeof(array[0]))
-#define IS_ALIGNED(addr, alignment)    (!(uintptr_t(addr) & ((alignment) - 1)))
+#define IS_ALIGNED(addr, alignment) (!(uintptr_t(addr) & ((alignment)-1)))
 
 #if defined(__GNUC__)
-# define KE_CRITICAL_LIKELY(x)  __builtin_expect(!!(x), 1)
+#    define KE_CRITICAL_LIKELY(x) __builtin_expect(!!(x), 1)
 #else
-# define KE_CRITICAL_LIKELY(x)  x
+#    define KE_CRITICAL_LIKELY(x) x
 #endif
 
 } // namespace ke

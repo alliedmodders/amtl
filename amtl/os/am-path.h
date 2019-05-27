@@ -2,10 +2,10 @@
 //
 // Copyright (C) 2013-2015, David Anderson and AlliedModders LLC
 // All rights reserved.
-// 
+//
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
-// 
+//
 //  * Redistributions of source code must retain the above copyright notice, this
 //    list of conditions and the following disclaimer.
 //  * Redistributions in binary form must reproduce the above copyright notice,
@@ -36,31 +36,29 @@ namespace ke {
 namespace path {
 
 static inline size_t
-FormatVa(char* dest, size_t maxlength, const char* fmt, va_list ap)
-{
-  size_t len = SafeVsprintf(dest, maxlength, fmt, ap);
+FormatVa(char* dest, size_t maxlength, const char* fmt, va_list ap) {
+    size_t len = SafeVsprintf(dest, maxlength, fmt, ap);
 
-  for (size_t i = 0; i < len; i++) {
+    for (size_t i = 0; i < len; i++) {
 #if defined(KE_WINDOWS)
-    if (dest[i] == '/')
-      dest[i] = '\\';
+        if (dest[i] == '/')
+            dest[i] = '\\';
 #else
-    if (dest[i] == '\\')
-      dest[i] = '/';
+        if (dest[i] == '\\')
+            dest[i] = '/';
 #endif
-  }
+    }
 
-  return len;
+    return len;
 }
 
 static inline size_t
-Format(char* dest, size_t maxlength, const char* fmt, ...)
-{
-  va_list ap;
-  va_start(ap, fmt);
-  size_t len = FormatVa(dest, maxlength, fmt, ap);
-  va_end(ap);
-  return len;
+Format(char* dest, size_t maxlength, const char* fmt, ...) {
+    va_list ap;
+    va_start(ap, fmt);
+    size_t len = FormatVa(dest, maxlength, fmt, ap);
+    va_end(ap);
+    return len;
 }
 
 } // namespace path

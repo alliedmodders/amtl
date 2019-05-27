@@ -34,7 +34,7 @@
 #include <stddef.h>
 #include <stdint.h>
 #if defined(_MSC_VER)
-# include <intrin.h>
+#    include <intrin.h>
 #endif
 #include <amtl/am-cxx.h>
 #include <amtl/am-platform.h>
@@ -51,49 +51,47 @@ static const size_t kGB = 1024 * kMB;
 template <typename T>
 static uint32_t Log2(T value);
 
-template <> inline uint32_t
-Log2<uint32_t>(uint32_t number)
-{
-  assert(number != 0);
+template <>
+inline uint32_t
+Log2<uint32_t>(uint32_t number) {
+    assert(number != 0);
 
-  unsigned long rval;
-  _BitScanReverse(&rval, number);
-  return rval;
+    unsigned long rval;
+    _BitScanReverse(&rval, number);
+    return rval;
 }
 
-template <> inline uint32_t
-Log2<uint64_t>(uint64_t number)
-{
-  assert(number != 0);
+template <>
+inline uint32_t
+Log2<uint64_t>(uint64_t number) {
+    assert(number != 0);
 
-  unsigned long rval;
-#if defined(_M_X64)
-  _BitScanReverse64(&rval, number);
-#else
-  if (number > uint32_t(0xFFFFFFFF)) {
-    _BitScanReverse(&rval, uint32_t(number >> 32));
-    rval += 32;
-  } else {
-    _BitScanReverse(&rval, uint32_t(number));
-  }
-#endif
-  return rval;
+    unsigned long rval;
+#    if defined(_M_X64)
+    _BitScanReverse64(&rval, number);
+#    else
+    if (number > uint32_t(0xFFFFFFFF)) {
+        _BitScanReverse(&rval, uint32_t(number >> 32));
+        rval += 32;
+    } else {
+        _BitScanReverse(&rval, uint32_t(number));
+    }
+#    endif
+    return rval;
 }
 #else
 static inline size_t
 Log2(size_t number)
 {
-  assert(number != 0);
+    assert(number != 0);
 
-#ifdef __GNUC__
-  return 31 - __builtin_clz(number);
-#else
-  size_t bit;
-  asm("bsr %1, %0\n"
-      : "=r" (bit)
-      : "rm" (number));
-  return bit;
-#endif
+#    ifdef __GNUC__
+    return 31 - __builtin_clz(number);
+#    else
+    size_t bit;
+    asm("bsr %1, %0\n" : "=r"(bit) : "rm"(number));
+    return bit;
+#    endif
 }
 #endif
 
@@ -104,19 +102,17 @@ FindRightmostBit(size_t number)
 
 #ifdef _MSC_VER
     unsigned long rval;
-# ifdef _M_IX86
+#    ifdef _M_IX86
     _BitScanForward(&rval, number);
-# elif _M_X64
+#    elif _M_X64
     _BitScanForward64(&rval, number);
-# endif
+#    endif
     return rval;
 #elif __GNUC__
     return __builtin_ctz(number);
 #else
     size_t bit;
-    asm("bsf %1, %0\n"
-        : "=r" (bit)
-        : "rm" (number));
+    asm("bsf %1, %0\n" : "=r"(bit) : "rm"(number));
     return bit;
 #endif
 }
@@ -140,60 +136,59 @@ template <typename T>
 static inline bool
 IsUintAddSafe(const T& a, const T& b)
 {
-  if (!a || !b)
-      return true;
-  size_t log2_a = Log2(a);
-  size_t log2_b = Log2(b);
-  return (log2_a < sizeof(T) * 8) &&
-         (log2_b < sizeof(T) * 8);
+    if (!a || !b)
+        return true;
+    size_t log2_a = Log2(a);
+    size_t log2_b = Log2(b);
+    return (log2_a < sizeof(T) * 8) && (log2_b < sizeof(T) * 8);
 }
 
 static inline bool
 IsUint32AddSafe(unsigned a, unsigned b)
 {
-  return IsUintAddSafe<uint32_t>(a, b);
+    return IsUintAddSafe<uint32_t>(a, b);
 }
 
 static inline bool
 IsUint64AddSafe(uint64_t a, uint64_t b)
 {
-  return IsUintAddSafe<uint64_t>(a, b);
+    return IsUintAddSafe<uint64_t>(a, b);
 }
 
 static inline bool
 IsUintPtrAddSafe(size_t a, size_t b)
 {
-  return IsUintAddSafe<size_t>(a, b);
+    return IsUintAddSafe<size_t>(a, b);
 }
 
 template <typename T>
 static inline bool
 IsUintMultiplySafe(const T& a, const T& b)
 {
-  if (a <= 1 || b <= 1)
-      return true;
+    if (a <= 1 || b <= 1)
+        return true;
 
-  size_t log2_a = Log2(a);
-  size_t log2_b = Log2(b);
-  return log2_a + log2_b < sizeof(T) * 8;
+    size_t log2_a = Log2(a);
+    size_t log2_b = Log2(b);
+    return log2_a + log2_b < sizeof(T) * 8;
 }
 
 static inline bool
 IsUint32MultiplySafe(unsigned a, unsigned b)
 {
-  return IsUintMultiplySafe<uint32_t>(a, b);
+    return IsUintMultiplySafe<uint32_t>(a, b);
 }
 
 static inline bool
 IsUint64MultiplySafe(uint64_t a, uint64_t b)
 {
-  return IsUintMultiplySafe<uint64_t>(a, b);
+    return IsUintMultiplySafe<uint64_t>(a, b);
 }
 
 static inline bool
 IsUintPtrMultiplySafe(size_t a, size_t b)
 {
-  return IsUintMultiplySafe<size_t>(a, b);
+    return IsUintMultiplySafe<size_t>(a, b);
 }
 
 template <typename T>

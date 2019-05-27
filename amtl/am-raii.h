@@ -35,43 +35,44 @@ namespace ke {
 template <typename T>
 class SaveAndSet
 {
- public:
-  SaveAndSet(T* location, const T& value)
-   : location_(location),
-     old_(*location)
-  {
-    *location_ = value;
-  }
-  ~SaveAndSet() {
-    *location_ = old_;
-  }
+  public:
+    SaveAndSet(T* location, const T& value)
+     : location_(location),
+       old_(*location)
+    {
+        *location_ = value;
+    }
+    ~SaveAndSet() {
+        *location_ = old_;
+    }
 
- private:
-  T* location_;
-  T old_;
+  private:
+    T* location_;
+    T old_;
 };
 
 template <typename T>
 class StackLinked
 {
- public:
-  StackLinked<T>(T** prevp)
-   : prevp_(prevp),
-     prev_(*prevp)
-  {
-    *prevp_ = static_cast<T*>(this);
-  }
-  virtual ~StackLinked() {
-    assert(*prevp_ == this);
-    *prevp_ = prev_;
-  }
+  public:
+    StackLinked<T>(T** prevp)
+     : prevp_(prevp),
+       prev_(*prevp)
+    {
+        *prevp_ = static_cast<T*>(this);
+    }
+    virtual ~StackLinked() {
+        assert(*prevp_ == this);
+        *prevp_ = prev_;
+    }
 
- protected:
-  T** prevp_;
-  T* prev_;
+  protected:
+    T** prevp_;
+    T* prev_;
 };
 
-template <typename T> T
+template <typename T>
+T
 ReturnAndVoid(T& t)
 {
     T saved = t;

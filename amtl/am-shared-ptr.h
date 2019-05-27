@@ -2,10 +2,10 @@
 //
 // Copyright (C) 2013-2015, David Anderson and AlliedModders LLC
 // All rights reserved.
-// 
+//
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
-// 
+//
 //  * Redistributions of source code must retain the above copyright notice, this
 //    list of conditions and the following disclaimer.
 //  * Redistributions in binary form must reproduce the above copyright notice,
@@ -41,29 +41,28 @@ namespace ke {
 template <typename T>
 class SharedPtr : public Refcounted<SharedPtr<T>>
 {
- public:
-  SharedPtr()
-  {}
-  SharedPtr(const SharedPtr& other)
-   : t_(other.t__)
-  {}
-  SharedPtr(SharedPtr&& other)
-   : t_(Move(other.t_))
-  {}
-  SharedPtr(T* t)
-   : t_(t)
-  {}
-  virtual ~SharedPtr()
-  {}
+  public:
+    SharedPtr() {
+    }
+    SharedPtr(const SharedPtr& other)
+     : t_(other.t__)
+    {}
+    SharedPtr(SharedPtr&& other)
+     : t_(Move(other.t_))
+    {}
+    SharedPtr(T* t)
+     : t_(t)
+    {}
+    virtual ~SharedPtr() {}
 
-  T* get() const {
-    return t_;
-  }
+    T* get() const {
+        return t_;
+    }
 
- private:
-  ke::AutoPtr<T> t_;
+  private:
+    ke::AutoPtr<T> t_;
 };
 
-}
+} // namespace ke
 
 #endif /* _INCLUDE_KEIMA_TPL_SHARED_PTR__H_ */

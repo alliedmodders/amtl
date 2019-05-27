@@ -2,10 +2,10 @@
 //
 // Copyright (C) 2014, David Anderson and AlliedModders LLC
 // All rights reserved.
-// 
+//
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
-// 
+//
 //  * Redistributions of source code must retain the above copyright notice, this
 //    list of conditions and the following disclaimer.
 //  * Redistributions in binary form must reproduce the above copyright notice,
@@ -30,61 +30,61 @@
 #define _include_amtl_cxx_support_h_
 
 #if defined(__clang__)
-# if !(defined(__clang_major__) && defined(__clang_minor__))
-#  define KE_CLANG_MAJOR 1
-#  define KE_CLANG_MINOR __GNUC_MINOR__
-# else
-#  if defined(__apple_build_version__) && clang_major__ > 3
-    // 4.0 => 3.1, 4.1 => 3.2
-#   if __clang_major__ == 4
-#    define KE_CLANG_MAJOR 3
-#    if __clang_minor__ == 0
-#     define KE_CLANG_MINOR 1
+#    if !(defined(__clang_major__) && defined(__clang_minor__))
+#        define KE_CLANG_MAJOR 1
+#        define KE_CLANG_MINOR __GNUC_MINOR__
 #    else
-#     define KE_CLANG_MINOR 2
+#        if defined(__apple_build_version__) && clang_major__ > 3
+// 4.0 => 3.1, 4.1 => 3.2
+#            if __clang_major__ == 4
+#                define KE_CLANG_MAJOR 3
+#                if __clang_minor__ == 0
+#                    define KE_CLANG_MINOR 1
+#                else
+#                    define KE_CLANG_MINOR 2
+#                endif
+// 5.0 => 3.3, 5.1 => 3.4
+#            elif __clang_major__ == 5
+#                define KE_CLANG_MAJOR 3
+#                if __clang_minor__ == 0
+#                    define KE_CLANG_MINOR 3
+#                else
+#                    define KE_CLANG_MINOR 4
+#                endif
+#            elif __clang_major__ == 6
+#                define KE_CLANG_MAJOR 3
+#                define KE_CLANG_MINOR 5
+#            endif
+#        endif
+#        if !defined(KE_CLANG_MAJOR)
+#            define KE_CLANG_MAJOR __clang_major__
+#        endif
+#        if !defined(KE_CLANG_MINOR)
+#            define KE_CLANG_MINOR __clang_minor__
+#        endif
 #    endif
-    // 5.0 => 3.3, 5.1 => 3.4
-#   elif __clang_major__ == 5
-#    define KE_CLANG_MAJOR 3
-#    if __clang_minor__ == 0
-#     define KE_CLANG_MINOR 3
-#    else
-#     define KE_CLANG_MINOR 4
-#    endif
-#   elif __clang_major__ == 6
-#    define KE_CLANG_MAJOR 3
-#    define KE_CLANG_MINOR 5
-#   endif
-#  endif
-#  if !defined(KE_CLANG_MAJOR)
-#   define KE_CLANG_MAJOR __clang_major__
-#  endif
-#  if !defined(KE_CLANG_MINOR)
-#   define KE_CLANG_MINOR __clang_minor__
-#  endif
-# endif
 
 // Done with horrible clang version detection.
-# define KE_CLANG_AT_LEAST(x, y) \
-   ((__clang_major__ > (x)) || (__clang_major__ == x && __clang_minor__ >= y))
+#    define KE_CLANG_AT_LEAST(x, y) \
+        ((__clang_major__ > (x)) || (__clang_major__ == x && __clang_minor__ >= y))
 
-# if !KE_CLANG_AT_LEAST(3, 4)
-#  error "AMTL requires clang 3.4 or higher"
-# endif
+#    if !KE_CLANG_AT_LEAST(3, 4)
+#        error "AMTL requires clang 3.4 or higher"
+#    endif
 
 #elif defined(__GNUC__)
-# define KE_GCC_AT_LEAST(x, y) ((__GNUC__ > (x)) || (__GNUC__ == x && __GNUC_MINOR__ >= y))
+#    define KE_GCC_AT_LEAST(x, y) ((__GNUC__ > (x)) || (__GNUC__ == x && __GNUC_MINOR__ >= y))
 
-# if !KE_GCC_AT_LEAST(4, 9)
-#  error "AMTL requires GCC 4.9 or higher"
-# endif
+#    if !KE_GCC_AT_LEAST(4, 9)
+#        error "AMTL requires GCC 4.9 or higher"
+#    endif
 
 #elif defined(_MSC_VER)
-# if _MSC_VER < 1900
-#  error "AMTL requires Microsoft Visual Studio 2015 or higher"
-# endif
+#    if _MSC_VER < 1900
+#        error "AMTL requires Microsoft Visual Studio 2015 or higher"
+#    endif
 #else
-# error "Unrecognized compiler."
+#    error "Unrecognized compiler."
 #endif
 
 // Done with compiler feature detection.
@@ -92,13 +92,13 @@
 #if defined(_MSC_VER)
 // This feature has been around for long enough that we shouldn't have to
 // warn for it.
-# pragma warning(disable: 4351)
+#    pragma warning(disable : 4351)
 #endif
 
 #if defined(_MSC_VER)
-# define KE_LINKONCE(x) __declspec(selectany) x
+#    define KE_LINKONCE(x) __declspec(selectany) x
 #else
-# define KE_LINKONCE(x) x __attribute__((weak))
+#    define KE_LINKONCE(x) x __attribute__((weak))
 #endif
 
 #endif // _include_amtl_cxx_support_h_

@@ -2,10 +2,10 @@
 //
 // Copyright (C) 2013, David Anderson and AlliedModders LLC
 // All rights reserved.
-// 
+//
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
-// 
+//
 //  * Redistributions of source code must retain the above copyright notice, this
 //    list of conditions and the following disclaimer.
 //  * Redistributions in binary form must reproduce the above copyright notice,
@@ -38,44 +38,40 @@ static ThreadLocal<void*> sThreadVarPointer;
 
 class VarThread
 {
- public:
-  VarThread()
-   : succeeded_(false)
-  {
-  }
+  public:
+    VarThread()
+     : succeeded_(false)
+    {}
 
-  void Run() {
-    ASSERT_EQ(sThreadVar.get(), 0);
+    void Run() {
+        ASSERT_EQ(sThreadVar.get(), 0);
 
-    sThreadVar = 20;
-    ASSERT_EQ(sThreadVar.get(), 20);
+        sThreadVar = 20;
+        ASSERT_EQ(sThreadVar.get(), 20);
 
-    succeeded_ = true;
-  }
+        succeeded_ = true;
+    }
 
-  bool succeeded() const {
-    return succeeded_;
-  }
+    bool succeeded() const {
+        return succeeded_;
+    }
 
- private:
-  bool succeeded_;
+  private:
+    bool succeeded_;
 };
 
-TEST(ThreadLocal, Threaded)
-{
-  sThreadVar = 10;
+TEST(ThreadLocal, Threaded) {
+    sThreadVar = 10;
 
-  VarThread run;
-  ke::AutoPtr<Thread> thread(new Thread([&run] () -> void {
-    run.Run();
-  }, "TestThreadLocal"));
-  ASSERT_TRUE(thread->Succeeded());
-  thread->Join();
+    VarThread run;
+    ke::AutoPtr<Thread> thread(new Thread([&run]() -> void { run.Run(); }, "TestThreadLocal"));
+    ASSERT_TRUE(thread->Succeeded());
+    thread->Join();
 
-  ASSERT_TRUE(run.succeeded());
-  EXPECT_EQ(sThreadVar.get(), 10);
+    ASSERT_TRUE(run.succeeded());
+    EXPECT_EQ(sThreadVar.get(), 10);
 
-  // Check that pointers are allowed in T.
-  sThreadVarPointer = &run;
-  EXPECT_EQ(sThreadVarPointer.get(), &run);
+    // Check that pointers are allowed in T.
+    sThreadVarPointer = &run;
+    EXPECT_EQ(sThreadVarPointer.get(), &run);
 }

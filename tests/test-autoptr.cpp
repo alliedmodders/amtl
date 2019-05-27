@@ -2,10 +2,10 @@
 //
 // Copyright (C) 2013, David Anderson and AlliedModders LLC
 // All rights reserved.
-// 
+//
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
-// 
+//
 //  * Redistributions of source code must retain the above copyright notice, this
 //    list of conditions and the following disclaimer.
 //  * Redistributions in binary form must reproduce the above copyright notice,
@@ -36,38 +36,37 @@ using namespace ke;
 static size_t sBlahCtors = 0;
 static size_t sBlahDtors = 0;
 struct Blah {
-  Blah() {
-    sBlahCtors++;
-  }
-  ~Blah() {
-    sBlahDtors++;
-  }
+    Blah() {
+        sBlahCtors++;
+    }
+    ~Blah() {
+        sBlahDtors++;
+    }
 };
 
-TEST(AutoPtr, Single)
-{
-  AutoPtr<int> intp(new int(5));
-  EXPECT_EQ(*intp.get(),  5);
+TEST(AutoPtr, Single) {
+    AutoPtr<int> intp(new int(5));
+    EXPECT_EQ(*intp.get(), 5);
 
-  intp = MakeUnique<int>(7);
-  EXPECT_EQ(*intp.get(), 7);
+    intp = MakeUnique<int>(7);
+    EXPECT_EQ(*intp.get(), 7);
 
-  intp = new int(2);
-  EXPECT_EQ(*intp.get(), 2);
+    intp = new int(2);
+    EXPECT_EQ(*intp.get(), 2);
 
-  {
-    AutoPtr<Blah> blah(new Blah());
-    EXPECT_EQ(sBlahCtors, (size_t)1);
-  }
-  EXPECT_EQ(sBlahDtors, (size_t)1);
+    {
+        AutoPtr<Blah> blah(new Blah());
+        EXPECT_EQ(sBlahCtors, (size_t)1);
+    }
+    EXPECT_EQ(sBlahDtors, (size_t)1);
 
-  sBlahCtors = 0;
-  sBlahDtors = 0;
-  {
-    AutoPtr<Blah[]> blah(new Blah[20]);
-    EXPECT_EQ(sBlahCtors, (size_t)20);
+    sBlahCtors = 0;
+    sBlahDtors = 0;
+    {
+        AutoPtr<Blah[]> blah(new Blah[20]);
+        EXPECT_EQ(sBlahCtors, (size_t)20);
 
-    blah = MakeUnique<Blah[]>(15);
-  }
-  EXPECT_EQ(sBlahDtors, (size_t)35);
+        blah = MakeUnique<Blah[]>(15);
+    }
+    EXPECT_EQ(sBlahDtors, (size_t)35);
 }

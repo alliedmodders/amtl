@@ -42,86 +42,86 @@ namespace ke {
 template <typename T>
 class Flags
 {
-public:
-  Flags()
-    : value_(static_cast<T>(0))
-  {}
+  public:
+    Flags()
+     : value_(static_cast<T>(0))
+    {}
 
-  // Note: these are not explicit since we want operators below to support
-  // both Flags and the underlying T type.
-  Flags(const T& t)
-    : value_(t)
-  {}
-  Flags(const Flags& other)
-    : value_(other.value_)
-  {}
+    // Note: these are not explicit since we want operators below to support
+    // both Flags and the underlying T type.
+    Flags(const T& t)
+     : value_(t)
+    {}
+    Flags(const Flags& other)
+     : value_(other.value_)
+    {}
 
-  using IntType = typename enum_integral_type<T>::type;
+    using IntType = typename enum_integral_type<T>::type;
 
-  explicit operator bool() const {
-    return value_ != static_cast<T>(0);
-  }
-  bool operator !() const {
-    return value_ == static_cast<T>(0);
-  }
+    explicit operator bool() const {
+        return value_ != static_cast<T>(0);
+    }
+    bool operator !() const {
+        return value_ == static_cast<T>(0);
+    }
 
-  IntType bits() const {
-    return static_cast<IntType>(value_);
-  }
-  T get() const {
-    return value_;
-  }
+    IntType bits() const {
+        return static_cast<IntType>(value_);
+    }
+    T get() const {
+        return value_;
+    }
 
-  Flags operator +(const Flags& other) const {
-    return Flags(static_cast<T>(bits() | other.bits()));
-  }
-  Flags operator -(const Flags& other) const {
-    return Flags(static_cast<T>(bits() & (bits() ^ other.bits())));
-  }
-  Flags operator |(const Flags& other) const {
-    return Flags(static_cast<T>(bits() | other.bits()));
-  }
-  Flags operator&(const Flags& other) const {
-    return Flags(static_cast<T>(bits() & other.bits()));
-  }
-  Flags operator ^(const Flags& other) const {
-    return Flags(static_cast<T>(bits() ^ other.bits()));
-  }
-  bool operator ==(const Flags& other) const {
-    return value_ == other.value_;
-  }
-  bool operator !=(const Flags& other) const {
-    return value_ != other.value_;
-  }
+    Flags operator +(const Flags& other) const {
+        return Flags(static_cast<T>(bits() | other.bits()));
+    }
+    Flags operator -(const Flags& other) const {
+        return Flags(static_cast<T>(bits() & (bits() ^ other.bits())));
+    }
+    Flags operator |(const Flags& other) const {
+        return Flags(static_cast<T>(bits() | other.bits()));
+    }
+    Flags operator &(const Flags& other) const {
+        return Flags(static_cast<T>(bits() & other.bits()));
+    }
+    Flags operator ^(const Flags& other) const {
+        return Flags(static_cast<T>(bits() ^ other.bits()));
+    }
+    bool operator ==(const Flags& other) const {
+        return value_ == other.value_;
+    }
+    bool operator !=(const Flags& other) const {
+        return value_ != other.value_;
+    }
 
-  Flags& operator +=(const Flags& other) {
-    *this = *this + other;
-    return *this;
-  }
-  Flags& operator -=(const Flags& other) {
-    *this = *this - other;
-    return *this;
-  }
-  Flags& operator |=(const Flags& other) {
-    *this = *this | other;
-    return *this;
-  }
-  Flags& operator &=(const Flags& other) {
-    *this = *this & other;
-    return *this;
-  }
-  Flags& operator ^=(const Flags& other) {
-    *this = *this ^ other;
-    return *this;
-  }
+    Flags& operator +=(const Flags& other) {
+        *this = *this + other;
+        return *this;
+    }
+    Flags& operator -=(const Flags& other) {
+        *this = *this - other;
+        return *this;
+    }
+    Flags& operator |=(const Flags& other) {
+        *this = *this | other;
+        return *this;
+    }
+    Flags& operator &=(const Flags& other) {
+        *this = *this & other;
+        return *this;
+    }
+    Flags& operator ^=(const Flags& other) {
+        *this = *this ^ other;
+        return *this;
+    }
 
-  Flags& operator =(const Flags& other) {
-    value_ = other.value_;
-    return *this;
-  }
+    Flags& operator =(const Flags& other) {
+        value_ = other.value_;
+        return *this;
+    }
 
-private:
-  T value_;
+  private:
+    T value_;
 };
 
 } // namespace ke

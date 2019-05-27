@@ -31,55 +31,58 @@
 #define _include_amtl_atomics_h_
 
 #if defined(KE_ABSOLUTELY_NO_STL)
-# include <amtl/am-atomics-no-stl.h>
+#    include <amtl/am-atomics-no-stl.h>
 #else
-# include <amtl/am-atomics-stl.h>
+#    include <amtl/am-atomics-stl.h>
 #endif
 
 #if defined(KE_CXX_MSVC)
 extern "C" {
-  void * __cdecl _InterlockedCompareExchangePointer(
-     void * volatile* Destination,
-     void * Exchange,
-     void * Comparand
-  );
+void* __cdecl _InterlockedCompareExchangePointer(void* volatile* Destination, void* Exchange,
+                                                 void* Comparand);
 } // extern "C"
-# pragma intrinsic(_InterlockedCompareExchangePointer)
+#    pragma intrinsic(_InterlockedCompareExchangePointer)
 #endif
 
 #if defined(KE_CXX_LIKE_GCC)
-# if defined(i386) || defined(__x86_64__)
-#  if defined(__clang__)
-    static inline void YieldProcessor() { asm("pause"); }
-#  else
-#   if KE_GCC_AT_LEAST(4, 7)
-#    define YieldProcessor() __builtin_ia32_pause()
-#   else
-    static inline void YieldProcessor() { asm("pause"); }
-#   endif
-#  endif
-# else
-#  define YieldProcessor()
-# endif
+#    if defined(i386) || defined(__x86_64__)
+#        if defined(__clang__)
+static inline void
+YieldProcessor()
+{
+    asm("pause");
+}
+#        else
+#            if KE_GCC_AT_LEAST(4, 7)
+#                define YieldProcessor() __builtin_ia32_pause()
+#            else
+static inline void
+YieldProcessor() {
+    asm("pause");
+}
+#            endif
+#        endif
+#    else
+#        define YieldProcessor()
+#    endif
 #elif defined(_MSC_VER)
-# if !defined(YieldProcessor)
-#  define YieldProcessor _mm_pause
-# endif
+#    if !defined(YieldProcessor)
+#        define YieldProcessor _mm_pause
+#    endif
 #endif
 
 namespace ke {
 
 #if defined(KE_CXX_MSVC)
 static inline void*
-CompareAndSwapPtr(void* volatile* Destination, void* Exchange, void* Comparand)
-{
-  return _InterlockedCompareExchangePointer(Destination, Exchange, Comparand);
+CompareAndSwapPtr(void* volatile* Destination, void* Exchange, void* Comparand) {
+    return _InterlockedCompareExchangePointer(Destination, Exchange, Comparand);
 }
 #else
 static inline void*
 CompareAndSwapPtr(void* volatile* dest, void* newval, void* oldval)
 {
-  return __sync_val_compare_and_swap(dest, oldval, newval);
+    return __sync_val_compare_and_swap(dest, oldval, newval);
 }
 #endif
 

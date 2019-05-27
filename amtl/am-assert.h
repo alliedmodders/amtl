@@ -34,9 +34,13 @@
 #include <stdlib.h>
 
 #if !defined(NDEBUG)
-# define KE_RELEASE_ASSERT assert
+#    define KE_RELEASE_ASSERT assert
 #else
-# define KE_RELEASE_ASSERT(cond) do { if (!(cond)) abort(); } while (0)
+#    define KE_RELEASE_ASSERT(cond) \
+        do {                        \
+            if (!(cond))            \
+                abort();            \
+        } while (0)
 #endif
 
 #endif // _include_amtl_assert_h_

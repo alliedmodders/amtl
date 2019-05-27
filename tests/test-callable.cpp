@@ -2,10 +2,10 @@
 //
 // Copyright (C) 2013, David Anderson and AlliedModders LLC
 // All rights reserved.
-// 
+//
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
-// 
+//
 //  * Redistributions of source code must retain the above copyright notice, this
 //    list of conditions and the following disclaimer.
 //  * Redistributions in binary form must reproduce the above copyright notice,
@@ -34,188 +34,171 @@
 
 using namespace ke;
 
-static int test_old_fn(int x) {
-  return 99 + x;
+static int
+test_old_fn(int x)
+{
+    return 99 + x;
 }
 
 class MoveObj
 {
- public:
-  static unsigned sNumMoves;
+  public:
+    static unsigned sNumMoves;
 
-  MoveObj()
-  {
-    sNumMoves = 0;
-  }
-  MoveObj(MoveObj&& other) {
-    sNumMoves++;
-  }
+    MoveObj() {
+        sNumMoves = 0;
+    }
+    MoveObj(MoveObj&& other) {
+        sNumMoves++;
+    }
 
-  unsigned count() const {
-    return sNumMoves;
-  }
+    unsigned count() const {
+        return sNumMoves;
+    }
 
- private:
-  MoveObj(const MoveObj& other);
-  void operator =(const MoveObj& other);
+  private:
+    MoveObj(const MoveObj& other);
+    void operator =(const MoveObj& other);
 };
 unsigned MoveObj::sNumMoves = 0;
 
 class CallableObj
 {
- public:
-  int operator()(int x) const {
-    return x + 34;
-  }
+  public:
+    int operator ()(int x) const {
+        return x + 34;
+    }
 };
 
-TEST(Callable, BasicLambda)
-{
-  int egg = 20;
-  auto fn = [&egg](int x) -> int {
-    return egg + x + 1;
-  };
-  
-  Lambda<int(int)> ptr(fn);
-  EXPECT_EQ(ptr(10), 31);
+TEST(Callable, BasicLambda) {
+    int egg = 20;
+    auto fn = [&egg](int x) -> int { return egg + x + 1; };
 
-  ptr = [](int x) -> int {
-    return x + 15;
-  };
-  EXPECT_EQ(ptr(7), 22);
+    Lambda<int(int)> ptr(fn);
+    EXPECT_EQ(ptr(10), 31);
 
-  ptr = test_old_fn;
-  EXPECT_EQ(ptr(10), 109);
+    ptr = [](int x) -> int { return x + 15; };
+    EXPECT_EQ(ptr(7), 22);
 
-  CallableObj obj;
-  ptr = obj;
-  EXPECT_EQ(ptr(66), 100);
+    ptr = test_old_fn;
+    EXPECT_EQ(ptr(10), 109);
 
-  Lambda<unsigned(MoveObj&& obj)> ptr2 = [](MoveObj&& obj) -> unsigned {
-    MoveObj other(ke::Move(obj));
-    return other.count();
-  };
+    CallableObj obj;
+    ptr = obj;
+    EXPECT_EQ(ptr(66), 100);
 
-  MoveObj moveObj;
-  EXPECT_EQ(ptr2(ke::Move(moveObj)), (unsigned)1);
+    Lambda<unsigned(MoveObj && obj)> ptr2 = [](MoveObj&& obj) -> unsigned {
+        MoveObj other(ke::Move(obj));
+        return other.count();
+    };
+
+    MoveObj moveObj;
+    EXPECT_EQ(ptr2(ke::Move(moveObj)), (unsigned)1);
 }
 
-TEST(Callable, InlineStorage)
-{
-  Lambda<int()> ptr = []() -> int {
-    return 10;
-  };
+TEST(Callable, InlineStorage) {
+    Lambda<int()> ptr = []() -> int { return 10; };
 
-  EXPECT_TRUE(ptr.usingInlineStorage());
-  EXPECT_EQ(ptr(), 10);
+    EXPECT_TRUE(ptr.usingInlineStorage());
+    EXPECT_EQ(ptr(), 10);
 
-  static size_t dtors = 0;
-  struct CallDtorObj {
-    ~CallDtorObj() {
-      dtors++;
-    }
-  };
+    static size_t dtors = 0;
+    struct CallDtorObj {
+        ~CallDtorObj() {
+            dtors++;
+        }
+    };
 
-  struct {
-    int a;
-    void* b, *c, *d, *e, *f, *g;
-    void* h, *j, *k, *m, *n, *o, *p;
-  } huge_struct = { 20 };
-  CallDtorObj test_dtor;
-  ptr = [huge_struct, test_dtor]() -> int {
-    return huge_struct.a;
-  };
-  EXPECT_FALSE(ptr.usingInlineStorage());
-  EXPECT_EQ(ptr(), 20);
+    struct {
+        int a;
+        void *b, *c, *d, *e, *f, *g;
+        void *h, *j, *k, *m, *n, *o, *p;
+    } huge_struct = {20};
+    CallDtorObj test_dtor;
+    ptr = [huge_struct, test_dtor]() -> int { return huge_struct.a; };
+    EXPECT_FALSE(ptr.usingInlineStorage());
+    EXPECT_EQ(ptr(), 20);
 
-  ptr = nullptr;
-  EXPECT_EQ(dtors, (size_t)2);
+    ptr = nullptr;
+    EXPECT_EQ(dtors, (size_t)2);
 }
 
-TEST(Callable, Move)
-{
-  static size_t ctors = 0;
-  static size_t copyctors = 0;
-  static size_t movectors = 0;
-  static size_t dtors = 0;
-  struct CallDtorObj {
-    CallDtorObj() {
-      ctors++;
-    }
-    CallDtorObj(const CallDtorObj& other) {
-      copyctors++;
-    }
-    CallDtorObj(CallDtorObj&& other) {
-      movectors++;
-    }
-    ~CallDtorObj() {
-      dtors++;
-    }
-  };
+TEST(Callable, Move) {
+    static size_t ctors = 0;
+    static size_t copyctors = 0;
+    static size_t movectors = 0;
+    static size_t dtors = 0;
+    struct CallDtorObj {
+        CallDtorObj() {
+            ctors++;
+        }
+        CallDtorObj(const CallDtorObj& other) {
+            copyctors++;
+        }
+        CallDtorObj(CallDtorObj&& other) {
+            movectors++;
+        }
+        ~CallDtorObj() {
+            dtors++;
+        }
+    };
 
-  CallDtorObj test_dtor;
-  Lambda<void()> ptr = [test_dtor] {
-  };
+    CallDtorObj test_dtor;
+    Lambda<void()> ptr = [test_dtor] {};
 
-  EXPECT_EQ(dtors, (size_t)1);
+    EXPECT_EQ(dtors, (size_t)1);
 
-  ctors = 0;
-  copyctors = 0;
-  movectors = 0;
-  dtors = 0;
+    ctors = 0;
+    copyctors = 0;
+    movectors = 0;
+    dtors = 0;
 
-  Lambda<void()> ptr2 = ptr;
-  EXPECT_EQ(ctors, (size_t)0);
-  EXPECT_EQ(copyctors, (size_t)1);
-  EXPECT_EQ(movectors, (size_t)0);
-  EXPECT_EQ(dtors, (size_t)0);
+    Lambda<void()> ptr2 = ptr;
+    EXPECT_EQ(ctors, (size_t)0);
+    EXPECT_EQ(copyctors, (size_t)1);
+    EXPECT_EQ(movectors, (size_t)0);
+    EXPECT_EQ(dtors, (size_t)0);
 
-  copyctors = 0;
+    copyctors = 0;
 
-  Lambda<void()> ptr3 = ke::Move(ptr2);
-  EXPECT_EQ(ctors, (size_t)0);
-  EXPECT_EQ(copyctors, (size_t)0);
-  EXPECT_EQ(movectors, (size_t)0);
-  EXPECT_EQ(dtors, (size_t)0);
+    Lambda<void()> ptr3 = ke::Move(ptr2);
+    EXPECT_EQ(ctors, (size_t)0);
+    EXPECT_EQ(copyctors, (size_t)0);
+    EXPECT_EQ(movectors, (size_t)0);
+    EXPECT_EQ(dtors, (size_t)0);
 
-  copyctors = 0;
+    copyctors = 0;
 
-  auto fn = [test_dtor]{};
-  Lambda<void()> ptr4 = ke::Move(fn);
-  EXPECT_EQ(ctors, (size_t)0);
-  EXPECT_EQ(copyctors, (size_t)1);
-  EXPECT_EQ(movectors, (size_t)1);
-  EXPECT_EQ(dtors, (size_t)0);
+    auto fn = [test_dtor] {};
+    Lambda<void()> ptr4 = ke::Move(fn);
+    EXPECT_EQ(ctors, (size_t)0);
+    EXPECT_EQ(copyctors, (size_t)1);
+    EXPECT_EQ(movectors, (size_t)1);
+    EXPECT_EQ(dtors, (size_t)0);
 }
 
-TEST(Callable, FuncPtr)
-{
-  FuncPtr<int(int)> ptr = test_old_fn;
+TEST(Callable, FuncPtr) {
+    FuncPtr<int(int)> ptr = test_old_fn;
 
-  EXPECT_EQ(ptr(1), 100);
+    EXPECT_EQ(ptr(1), 100);
 
-  auto fn = [](int x) -> int {
-    return x + 2;
-  };
-  ptr = &fn;
+    auto fn = [](int x) -> int { return x + 2; };
+    ptr = &fn;
 
-  EXPECT_EQ(ptr(10), 12);
+    EXPECT_EQ(ptr(10), 12);
 
-  CallableObj obj;
-  ptr = &obj;
-  EXPECT_EQ(ptr(7), 41);
+    CallableObj obj;
+    ptr = &obj;
+    EXPECT_EQ(ptr(7), 41);
 }
 
-TEST(Callable, MoveUncopyable)
-{
-  Vector<int> v;
+TEST(Callable, MoveUncopyable) {
+    Vector<int> v;
 
-  auto lambda = [v = Move(v)]() -> size_t {
-    return v.length();
-  };
+    auto lambda = [v = Move(v)]() -> size_t { return v.length(); };
 
-  v.append(10);
-  Function<size_t()> f = ke::Move(lambda);
+    v.append(10);
+    Function<size_t()> f = ke::Move(lambda);
 
-  EXPECT_EQ(f(), (size_t)0);
+    EXPECT_EQ(f(), (size_t)0);
 }

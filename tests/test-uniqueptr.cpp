@@ -2,10 +2,10 @@
 //
 // Copyright (C) 2013, David Anderson and AlliedModders LLC
 // All rights reserved.
-// 
+//
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
-// 
+//
 //  * Redistributions of source code must retain the above copyright notice, this
 //    list of conditions and the following disclaimer.
 //  * Redistributions in binary form must reproduce the above copyright notice,
@@ -36,33 +36,32 @@ using namespace ke;
 static int sBrahCtors = 0;
 static int sBrahDtors = 0;
 struct Brah {
-  Brah() {
-    sBrahCtors++;
-  }
-  ~Brah() {
-    sBrahDtors++;
-  }
+    Brah() {
+        sBrahCtors++;
+    }
+    ~Brah() {
+        sBrahDtors++;
+    }
 };
 
-TEST(UniquePtr, Single)
-{
-  UniquePtr<int> five = MakeUnique<int>(5);
-  EXPECT_EQ(*five.get(), 5);
+TEST(UniquePtr, Single) {
+    UniquePtr<int> five = MakeUnique<int>(5);
+    EXPECT_EQ(*five.get(), 5);
 
-  five = nullptr;
-  EXPECT_FALSE(five);
+    five = nullptr;
+    EXPECT_FALSE(five);
 
-  {
-    UniquePtr<Brah> blah = MakeUnique<Brah>();
-    EXPECT_EQ(sBrahCtors, 1);
-  }
-  EXPECT_EQ(sBrahDtors, 1);
+    {
+        UniquePtr<Brah> blah = MakeUnique<Brah>();
+        EXPECT_EQ(sBrahCtors, 1);
+    }
+    EXPECT_EQ(sBrahDtors, 1);
 
-  sBrahCtors = 0;
-  sBrahDtors = 0;
-  {
-    UniquePtr<Brah[]> blah = MakeUnique<Brah[]>(20);
-    EXPECT_EQ(sBrahCtors, 20);
-  }
-  EXPECT_EQ(sBrahDtors, 20);
+    sBrahCtors = 0;
+    sBrahDtors = 0;
+    {
+        UniquePtr<Brah[]> blah = MakeUnique<Brah[]>(20);
+        EXPECT_EQ(sBrahCtors, 20);
+    }
+    EXPECT_EQ(sBrahDtors, 20);
 }
