@@ -27,7 +27,7 @@
 // ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 // POSSIBILITY OF SUCH DAMAGE.
 
-#include <am-autoptr.h>
+#include <amtl/am-autoptr.h>
 #include <gtest/gtest.h>
 #include "runner.h"
 

@@ -27,9 +27,9 @@
 // ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 // POSSIBILITY OF SUCH DAMAGE.
 
-#include <am-hashmap.h>
-#include <am-utility.h>
-#include <am-string.h>
+#include <amtl/am-hashmap.h>
+#include <amtl/am-utility.h>
+#include <amtl/am-string.h>
 #include <gtest/gtest.h>
 #include "runner.h"
 

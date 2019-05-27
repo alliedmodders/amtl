@@ -28,7 +28,7 @@
 // POSSIBILITY OF SUCH DAMAGE.
 
 #define KE_SINGLE_THREADED
-#include <am-threadlocal.h>
+#include <amtl/am-threadlocal.h>
 #include <gtest/gtest.h>
 #include "runner.h"
 

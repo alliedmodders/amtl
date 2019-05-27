@@ -27,7 +27,7 @@
 // ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 // POSSIBILITY OF SUCH DAMAGE.
 
-#include <am-vector.h>
+#include <amtl/am-vector.h>
 #include <amtl/am-refcounting.h>
 #include <assert.h>
 #include <gtest/gtest.h>

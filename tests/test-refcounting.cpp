@@ -27,9 +27,9 @@
 // ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 // POSSIBILITY OF SUCH DAMAGE.
 
-#include <am-utility.h>
-#include <am-refcounting.h>
-#include <am-refcounting-threadsafe.h>
+#include <amtl/am-utility.h>
+#include <amtl/am-refcounting.h>
+#include <amtl/am-refcounting-threadsafe.h>
 #include <gtest/gtest.h>
 #include "runner.h"
 #include <stdlib.h>

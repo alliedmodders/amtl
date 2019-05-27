@@ -27,10 +27,10 @@
 // ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 // POSSIBILITY OF SUCH DAMAGE.
 #include "runner.h"
-#include <am-platform.h>
+#include <amtl/am-platform.h>
 #include <gtest/gtest.h>
-#include <os/am-shared-library.h>
-#include <os/am-path.h>
+#include <amtl/os/am-shared-library.h>
+#include <amtl/os/am-path.h>
 
 using namespace ke;
 

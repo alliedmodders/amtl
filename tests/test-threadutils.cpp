@@ -27,9 +27,9 @@
 // ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 // POSSIBILITY OF SUCH DAMAGE.
 
-#include <am-thread-utils.h>
-#include <am-utility.h>
-#include <am-linkedlist.h>
+#include <amtl/am-thread-utils.h>
+#include <amtl/am-utility.h>
+#include <amtl/am-linkedlist.h>
 #include <gtest/gtest.h>
 #include "runner.h"
 
