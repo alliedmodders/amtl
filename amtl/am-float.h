@@ -30,6 +30,8 @@
 #ifndef _include_amtl_float_h_
 #define _include_amtl_float_h_
 
+#include <stdint.h>
+
 #include <cmath>
 #include <cfloat>
 

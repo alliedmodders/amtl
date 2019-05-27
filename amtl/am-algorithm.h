@@ -29,6 +29,8 @@
 #ifndef _include_amtl_algorithm_h_
 #define _include_amtl_algorithm_h_
 
+#include <stdint.h>
+
 #include <amtl/am-cxx.h>
 #include <amtl/am-moveable.h>
 
