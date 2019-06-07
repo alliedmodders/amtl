@@ -32,8 +32,8 @@
 
 #include <assert.h>
 #if defined(_MSC_VER)
-#    include <WinBase.h>
 #    include <windows.h>
+#    include <WinBase.h>
 #else
 #    include <pthread.h>
 #endif

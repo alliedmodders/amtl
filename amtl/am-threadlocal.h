@@ -31,6 +31,7 @@
 #define _include_amtl_thread_local_h_
 
 #include <amtl/am-thread-utils.h>
+#include <amtl/am-utility.h>
 #include <stddef.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -114,10 +115,10 @@ class ThreadLocal
 
   private:
     T internalGet() const {
-        return reinterpret_cast<T>(TlsGetValue(key_));
+        return (T)reinterpret_cast<uintptr_t>(TlsGetValue(key_));
     }
     void internalSet(const T& t) {
-        TlsSetValue(key_, reinterpret_cast<LPVOID>(t));
+        TlsSetValue(key_, cast_to_pointer<T>::cast(t));
     }
     bool allocate() {
         if (InterlockedCompareExchange((volatile LONG*)&allocated_, 1, 0) == 1)

@@ -62,6 +62,23 @@ MemsetZero(T* t) {
 #    define KE_CRITICAL_LIKELY(x) x
 #endif
 
+template <typename T>
+struct cast_to_pointer {
+    static void* cast(const T& t) {
+        return reinterpret_cast<void*>((uintptr_t)t);
+    }
+};
+
+template <typename T>
+struct cast_to_pointer<T*> {
+    static const void* cast(const T* ptr) {
+        return ptr;
+    }
+    static void* cast(T* ptr) {
+        return ptr;
+    }
+};
+
 } // namespace ke
 
 #endif // _include_amtl_utility_h_
