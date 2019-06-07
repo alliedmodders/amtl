@@ -39,19 +39,19 @@ namespace ke {
 template <typename T>
 class StorageBuffer
 {
- public:
-  T* address() {
-    return reinterpret_cast<T*>(buffer_);
-  }
-  const T* address() const {
-    return reinterpret_cast<const T*>(buffer_);
-  }
+  public:
+    T* address() {
+        return reinterpret_cast<T*>(buffer_);
+    }
+    const T* address() const {
+        return reinterpret_cast<const T*>(buffer_);
+    }
 
- private:
-  union {
-    char buffer_[sizeof(T)];
-    uint64_t aligned_;
-  };
+  private:
+    union {
+        char buffer_[sizeof(T)];
+        uint64_t aligned_;
+    };
 };
 
 } // namespace ke

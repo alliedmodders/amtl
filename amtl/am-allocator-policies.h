@@ -2,10 +2,10 @@
 //
 // Copyright (C) 2013, David Anderson and AlliedModders LLC
 // All rights reserved.
-// 
+//
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
-// 
+//
 //  * Redistributions of source code must retain the above copyright notice, this
 //    list of conditions and the following disclaimer.
 //  * Redistributions in binary form must reproduce the above copyright notice,
@@ -40,34 +40,34 @@ class SystemAllocatorPolicy
 {
   public:
     void reportOutOfMemory() {
-      fprintf(stderr, "OUT OF MEMORY\n");
-      abort();
+        fprintf(stderr, "OUT OF MEMORY\n");
+        abort();
     }
     void reportAllocationOverflow() {
-      fprintf(stderr, "OUT OF MEMORY\n");
-      abort();
+        fprintf(stderr, "OUT OF MEMORY\n");
+        abort();
     }
 
   public:
     void am_free(void* memory) {
 #if defined(_DEBUG) && defined(_CRTDBG_MAP_ALLOC)
-      free(memory);
+        free(memory);
 #else
-      ::free(memory);
+        ::free(memory);
 #endif
     }
     void* am_malloc(size_t bytes) {
 #if defined(_DEBUG) && defined(_CRTDBG_MAP_ALLOC)
-      void* ptr = malloc(bytes);
+        void* ptr = malloc(bytes);
 #else
-      void* ptr = ::malloc(bytes);
+        void* ptr = ::malloc(bytes);
 #endif
-      if (!ptr)
-        reportOutOfMemory();
-      return ptr;
+        if (!ptr)
+            reportOutOfMemory();
+        return ptr;
     }
 };
 
-}
+} // namespace ke
 
 #endif // _include_amtl_allocatorpolicies_h_

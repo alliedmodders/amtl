@@ -2,10 +2,10 @@
 //
 // Copyright (C) 2013-2015, David Anderson and AlliedModders LLC
 // All rights reserved.
-// 
+//
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
-// 
+//
 //  * Redistributions of source code must retain the above copyright notice, this
 //    list of conditions and the following disclaimer.
 //  * Redistributions in binary form must reproduce the above copyright notice,
@@ -29,15 +29,15 @@
 #ifndef _include_amtl_os_sharedlib_h_
 #define _include_amtl_os_sharedlib_h_
 
-#include <amtl/am-refcounting.h>
 #include <amtl/am-platform.h>
+#include <amtl/am-refcounting.h>
 #if defined(KE_WINDOWS)
-# define WIN32_LEAN_AND_MEAN
-# include <Windows.h>
-# include <amtl/os/am-system-errors.h>
+#    define WIN32_LEAN_AND_MEAN
+#    include <Windows.h>
+#    include <amtl/os/am-system-errors.h>
 #else
-# include <dlfcn.h>
-# include <amtl/am-string.h>
+#    include <amtl/am-string.h>
+#    include <dlfcn.h>
 #endif
 
 namespace ke {
@@ -45,78 +45,77 @@ namespace ke {
 class SharedLib : public Refcounted<SharedLib>
 {
 #if defined(KE_WINDOWS)
-  typedef HMODULE SysType;
+    typedef HMODULE SysType;
 #else
-  typedef void* SysType;
+    typedef void* SysType;
 #endif
 
- public:
-  SharedLib()
-   : lib_(nullptr)
-  {}
-  explicit SharedLib(const SysType& lib)
-   : lib_(lib)
-  {}
-  explicit SharedLib(const char* path) {
-#if defined(KE_WINDOWS)
-    lib_ = LoadLibraryA(path);
-#else
-    lib_ = dlopen(path, RTLD_NOW);
-#endif
-  }
-  ~SharedLib() {
-    if (lib_ == nullptr)
-      return;
-
-#if defined(KE_WINDOWS)
-    FreeLibrary(lib_);
-#else
-    dlclose(lib_);
-#endif
-  }
-
-  explicit operator bool() const {
-    return !!lib_;
-  }
-
-  static inline AlreadyRefed<SharedLib>
-  Open(const char* path, char* error = nullptr, size_t maxlength = 0)
-  {
-    RefPtr<SharedLib> lib = new SharedLib(path);
-    if (!lib || !lib->valid()) {
-      if (!error || !maxlength)
-        return nullptr;
-#if defined(KE_WINDOWS)
-      FormatSystemError(error, maxlength);
-#else
-      SafeStrcpy(error, maxlength, dlerror());
-#endif
-      return nullptr;
+  public:
+    SharedLib()
+     : lib_(nullptr) {
     }
-    return lib.forget();
-  }
-
-  void* lookup(const char* symbol) {
+    explicit SharedLib(const SysType& lib)
+     : lib_(lib) {
+    }
+    explicit SharedLib(const char* path) {
 #if defined(KE_WINDOWS)
-    return reinterpret_cast<void*>(GetProcAddress(lib_, symbol));
+        lib_ = LoadLibraryA(path);
 #else
-    return dlsym(lib_, symbol);
+        lib_ = dlopen(path, RTLD_NOW);
 #endif
-  }
-  
-  template <typename T>
-  T get(const char* symbol) {
-    return reinterpret_cast<T>(lookup(symbol));
-  }
+    }
+    ~SharedLib() {
+        if (lib_ == nullptr)
+            return;
 
-  bool valid() const {
-    return !!lib_;
-  }
+#if defined(KE_WINDOWS)
+        FreeLibrary(lib_);
+#else
+        dlclose(lib_);
+#endif
+    }
 
- private:
-  SysType lib_;
+    explicit operator bool() const {
+        return !!lib_;
+    }
+
+    static inline AlreadyRefed<SharedLib> Open(const char* path, char* error = nullptr,
+                                               size_t maxlength = 0) {
+        RefPtr<SharedLib> lib = new SharedLib(path);
+        if (!lib || !lib->valid()) {
+            if (!error || !maxlength)
+                return nullptr;
+#if defined(KE_WINDOWS)
+            FormatSystemError(error, maxlength);
+#else
+            SafeStrcpy(error, maxlength, dlerror());
+#endif
+            return nullptr;
+        }
+        return lib.forget();
+    }
+
+    void* lookup(const char* symbol) {
+#if defined(KE_WINDOWS)
+        return reinterpret_cast<void*>(GetProcAddress(lib_, symbol));
+#else
+        return dlsym(lib_, symbol);
+#endif
+    }
+
+    template <typename T>
+    T get(const char* symbol) {
+        return reinterpret_cast<T>(lookup(symbol));
+    }
+
+    bool valid() const {
+        return !!lib_;
+    }
+
+  private:
+    SysType lib_;
 };
 
-}
+} // namespace ke
 
 #endif // _include_amtl_os_sharedlib_h_

@@ -2,10 +2,10 @@
 //
 // Copyright (C) 2013, David Anderson and AlliedModders LLC
 // All rights reserved.
-// 
+//
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
-// 
+//
 //  * Redistributions of source code must retain the above copyright notice, this
 //    list of conditions and the following disclaimer.
 //  * Redistributions in binary form must reproduce the above copyright notice,
@@ -45,11 +45,10 @@ class RefcountedThreadsafe
   public:
     RefcountedThreadsafe()
      : refcount_(0)
-    {
-    }
+    {}
 
     void AddRef() {
-      refcount_.increment();
+        refcount_.increment();
     }
     bool Release() {
         if (!refcount_.decrement()) {
@@ -60,52 +59,51 @@ class RefcountedThreadsafe
     }
 
   protected:
-    ~RefcountedThreadsafe() {
-    }
+    ~RefcountedThreadsafe() {}
 
   private:
     AtomicRefcount refcount_;
 };
 
 // Use this to forward to ke::Refcounted<X>, when implementing IRefcounted.
-#define KE_IMPL_REFCOUNTING_TS(classname)                                     \
-   void AddRef() {                                                            \
-     ke::RefcountedThreadsafe<classname>::AddRef();                           \
-   }                                                                          \
-   void Release() {                                                           \
-     ke::RefcountedThreadsafe<classname>::Release();                          \
-   }
+#define KE_IMPL_REFCOUNTING_TS(classname)               \
+    void AddRef() {                                     \
+        ke::RefcountedThreadsafe<classname>::AddRef();  \
+    }                                                   \
+    void Release() {                                    \
+        ke::RefcountedThreadsafe<classname>::Release(); \
+    }
 
 // Classes may be multiply-inherited may wish to derive from this Refcounted
 // instead.
 class VirtualRefcountedThreadsafe : public IRefcounted
 {
- public:
-  VirtualRefcountedThreadsafe() : refcount_(0)
-  {
+  public:
+    VirtualRefcountedThreadsafe()
+     : refcount_(0)
+    {
 #if !defined(NDEBUG)
-    destroying_ = false;
+        destroying_ = false;
 #endif
-  }
-  virtual ~VirtualRefcountedThreadsafe()
-  {}
-  void AddRef() override {
-    assert(!destroying_);
-    refcount_.increment();
-  }
-  void Release() override {
-    if (!refcount_.decrement()) {
-#if !defined(NDEBUG)
-      destroying_ = true;
-#endif
-      delete this;
     }
-  }
-
- private:
-  AtomicRefcount refcount_;
+    virtual ~VirtualRefcountedThreadsafe() {}
+    void AddRef() override {
+        assert(!destroying_);
+        refcount_.increment();
+    }
+    void Release() override {
+        if (!refcount_.decrement()) {
 #if !defined(NDEBUG)
-  bool destroying_;
+            destroying_ = true;
+#endif
+            delete this;
+        }
+    }
+
+  private:
+    AtomicRefcount refcount_;
+#if !defined(NDEBUG)
+    bool destroying_;
 #endif
 };
 
@@ -122,74 +120,74 @@ class VirtualRefcountedThreadsafe : public IRefcounted
 template <typename T>
 class AtomicRef
 {
- public:
-  AtomicRef()
-   : thing_(nullptr)
-  {}
-  AtomicRef(T* thing)
-   : thing_(thing)
-  {
-    assert(IsAligned(thing, sizeof(void*)));
-    if (thing)
-      thing->AddRef();
-  }
-  ~AtomicRef() {
-    assert(thing_ == untagged(thing_));
-    if (thing_)
-      reinterpret_cast<T*>(thing_)->Release();
-  }
-
-  // Atomically retrieve and add a reference to the contained value.
-  AlreadyRefed<T> get() {
-    T* value = lock();
-    if (value)
-      value->AddRef();
-    unlock(value);
-    return AdoptRef(value);
-  }
-
-  // Atomically incref the new value and replace the old value.
-  void operator =(T* other) {
-    T* value = lock();
-    if (other)
-      other->AddRef();
-    unlock(other);
-    if (value)
-      value->Release();
-  }
-
- private:
-  AtomicRef(const AtomicRef& other) = delete;
-  void operator =(const AtomicRef& other) = delete;
-
- private:
-  // We represent a locked state with a tag bit.
-  void* tagged(void* ptr) {
-    return reinterpret_cast<void*>(uintptr_t(ptr) | 1);
-  }
-  void* untagged(void* ptr) {
-    return reinterpret_cast<void*>(uintptr_t(ptr) & ~uintptr_t(1));
-  }
-
-  T* lock() {
-    // Spin until we can replace an untagged ptr with the tagged version.
-    void* oldval = untagged(thing_);
-    while (CompareAndSwapPtr(&thing_, tagged(oldval), oldval) != oldval) {
-      YieldProcessor();
-      oldval = untagged(thing_);
+  public:
+    AtomicRef()
+     : thing_(nullptr)
+    {}
+    AtomicRef(T* thing)
+     : thing_(thing)
+    {
+        assert(IsAligned(thing, sizeof(void*)));
+        if (thing)
+            thing->AddRef();
     }
-    return reinterpret_cast<T*>(oldval);
-  }
-  void unlock(T* ptr) {
-    // Nothing should have mutated the value, and the new value should be
-    // untagged.
-    assert(thing_ == tagged(thing_));
-    assert(ptr == untagged(ptr));
-    thing_ = ptr;
-  }
+    ~AtomicRef() {
+        assert(thing_ == untagged(thing_));
+        if (thing_)
+            reinterpret_cast<T*>(thing_)->Release();
+    }
 
- private:
-  void * volatile thing_;
+    // Atomically retrieve and add a reference to the contained value.
+    AlreadyRefed<T> get() {
+        T* value = lock();
+        if (value)
+            value->AddRef();
+        unlock(value);
+        return AdoptRef(value);
+    }
+
+    // Atomically incref the new value and replace the old value.
+    void operator =(T* other) {
+        T* value = lock();
+        if (other)
+            other->AddRef();
+        unlock(other);
+        if (value)
+            value->Release();
+    }
+
+  private:
+    AtomicRef(const AtomicRef& other) = delete;
+    void operator =(const AtomicRef& other) = delete;
+
+  private:
+    // We represent a locked state with a tag bit.
+    void* tagged(void* ptr) {
+        return reinterpret_cast<void*>(uintptr_t(ptr) | 1);
+    }
+    void* untagged(void* ptr) {
+        return reinterpret_cast<void*>(uintptr_t(ptr) & ~uintptr_t(1));
+    }
+
+    T* lock() {
+        // Spin until we can replace an untagged ptr with the tagged version.
+        void* oldval = untagged(thing_);
+        while (CompareAndSwapPtr(&thing_, tagged(oldval), oldval) != oldval) {
+            YieldProcessor();
+            oldval = untagged(thing_);
+        }
+        return reinterpret_cast<T*>(oldval);
+    }
+    void unlock(T* ptr) {
+        // Nothing should have mutated the value, and the new value should be
+        // untagged.
+        assert(thing_ == tagged(thing_));
+        assert(ptr == untagged(ptr));
+        thing_ = ptr;
+    }
+
+  private:
+    void* volatile thing_;
 };
 
 } // namespace ke

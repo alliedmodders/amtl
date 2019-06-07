@@ -2,10 +2,10 @@
 //
 // Copyright (C) 2013, David Anderson and AlliedModders LLC
 // All rights reserved.
-// 
+//
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
-// 
+//
 //  * Redistributions of source code must retain the above copyright notice, this
 //  list of conditions and the following disclaimer.
 //  * Redistributions in binary form must reproduce the above copyright notice,
@@ -45,150 +45,142 @@ namespace ke {
 // All types that match a given key, must compute the same hash.
 //
 // Note that like HashTable, a HashMap is not usable until init() has been called.
-template <typename K,
-          typename V,
-          typename HashPolicy,
-          typename AllocPolicy = SystemAllocatorPolicy>
+template <typename K, typename V, typename HashPolicy, typename AllocPolicy = SystemAllocatorPolicy>
 class HashMap : private AllocPolicy
 {
- private:
-  struct Entry
-  {
-    K key;
-    V value;
+  private:
+    struct Entry {
+        K key;
+        V value;
 
-    Entry()
-    {}
-    Entry(const Entry& other)
-      : key(other.key),
-        value(other.value)
-    {}
-    Entry(Entry&& other)
-      : key(ke::Move(other.key)),
-        value(ke::Move(other.value))
+        Entry() {
+        }
+        Entry(const Entry& other)
+         : key(other.key),
+           value(other.value)
+        {}
+        Entry(Entry&& other)
+         : key(ke::Move(other.key)),
+           value(ke::Move(other.value))
+        {}
+
+        template <typename UK, typename UV>
+        Entry(UK&& aKey, UV&& aValue)
+         : key(ke::Forward<UK>(aKey)),
+           value(ke::Forward<UV>(aValue))
+        {}
+    };
+
+    struct Policy {
+        typedef Entry Payload;
+
+        template <typename Lookup>
+        static uint32_t hash(const Lookup& key) {
+            return HashPolicy::hash(key);
+        }
+
+        template <typename Lookup>
+        static bool matches(const Lookup& key, const Payload& payload) {
+            return HashPolicy::matches(key, payload.key);
+        }
+    };
+
+    typedef HashTable<Policy, AllocPolicy> Internal;
+
+  public:
+    explicit HashMap(AllocPolicy ap = AllocPolicy())
+     : table_(ap)
     {}
 
+    HashMap(HashMap&& other)
+     : table_(ke::Move(other.table_))
+    {}
+
+    // capacity must be a power of two.
+    bool init(size_t capacity = 16) {
+        return table_.init(capacity);
+    }
+
+    typedef typename Internal::Result Result;
+    typedef typename Internal::Insert Insert;
+    typedef typename Internal::iterator iterator;
+
+    template <typename Lookup>
+    Result find(const Lookup& key) const {
+        return table_.find(key);
+    }
+
+    template <typename Lookup>
+    Insert findForAdd(const Lookup& key) {
+        return table_.findForAdd(key);
+    }
+
+    template <typename Lookup>
+    void removeIfExists(const Lookup& key) {
+        return table_.removeIfExists(key);
+    }
+
+    void remove(Result& r) {
+        table_.remove(r);
+    }
+
+    // The map must not have been mutated in between findForAdd() and add().
+    // The Insert object is still valid after add() returns, however.
     template <typename UK, typename UV>
-    Entry(UK&& aKey, UV&& aValue)
-     : key(ke::Forward<UK>(aKey)),
-       value(ke::Forward<UV>(aValue))
-    { }
-  };
-
-  struct Policy
-  {
-    typedef Entry Payload;
-
-    template <typename Lookup>
-    static uint32_t hash(const Lookup& key) {
-      return HashPolicy::hash(key);
+    bool add(Insert& i, UK&& key, UV&& value) {
+        Entry entry(ke::Forward<UK>(key), ke::Forward<UV>(value));
+        return table_.add(i, ke::Move(entry));
+    }
+    template <typename UK>
+    bool add(Insert& i, UK&& key) {
+        Entry entry(ke::Forward<UK>(key), V());
+        return table_.add(i, ke::Move(entry));
     }
 
-    template <typename Lookup>
-    static bool matches(const Lookup& key, const Payload& payload) {
-      return HashPolicy::matches(key, payload.key);
+    // This can be used to avoid compiler constructed temporaries, since AMTL
+    // does not yet support move semantics. If you use this, the key and value
+    // must be set after.
+    bool add(Insert& i) {
+        return table_.add(i);
     }
-  };
 
-  typedef HashTable<Policy, AllocPolicy> Internal;
+    iterator iter() {
+        return iterator(&table_);
+    }
 
- public:
-  explicit HashMap(AllocPolicy ap = AllocPolicy())
-   : table_(ap)
-  {
-  }
+    void clear() {
+        table_.clear();
+    }
 
-  HashMap(HashMap&& other)
-   : table_(ke::Move(other.table_))
-  {
-  }
+    size_t elements() const {
+        return table_.elements();
+    }
 
-  // capacity must be a power of two.
-  bool init(size_t capacity = 16) {
-    return table_.init(capacity);
-  }
+    size_t estimateMemoryUse() const {
+        return table_.estimateMemoryUse();
+    }
 
-  typedef typename Internal::Result Result;
-  typedef typename Internal::Insert Insert;
-  typedef typename Internal::iterator iterator;
+    AllocPolicy& allocPolicy() {
+        return *this;
+    }
+    const AllocPolicy& allocPolicy() const {
+        return *this;
+    }
 
-  template <typename Lookup>
-  Result find(const Lookup& key) const {
-    return table_.find(key);
-  }
-
-  template <typename Lookup>
-  Insert findForAdd(const Lookup& key) {
-    return table_.findForAdd(key);
-  }
-
-  template <typename Lookup>
-  void removeIfExists(const Lookup& key) {
-    return table_.removeIfExists(key);
-  }
-
-  void remove(Result& r) {
-    table_.remove(r);
-  }
-
-  // The map must not have been mutated in between findForAdd() and add().
-  // The Insert object is still valid after add() returns, however.
-  template <typename UK, typename UV>
-  bool add(Insert& i, UK&& key, UV&& value) {
-    Entry entry(ke::Forward<UK>(key), ke::Forward<UV>(value));
-    return table_.add(i, ke::Move(entry));
-  }
-  template <typename UK>
-  bool add(Insert& i, UK&& key) {
-    Entry entry(ke::Forward<UK>(key), V());
-    return table_.add(i, ke::Move(entry));
-  }
-
-  // This can be used to avoid compiler constructed temporaries, since AMTL
-  // does not yet support move semantics. If you use this, the key and value
-  // must be set after.
-  bool add(Insert& i) {
-    return table_.add(i);
-  }
-
-  iterator iter() {
-    return iterator(&table_);
-  }
-
-  void clear() {
-    table_.clear();
-  }
-
-  size_t elements() const {
-    return table_.elements();
-  }
-
-  size_t estimateMemoryUse() const {
-    return table_.estimateMemoryUse();
-  }
-
-  AllocPolicy& allocPolicy() {
-    return *this;
-  }
-  const AllocPolicy& allocPolicy() const {
-    return *this;
-  }
-
- private:
-  Internal table_;
+  private:
+    Internal table_;
 };
 
 template <typename T>
-struct PointerPolicy
-{
-  static inline uint32_t hash(T* p) {
-    return HashPointer(p);
-  }
-  static inline bool matches(T* p1, T* p2) {
-    return p1 == p2;
-  }
+struct PointerPolicy {
+    static inline uint32_t hash(T* p) {
+        return HashPointer(p);
+    }
+    static inline bool matches(T* p1, T* p2) {
+        return p1 == p2;
+    }
 };
 
-}
+} // namespace ke
 
 #endif // _include_amtl_hashmap_h_

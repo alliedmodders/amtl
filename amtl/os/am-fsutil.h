@@ -2,10 +2,10 @@
 //
 // Copyright (C) 2013-2015, David Anderson and AlliedModders LLC
 // All rights reserved.
-// 
+//
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
-// 
+//
 //  * Redistributions of source code must retain the above copyright notice, this
 //    list of conditions and the following disclaimer.
 //  * Redistributions in binary form must reproduce the above copyright notice,
@@ -32,15 +32,13 @@
 #include <amtl/am-platform.h>
 #include <amtl/am-string.h>
 #if defined(KE_WINDOWS)
-# include <amtl/os/am-fsutil-windows.h>
+#    include <amtl/os/am-fsutil-windows.h>
 #else
-# include <amtl/os/am-fsutil-posix.h>
+#    include <amtl/os/am-fsutil-posix.h>
 #endif
 
 namespace ke {
-namespace file {
-} // namespace file
+namespace file {} // namespace file
 } // namespace ke
 
 #endif // _include_amtl_os_fsutil_h_
-

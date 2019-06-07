@@ -2,10 +2,10 @@
 //
 // Copyright (C) 2013, David Anderson and AlliedModders LLC
 // All rights reserved.
-// 
+//
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
-// 
+//
 //  * Redistributions of source code must retain the above copyright notice, this
 //    list of conditions and the following disclaimer.
 //  * Redistributions in binary form must reproduce the above copyright notice,
@@ -27,7 +27,7 @@
 // ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 // POSSIBILITY OF SUCH DAMAGE.
 
-#include <experimental/am-argparser.h>
+#include <amtl/experimental/am-argparser.h>
 #include <gtest/gtest.h>
 #include <limits.h>
 #include "runner.h"
@@ -35,202 +35,153 @@
 using namespace ke;
 using namespace ke::args;
 
-TEST(ArgParser, Basic)
-{
-  Parser parser("help");
+TEST(ArgParser, Basic) {
+    Parser parser("help");
 
-  EXPECT_TRUE(parser.parsev(nullptr));
-  EXPECT_FALSE(parser.parsev("asdf", nullptr));
-  EXPECT_FALSE(parser.parsev("--asdf", nullptr));
+    EXPECT_TRUE(parser.parsev(nullptr));
+    EXPECT_FALSE(parser.parsev("asdf", nullptr));
+    EXPECT_FALSE(parser.parsev("--asdf", nullptr));
 }
 
-TEST(ArgParser, BoolArg)
-{
-  Parser parser("help");
+TEST(ArgParser, BoolArg) {
+    Parser parser("help");
 
-  BoolOption no_default(parser,
-    "b", "bool",
-    Nothing(),
-    "help");
-  BoolOption default_true(parser,
-    "t", "default-true",
-    Some(true),
-    "help");
-  BoolOption default_false(parser,
-    "f", "default-false",
-    Some(false),
-    "help");
+    BoolOption no_default(parser, "b", "bool", Nothing(), "help");
+    BoolOption default_true(parser, "t", "default-true", Some(true), "help");
+    BoolOption default_false(parser, "f", "default-false", Some(false), "help");
 
-  EXPECT_TRUE(parser.parsev(nullptr));
-  EXPECT_FALSE(no_default.hasValue());
-  EXPECT_TRUE(default_true.hasValue());
-  EXPECT_FALSE(default_true.hasUserValue());
-  EXPECT_TRUE(default_true.value());
-  EXPECT_TRUE(default_false.hasValue());
-  EXPECT_FALSE(default_false.hasUserValue());
-  EXPECT_FALSE(default_false.value());
+    EXPECT_TRUE(parser.parsev(nullptr));
+    EXPECT_FALSE(no_default.hasValue());
+    EXPECT_TRUE(default_true.hasValue());
+    EXPECT_FALSE(default_true.hasUserValue());
+    EXPECT_TRUE(default_true.value());
+    EXPECT_TRUE(default_false.hasValue());
+    EXPECT_FALSE(default_false.hasUserValue());
+    EXPECT_FALSE(default_false.value());
 
-  parser.reset();
-  EXPECT_TRUE(parser.parsev("-b", nullptr));
-  EXPECT_TRUE(no_default.hasValue());
-  EXPECT_TRUE(no_default.value());
-  EXPECT_FALSE(default_true.hasUserValue());
-  EXPECT_FALSE(default_false.hasUserValue());
+    parser.reset();
+    EXPECT_TRUE(parser.parsev("-b", nullptr));
+    EXPECT_TRUE(no_default.hasValue());
+    EXPECT_TRUE(no_default.value());
+    EXPECT_FALSE(default_true.hasUserValue());
+    EXPECT_FALSE(default_false.hasUserValue());
 
-  parser.reset();
-  EXPECT_TRUE(parser.parsev("--bool=false", nullptr));
-  EXPECT_FALSE(no_default.value());
+    parser.reset();
+    EXPECT_TRUE(parser.parsev("--bool=false", nullptr));
+    EXPECT_FALSE(no_default.value());
 
-  parser.reset();
-  EXPECT_TRUE(parser.parsev("--bool", "false", nullptr));
-  EXPECT_FALSE(no_default.value());
+    parser.reset();
+    EXPECT_TRUE(parser.parsev("--bool", "false", nullptr));
+    EXPECT_FALSE(no_default.value());
 
-  parser.reset();
-  EXPECT_TRUE(parser.parsev("-b", "true", nullptr));
-  EXPECT_TRUE(no_default.value());
+    parser.reset();
+    EXPECT_TRUE(parser.parsev("-b", "true", nullptr));
+    EXPECT_TRUE(no_default.value());
 
-  parser.reset();
-  EXPECT_TRUE(parser.parsev("-f", nullptr));
-  EXPECT_TRUE(default_false.value());
+    parser.reset();
+    EXPECT_TRUE(parser.parsev("-f", nullptr));
+    EXPECT_TRUE(default_false.value());
 
-  parser.reset();
-  EXPECT_TRUE(parser.parsev("--default-true=false", nullptr));
-  EXPECT_FALSE(default_true.value());
+    parser.reset();
+    EXPECT_TRUE(parser.parsev("--default-true=false", nullptr));
+    EXPECT_FALSE(default_true.value());
 }
 
-TEST(ArgParser, ToggleArg)
-{
-  Parser parser("help");
+TEST(ArgParser, ToggleArg) {
+    Parser parser("help");
 
-  ToggleOption x(parser,
-    "x", nullptr,
-    Nothing(),
-    "help");
-  ToggleOption y(parser,
-    "y", nullptr,
-    Some(true),
-    "help");
-  ToggleOption z(parser,
-    "z", nullptr,
-    Some(false),
-    "help");
+    ToggleOption x(parser, "x", nullptr, Nothing(), "help");
+    ToggleOption y(parser, "y", nullptr, Some(true), "help");
+    ToggleOption z(parser, "z", nullptr, Some(false), "help");
 
-  parser.reset();
-  EXPECT_TRUE(parser.parsev(nullptr));
-  EXPECT_FALSE(x.value());
+    parser.reset();
+    EXPECT_TRUE(parser.parsev(nullptr));
+    EXPECT_FALSE(x.value());
 
-  parser.reset();
-  EXPECT_TRUE(parser.parsev("-x", nullptr));
-  EXPECT_TRUE(x.value());
+    parser.reset();
+    EXPECT_TRUE(parser.parsev("-x", nullptr));
+    EXPECT_TRUE(x.value());
 
-  parser.reset();
-  EXPECT_TRUE(parser.parsev("-y", nullptr));
-  EXPECT_FALSE(y.value());
+    parser.reset();
+    EXPECT_TRUE(parser.parsev("-y", nullptr));
+    EXPECT_FALSE(y.value());
 
-  parser.reset();
-  EXPECT_TRUE(parser.parsev("-z", nullptr));
-  EXPECT_TRUE(z.value());
+    parser.reset();
+    EXPECT_TRUE(parser.parsev("-z", nullptr));
+    EXPECT_TRUE(z.value());
 
-  parser.reset();
-  EXPECT_FALSE(parser.parsev("-z=false", nullptr));
+    parser.reset();
+    EXPECT_FALSE(parser.parsev("-z=false", nullptr));
 }
 
-TEST(ArgParser, StringArg)
-{
-  Parser parser("help");
+TEST(ArgParser, StringArg) {
+    Parser parser("help");
 
-  StringOption s(parser,
-    "s", "string",
-    Nothing(),
-    "help");
-  StringOption t(parser,
-    "t", "ttt",
-    Some(AString("whatever")),
-    "help");
-  StringOption mode(parser, "mode", "help");
+    StringOption s(parser, "s", "string", Nothing(), "help");
+    StringOption t(parser, "t", "ttt", Some(AString("whatever")), "help");
+    StringOption mode(parser, "mode", "help");
 
-  parser.reset();
-  EXPECT_FALSE(parser.parsev(nullptr));
+    parser.reset();
+    EXPECT_FALSE(parser.parsev(nullptr));
 
-  parser.reset();
-  EXPECT_TRUE(parser.parsev("crab", nullptr));
-  EXPECT_FALSE(s.hasValue());
-  EXPECT_EQ(t.value().compare("whatever"), 0);
-  EXPECT_EQ(mode.value().compare("crab"), 0);
+    parser.reset();
+    EXPECT_TRUE(parser.parsev("crab", nullptr));
+    EXPECT_FALSE(s.hasValue());
+    EXPECT_EQ(t.value().compare("whatever"), 0);
+    EXPECT_EQ(mode.value().compare("crab"), 0);
 
-  parser.reset();
-  EXPECT_TRUE(parser.parsev("-s", "yam", "egg", nullptr));
-  EXPECT_EQ(s.value().compare("yam"), 0);
-  EXPECT_EQ(mode.value().compare("egg"), 0);
+    parser.reset();
+    EXPECT_TRUE(parser.parsev("-s", "yam", "egg", nullptr));
+    EXPECT_EQ(s.value().compare("yam"), 0);
+    EXPECT_EQ(mode.value().compare("egg"), 0);
 }
 
-TEST(ArgParser, IntArg)
-{
-  Parser parser("help");
+TEST(ArgParser, IntArg) {
+    Parser parser("help");
 
-  IntOption val1(parser,
-    nullptr, "val",
-    Nothing(),
-    "help");
+    IntOption val1(parser, nullptr, "val", Nothing(), "help");
 
-  parser.reset();
-  EXPECT_TRUE(parser.parsev("--val", "308", nullptr));
-  EXPECT_EQ(val1.value(), 308);
+    parser.reset();
+    EXPECT_TRUE(parser.parsev("--val", "308", nullptr));
+    EXPECT_EQ(val1.value(), 308);
 
-  parser.reset();
-  EXPECT_FALSE(parser.parsev("--val", "30x", nullptr));
+    parser.reset();
+    EXPECT_FALSE(parser.parsev("--val", "30x", nullptr));
 }
 
-TEST(ArgParser, RepeatArg)
-{
-  Parser parser("help");
+TEST(ArgParser, RepeatArg) {
+    Parser parser("help");
 
-  RepeatOption<AString> inc(parser,
-    "-i", "--include-path",
-    "Include path.");
+    RepeatOption<AString> inc(parser, "-i", "--include-path", "Include path.");
 
-  ASSERT_TRUE(parser.parsev("-i", "blah", "-i", "crab", "--include-path=yam", nullptr));
+    ASSERT_TRUE(parser.parsev("-i", "blah", "-i", "crab", "--include-path=yam", nullptr));
 
-  Vector<AString> values = Move(inc.values());
-  ASSERT_EQ(values.length(), (size_t)3);
-  EXPECT_EQ(values[0].compare("blah"), 0);
-  EXPECT_EQ(values[1].compare("crab"), 0);
-  EXPECT_EQ(values[2].compare("yam"), 0);
+    Vector<AString> values = Move(inc.values());
+    ASSERT_EQ(values.length(), (size_t)3);
+    EXPECT_EQ(values[0].compare("blah"), 0);
+    EXPECT_EQ(values[1].compare("crab"), 0);
+    EXPECT_EQ(values[2].compare("yam"), 0);
 }
 
-TEST(ArgParser, StopArg1)
-{
-  Parser parser("help");
+TEST(ArgParser, StopArg1) {
+    Parser parser("help");
 
-  StopOption show_version(parser,
-    "-v", "--version",
-    Some(false),
-    "Show the version and exit.");
-  StringOption required(parser,
-    "something_required",
-    "This is a required positional argument.");
+    StopOption show_version(parser, "-v", "--version", Some(false), "Show the version and exit.");
+    StringOption required(parser, "something_required", "This is a required positional argument.");
 
-  EXPECT_FALSE(parser.parsev(nullptr));
-  EXPECT_TRUE(parser.parsev("-v", nullptr));
-  EXPECT_TRUE(show_version.value());
+    EXPECT_FALSE(parser.parsev(nullptr));
+    EXPECT_TRUE(parser.parsev("-v", nullptr));
+    EXPECT_TRUE(show_version.value());
 }
 
-TEST(ArgParser, StopArg2)
-{
-  Parser parser("help");
+TEST(ArgParser, StopArg2) {
+    Parser parser("help");
 
-  BoolOption disable_watchdog(parser,
-    "w", "disable-watchdog",
-    Some(false),
-    "Disable the watchdog timer.");
-  StopOption show_version(parser,
-    "-v", "--version",
-    Some(false),
-    "Show the version and exit.");
-  StringOption filename(parser,
-    "file",
-    "SMX file to execute.");
+    BoolOption disable_watchdog(parser, "w", "disable-watchdog", Some(false),
+                                "Disable the watchdog timer.");
+    StopOption show_version(parser, "-v", "--version", Some(false), "Show the version and exit.");
+    StringOption filename(parser, "file", "SMX file to execute.");
 
-  EXPECT_TRUE(parser.parsev("-v", "-w", nullptr));
-  EXPECT_TRUE(show_version.value());
+    EXPECT_TRUE(parser.parsev("-v", "-w", nullptr));
+    EXPECT_TRUE(show_version.value());
 }

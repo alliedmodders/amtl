@@ -2,10 +2,10 @@
 //
 // Copyright (C) 2014, David Anderson and AlliedModders LLC
 // All rights reserved.
-// 
+//
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
-// 
+//
 //  * Redistributions of source code must retain the above copyright notice, this
 //    list of conditions and the following disclaimer.
 //  * Redistributions in binary form must reproduce the above copyright notice,
@@ -29,234 +29,231 @@
 #ifndef _INCLUDE_KEIMA_TPL_CPP_DEQUE_H_
 #define _INCLUDE_KEIMA_TPL_CPP_DEQUE_H_
 
-#include <new>
-#include <stdlib.h>
-#include <assert.h>
 #include <amtl/am-allocator-policies.h>
 #include <amtl/am-bits.h>
 #include <amtl/am-cxx.h>
 #include <amtl/am-moveable.h>
+#include <assert.h>
+#include <stdlib.h>
+#include <new>
 
 namespace ke {
 
 template <typename T, typename AllocPolicy = SystemAllocatorPolicy>
 class Deque : private AllocPolicy
 {
-  static const size_t kInvalidIndex = ~size_t(0);
+    static const size_t kInvalidIndex = ~size_t(0);
 
- public:
-  explicit Deque(AllocPolicy = AllocPolicy())
-   : buffer_(NULL),
-     maxlength_(0),
-     first_(0),
-     last_(0)
-  {
-  }
-  Deque(Deque&& other)
-   : AllocPolicy(Move(other)),
-     buffer_(other.buffer_),
-     maxlength_(other.maxlength_),
-     first_(other.first_),
-     last_(other.last_)
-  {
-    other.reset();
-  }
-  ~Deque() {
-    zap();
-  }
+  public:
+    explicit Deque(AllocPolicy = AllocPolicy())
+     : buffer_(NULL),
+       maxlength_(0),
+       first_(0),
+       last_(0)
+    {}
+    Deque(Deque&& other)
+     : AllocPolicy(Move(other)),
+       buffer_(other.buffer_),
+       maxlength_(other.maxlength_),
+       first_(other.first_),
+       last_(other.last_)
+    {
+        other.reset();
+    }
+    ~Deque() {
+        zap();
+    }
 
-  Deque& operator =(Deque&& other) {
-    zap();
-    buffer_ = other.buffer_;
-    maxlength_ = other.maxlength_;
-    first_ = other.first_;
-    last_ = other.last_;
-    other.reset();
-    return *this;
-  }
+    Deque& operator =(Deque&& other) {
+        zap();
+        buffer_ = other.buffer_;
+        maxlength_ = other.maxlength_;
+        first_ = other.first_;
+        last_ = other.last_;
+        other.reset();
+        return *this;
+    }
 
-  bool empty() const {
-    return first_ == last_;
-  }
+    bool empty() const {
+        return first_ == last_;
+    }
 
-  template <typename U>
-  bool append(U&& other) {
-    size_t next = ensureCanAppend();
-    if (next == kInvalidIndex)
-      return false;
-    new (&buffer_[last_]) T(ke::Forward<U>(other));
-    last_ = next;
-    return true;
-  }
+    template <typename U>
+    bool append(U&& other) {
+        size_t next = ensureCanAppend();
+        if (next == kInvalidIndex)
+            return false;
+        new (&buffer_[last_]) T(ke::Forward<U>(other));
+        last_ = next;
+        return true;
+    }
 
-  template <typename U>
-  bool prepend(U&& other) {
-    size_t prev = ensureCanPrepend();
-    if (prev == kInvalidIndex)
-      return false;
-    first_ = prev;
-    new (&buffer_[first_]) T(ke::Forward<U>(other));
-    return true;
-  }
+    template <typename U>
+    bool prepend(U&& other) {
+        size_t prev = ensureCanPrepend();
+        if (prev == kInvalidIndex)
+            return false;
+        first_ = prev;
+        new (&buffer_[first_]) T(ke::Forward<U>(other));
+        return true;
+    }
 
-  void popFront() {
-    assert(!empty());
-    buffer_[first_].~T();
-    if (first_ == maxlength_ - 1)
-      first_ = 0;
-    else
-      first_++;
-  }
-  void popBack() {
-    assert(!empty());
-    if (last_ == 0)
-      last_ = maxlength_ - 1;
-    else
-      last_--;
-    buffer_[last_].~T();
-  }
+    void popFront() {
+        assert(!empty());
+        buffer_[first_].~T();
+        if (first_ == maxlength_ - 1)
+            first_ = 0;
+        else
+            first_++;
+    }
+    void popBack() {
+        assert(!empty());
+        if (last_ == 0)
+            last_ = maxlength_ - 1;
+        else
+            last_--;
+        buffer_[last_].~T();
+    }
 
-  T popFrontCopy() {
-    T t = front();
-    popFront();
-    return t;
-  }
-  T popBackCopy() {
-    T t = back();
-    popBack();
-    return t;
-  }
+    T popFrontCopy() {
+        T t = front();
+        popFront();
+        return t;
+    }
+    T popBackCopy() {
+        T t = back();
+        popBack();
+        return t;
+    }
 
-  const T& front() const {
-    assert(!empty());
-    return buffer_[first_];
-  }
-  T& front() {
-    assert(!empty());
-    return buffer_[first_];
-  }
-  const T& back() const {
-    assert(!empty());
-    if (last_ == 0)
-      return buffer_[maxlength_ - 1];
-    return buffer_[last_ - 1];
-  }
-  T& back() {
-    assert(!empty());
-    if (last_ == 0)
-      return buffer_[maxlength_ - 1];
-    return buffer_[last_ - 1];
-  }
+    const T& front() const {
+        assert(!empty());
+        return buffer_[first_];
+    }
+    T& front() {
+        assert(!empty());
+        return buffer_[first_];
+    }
+    const T& back() const {
+        assert(!empty());
+        if (last_ == 0)
+            return buffer_[maxlength_ - 1];
+        return buffer_[last_ - 1];
+    }
+    T& back() {
+        assert(!empty());
+        if (last_ == 0)
+            return buffer_[maxlength_ - 1];
+        return buffer_[last_ - 1];
+    }
 
-  size_t length() const {
-    if (first_ == last_)
-      return 0;
-    return first_ < last_
-           ? (last_ - first_)
-           : (last_ + (maxlength_ - first_));
-  }
-  size_t capacity() const {
-    return maxlength_;
-  }
+    size_t length() const {
+        if (first_ == last_)
+            return 0;
+        return first_ < last_ ? (last_ - first_) : (last_ + (maxlength_ - first_));
+    }
+    size_t capacity() const {
+        return maxlength_;
+    }
 
- private:
-  Deque(const Deque& other) = delete;
-  Deque& operator =(const Deque& other) = delete;
+  private:
+    Deque(const Deque& other) = delete;
+    Deque& operator =(const Deque& other) = delete;
 
-  // Return the next value of first_.
-  size_t ensureCanPrepend() {
-    if (first_ == 0) {
-      if (maxlength_ && (last_ != maxlength_ - 1))
+    // Return the next value of first_.
+    size_t ensureCanPrepend() {
+        if (first_ == 0) {
+            if (maxlength_ && (last_ != maxlength_ - 1))
+                return maxlength_ - 1;
+        } else if (first_ - 1 != last_) {
+            return first_ - 1;
+        }
+
+        // The ring is full.
+        if (!growByOne())
+            return kInvalidIndex;
         return maxlength_ - 1;
-    } else if (first_ - 1 != last_) {
-      return first_ - 1;
     }
 
-    // The ring is full.
-    if (!growByOne())
-      return kInvalidIndex;
-    return maxlength_ - 1;
-  }
+    // Return the next value of last_.
+    size_t ensureCanAppend() {
+        if (last_ < first_) {
+            if (last_ + 1 != first_)
+                return last_ + 1;
+        } else {
+            if (last_ + 1 < maxlength_)
+                return last_ + 1;
+            if (first_ != 0)
+                return 0;
+        }
 
-  // Return the next value of last_.
-  size_t ensureCanAppend() {
-    if (last_ < first_) {
-      if (last_ + 1 != first_)
+        // The ring is full.
+        if (!growByOne())
+            return kInvalidIndex;
         return last_ + 1;
-    } else{
-      if (last_ + 1 < maxlength_)
-        return last_ + 1;
-      if (first_ != 0)
-        return 0;
     }
 
-    // The ring is full.
-    if (!growByOne())
-      return kInvalidIndex;
-    return last_ + 1;
-  }
+    bool growByOne() {
+        if (!IsUintPtrMultiplySafe(maxlength_, 2)) {
+            this->reportAllocationOverflow();
+            return false;
+        }
 
-  bool growByOne() {
-    if (!IsUintPtrMultiplySafe(maxlength_, 2)) {
-      this->reportAllocationOverflow();
-      return false;
+        size_t new_maxlength = maxlength_ ? maxlength_ * 2 : 8;
+        T* new_buffer = (T*)this->am_malloc(sizeof(T) * new_maxlength);
+        if (!new_buffer)
+            return false;
+
+        // Move everything to the bottom of the new buffer, and reset our indices
+        // so that first is at 0.
+        if (first_ < last_) {
+            MoveRange(new_buffer, buffer_ + first_, last_ - first_);
+            last_ = last_ - first_;
+            first_ = 0;
+        } else {
+            MoveRange(new_buffer, buffer_ + first_, maxlength_ - first_);
+            MoveRange(new_buffer + (maxlength_ - first_), buffer_, last_);
+            last_ = last_ + (maxlength_ - first_);
+            first_ = 0;
+        }
+        this->am_free(buffer_);
+
+        buffer_ = new_buffer;
+        maxlength_ = new_maxlength;
+        return true;
     }
 
-    size_t new_maxlength = maxlength_ ? maxlength_ * 2 : 8;
-    T* new_buffer = (T*)this->am_malloc(sizeof(T) * new_maxlength);
-    if (!new_buffer)
-      return false;
-
-    // Move everything to the bottom of the new buffer, and reset our indices
-    // so that first is at 0.
-    if (first_ < last_) {
-      MoveRange(new_buffer, buffer_ + first_, last_ - first_);
-      last_ = last_ - first_;
-      first_ = 0;
-    } else {
-      MoveRange(new_buffer, buffer_ + first_, maxlength_ - first_);
-      MoveRange(new_buffer + (maxlength_ - first_), buffer_, last_);
-      last_ = last_ + (maxlength_ - first_);
-      first_ = 0;
+    void reset() {
+        buffer_ = NULL;
+        maxlength_ = 0;
+        first_ = 0;
+        last_ = 0;
     }
-    this->am_free(buffer_);
 
-    buffer_ = new_buffer;
-    maxlength_ = new_maxlength;
-    return true;
-  }
-
-  void reset() {
-    buffer_ = NULL;
-    maxlength_ = 0;
-    first_ = 0;
-    last_ = 0;
-  }
-
-  void zap() {
-    if (first_ <= last_) {
-      for (size_t i = first_; i < last_; i++)
-        buffer_[i].~T();
-    } else {
-      for (size_t i = first_; i < maxlength_; i++)
-        buffer_[i].~T();
-      for (size_t i = 0; i < last_; i++)
-        buffer_[i].~T();
+    void zap() {
+        if (first_ <= last_) {
+            for (size_t i = first_; i < last_; i++)
+                buffer_[i].~T();
+        } else {
+            for (size_t i = first_; i < maxlength_; i++)
+                buffer_[i].~T();
+            for (size_t i = 0; i < last_; i++)
+                buffer_[i].~T();
+        }
+        this->am_free(buffer_);
     }
-    this->am_free(buffer_);
-  }
 
- private:
-  T* buffer_;
-  size_t maxlength_;
+  private:
+    T* buffer_;
+    size_t maxlength_;
 
-  // Always points to the first readable item.
-  size_t first_;
+    // Always points to the first readable item.
+    size_t first_;
 
-  // Always points to where the next item can be appended.
-  size_t last_;
+    // Always points to where the next item can be appended.
+    size_t last_;
 };
 
-}
+} // namespace ke
 
 #endif // _INCLUDE_KEIMA_TPL_CPP_DEQUE_H_

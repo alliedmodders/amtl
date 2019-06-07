@@ -2,10 +2,10 @@
 //
 // Copyright (C) 2013-2014, David Anderson and AlliedModders LLC
 // All rights reserved.
-// 
+//
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
-// 
+//
 //  * Redistributions of source code must retain the above copyright notice, this
 //    list of conditions and the following disclaimer.
 //  * Redistributions in binary form must reproduce the above copyright notice,
@@ -33,13 +33,13 @@
 #include <amtl/am-platform.h>
 
 #if defined(_MSC_VER)
-# define KE_DLL_IMPORT __declspec(dllimport)
-# define KE_DLL_EXPORT __declspec(dllexport)
-# define KE_DLL_PRIVATE
+#    define KE_DLL_IMPORT __declspec(dllimport)
+#    define KE_DLL_EXPORT __declspec(dllexport)
+#    define KE_DLL_PRIVATE
 #else
-# define KE_DLL_IMPORT
-# define KE_DLL_EXPORT __attribute__((visibility("default")))
-# define KE_DLL_PRIVATE __attribute__((visibility("hidden")))
+#    define KE_DLL_IMPORT
+#    define KE_DLL_EXPORT __attribute__((visibility("default")))
+#    define KE_DLL_PRIVATE __attribute__((visibility("hidden")))
 #endif
 
 #endif // _include_amtl_linking_h_

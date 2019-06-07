@@ -2,10 +2,10 @@
 //
 // Copyright (C) 2013-2015, David Anderson and AlliedModders LLC
 // All rights reserved.
-// 
+//
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
-// 
+//
 //  * Redistributions of source code must retain the above copyright notice, this
 //    list of conditions and the following disclaimer.
 //  * Redistributions in binary form must reproduce the above copyright notice,
@@ -37,35 +37,31 @@ namespace ke {
 namespace file {
 
 static inline bool
-PathExists(const char* path)
-{
-  return GetFileAttributesA(path) != INVALID_FILE_ATTRIBUTES;
+PathExists(const char* path) {
+    return GetFileAttributesA(path) != INVALID_FILE_ATTRIBUTES;
 }
 
 static inline bool
-IsFile(const char* path)
-{
-  DWORD attr = GetFileAttributesA(path);
-  if (attr == INVALID_FILE_ATTRIBUTES)
-    return false;
-  if (attr & (FILE_ATTRIBUTE_DIRECTORY|FILE_ATTRIBUTE_DEVICE))
-    return false;
-  return true;
+IsFile(const char* path) {
+    DWORD attr = GetFileAttributesA(path);
+    if (attr == INVALID_FILE_ATTRIBUTES)
+        return false;
+    if (attr & (FILE_ATTRIBUTE_DIRECTORY | FILE_ATTRIBUTE_DEVICE))
+        return false;
+    return true;
 }
 
 static inline bool
-IsDirectory(const char* path)
-{
-  DWORD attr = GetFileAttributesA(path);
-  if (attr == INVALID_FILE_ATTRIBUTES)
-    return false;
-  return (attr & (FILE_ATTRIBUTE_DIRECTORY|FILE_ATTRIBUTE_DEVICE)) == FILE_ATTRIBUTE_DIRECTORY;
+IsDirectory(const char* path) {
+    DWORD attr = GetFileAttributesA(path);
+    if (attr == INVALID_FILE_ATTRIBUTES)
+        return false;
+    return (attr & (FILE_ATTRIBUTE_DIRECTORY | FILE_ATTRIBUTE_DEVICE)) == FILE_ATTRIBUTE_DIRECTORY;
 }
 
 static inline bool
-CreateDirectory(const char* path, unsigned mode_IGNORED=0)
-{
-  return mkdir(path) == 0;
+CreateDirectory(const char* path, unsigned mode_IGNORED = 0) {
+    return mkdir(path) == 0;
 }
 
 } // namespace file

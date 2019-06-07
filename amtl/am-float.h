@@ -2,10 +2,10 @@
 //
 // Copyright (C) 2013, David Anderson and AlliedModders LLC
 // All rights reserved.
-// 
+//
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
-// 
+//
 //  * Redistributions of source code must retain the above copyright notice, this
 //    list of conditions and the following disclaimer.
 //  * Redistributions in binary form must reproduce the above copyright notice,
@@ -30,48 +30,48 @@
 #ifndef _include_amtl_float_h_
 #define _include_amtl_float_h_
 
-#include <cmath>
+#include <stdint.h>
+
 #include <cfloat>
+#include <cmath>
 
 namespace ke {
 
 static const uint32_t kFloat32ExponentMask = 0x7F800000;
 static const uint64_t kFloat64ExponentMask = 0x7FFF000000000000ULL;
 
-struct float32_bits
-{
-  static const uint32_t kExponentMask = kFloat32ExponentMask;
+struct float32_bits {
+    static const uint32_t kExponentMask = kFloat32ExponentMask;
 
-  typedef uint32_t Bits;
+    typedef uint32_t Bits;
 
-  union layout {
-    uint32_t bits;
-    float value;
-  };
+    union layout {
+        uint32_t bits;
+        float value;
+    };
 
-  static layout to_layout(float value) {
-    layout impl;
-    impl.value = value;
-    return impl;
-  }
+    static layout to_layout(float value) {
+        layout impl;
+        impl.value = value;
+        return impl;
+    }
 };
 
-struct float64_bits
-{
-  static const uint64_t kExponentMask = kFloat64ExponentMask;
+struct float64_bits {
+    static const uint64_t kExponentMask = kFloat64ExponentMask;
 
-  typedef uint64_t Bits;
+    typedef uint64_t Bits;
 
-  union layout {
-    uint64_t bits;
-    float value;
-  };
+    union layout {
+        uint64_t bits;
+        float value;
+    };
 
-  static layout to_layout(float value) {
-    layout impl;
-    impl.value = value;
-    return impl;
-  }
+    static layout to_layout(float value) {
+        layout impl;
+        impl.value = value;
+        return impl;
+    }
 };
 
 template <typename T>
@@ -86,19 +86,20 @@ static inline bool
 IsNaN(T v)
 {
 #ifdef _MSC_VER
-  return !!_isnan(v);
+    return !!_isnan(v);
 #else
-  return std::isnan(v);
+    return std::isnan(v);
 #endif
 }
 
-template <typename T> static inline bool
+template <typename T>
+static inline bool
 IsInfinite(T value)
 {
-  typedef float_bits<T> Properties;
-  typedef typename Properties::Bits Bits;
-  Bits bits = Properties::to_layout(value).bits;
-  return (bits & Properties::kExponentMask) == Properties::kExponentMask;
+    typedef float_bits<T> Properties;
+    typedef typename Properties::Bits Bits;
+    Bits bits = Properties::to_layout(value).bits;
+    return (bits & Properties::kExponentMask) == Properties::kExponentMask;
 };
 
 // Performs the operation (x % y) where x and y are floating-point values.
@@ -117,21 +118,20 @@ IsInfinite(T value)
 //
 // If y is Infinity, then r = x (and I = 0).
 // If x is +/-0, then r = +/-0.
-template <typename T> static inline T
+template <typename T>
+static inline T
 FloatModulo(T left, T right)
 {
 #if defined(KE_WINDOWS)
-  // Windows fmod() does not follow the contract above, in that:
-  //  42 % Infinity => NaN, instead of 42, and
-  //  -0 % -N => 0, instead of -0.
-  if ((!IsInfinite(left) && IsInfinite(right)) ||
-      (left == 0 && !IsInfinite(right)))
-  {
-    return left;
-  }
+    // Windows fmod() does not follow the contract above, in that:
+    //  42 % Infinity => NaN, instead of 42, and
+    //  -0 % -N => 0, instead of -0.
+    if ((!IsInfinite(left) && IsInfinite(right)) || (left == 0 && !IsInfinite(right))) {
+        return left;
+    }
 #endif
 
-  return fmod(left, right);
+    return fmod(left, right);
 }
 
 } // namespace ke

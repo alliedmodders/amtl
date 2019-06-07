@@ -2,10 +2,10 @@
 //
 // Copyright (C) 2013, David Anderson and AlliedModders LLC
 // All rights reserved.
-// 
+//
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
-// 
+//
 //  * Redistributions of source code must retain the above copyright notice, this
 //    list of conditions and the following disclaimer.
 //  * Redistributions in binary form must reproduce the above copyright notice,
@@ -27,9 +27,9 @@
 // ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 // POSSIBILITY OF SUCH DAMAGE.
 
-#include <am-thread-utils.h>
-#include <am-utility.h>
-#include <am-linkedlist.h>
+#include <amtl/am-linkedlist.h>
+#include <amtl/am-thread-utils.h>
+#include <amtl/am-utility.h>
 #include <gtest/gtest.h>
 #include "runner.h"
 
@@ -38,99 +38,95 @@ using namespace ke;
 // Simple worker that adds up numbers.
 class TestWorkerModel
 {
- public:
-  TestWorkerModel()
-   : terminate_(false),
-     result_(0),
-     started_(false)
-  {
-  }
+  public:
+    TestWorkerModel()
+     : terminate_(false),
+       result_(0),
+       started_(false)
+    {}
 
-  void Run() {
-    {
-      AutoLock lock(main());
-      started_ = true;
-      main()->Notify();
+    void Run() {
+        {
+            AutoLock lock(main());
+            started_ = true;
+            main()->Notify();
+        }
+
+        AutoLock lock(wakeup());
+        while (true) {
+            while (items_.begin() != items_.end()) {
+                int value = *(items_.begin());
+                items_.erase(items_.begin());
+
+                AutoUnlock unlock(wakeup());
+                result_ += value;
+            }
+
+            // Only terminate if we're guaranteed the queue has no items - after
+            // we've just finished processing all items in the queue, while the lock
+            // is held.
+            if (terminate_)
+                return;
+
+            wakeup()->Wait();
+        }
     }
 
-    AutoLock lock(wakeup());
-    while (true) {
-      while (items_.begin() != items_.end()) {
-        int value = *(items_.begin());
-        items_.erase(items_.begin());
-
-        AutoUnlock unlock(wakeup());
-        result_ += value;
-      }
-
-      // Only terminate if we're guaranteed the queue has no items - after
-      // we've just finished processing all items in the queue, while the lock
-      // is held.
-      if (terminate_)
-        return;
-
-      wakeup()->Wait();
+    ConditionVariable* main() {
+        return &main_;
     }
-  }
+    ConditionVariable* wakeup() {
+        return &wakeup_;
+    }
 
-  ConditionVariable* main() {
-    return &main_;
-  }
-  ConditionVariable* wakeup() {
-    return &wakeup_;
-  }
+    void terminate() {
+        AutoLock lock(&wakeup_);
+        terminate_ = true;
+        wakeup_.Notify();
+    }
 
-  void terminate() {
-    AutoLock lock(&wakeup_);
-    terminate_ = true;
-    wakeup_.Notify();
-  }
+    int result() {
+        return result_;
+    }
 
-  int result() {
-    return result_;
-  }
+    bool started() {
+        return started_;
+    }
 
-  bool started() {
-    return started_;
-  }
+    void send(int value) {
+        AutoLock lock(&wakeup_);
+        items_.append(value);
+        wakeup_.Notify();
+    }
 
-  void send(int value) {
-    AutoLock lock(&wakeup_);
-    items_.append(value);
-    wakeup_.Notify();
-  }
-
- private:
-  ConditionVariable main_;
-  ConditionVariable wakeup_;
-  LinkedList<int> items_;
-  bool terminate_;
-  int result_;
-  bool started_;
+  private:
+    ConditionVariable main_;
+    ConditionVariable wakeup_;
+    LinkedList<int> items_;
+    bool terminate_;
+    int result_;
+    bool started_;
 };
 
-TEST(ThreadUtils, Worker)
-{
-  TestWorkerModel test;
+TEST(ThreadUtils, Worker) {
+    TestWorkerModel test;
 
-  ke::AutoPtr<Thread> thread(new Thread([&test] () -> void {
-    test.Run();
-  }, "TestWorkerModel"));
-  ASSERT_TRUE(thread->Succeeded());
+    ke::AutoPtr<Thread> thread(new Thread([&test]() -> void { test.Run(); }, "TestWorkerModel"));
+    ASSERT_TRUE(thread->Succeeded());
 
-  {
-    AutoLock lock(test.main());
-    ASSERT_TRUE(test.started() || test.main()->Wait(5000) == Wait_Signaled);
-  }
+    {
+        AutoLock lock(test.main());
+        ASSERT_TRUE(test.started() || test.main()->Wait(5000) == Wait_Signaled);
+    }
 
-  int total = 0;
-  for (int i = 0; i < 100000; i++) {
-    test.send(i);
-    total += i;
-  }
+    int total = 0;
+    for (int i = 0; i < 100000; i++) {
+        test.send(i);
+        total += i;
+    }
 
-  test.terminate();
-  thread->Join();
+    test.terminate();
+    thread->Join();
 
-  EXPECT_EQ(test.result(), total);
+    EXPECT_EQ(test.result(), total);
 }

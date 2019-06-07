@@ -2,10 +2,10 @@
 //
 // Copyright (C) 2013, David Anderson and AlliedModders LLC
 // All rights reserved.
-// 
+//
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
-// 
+//
 //  * Redistributions of source code must retain the above copyright notice, this
 //    list of conditions and the following disclaimer.
 //  * Redistributions in binary form must reproduce the above copyright notice,
@@ -30,15 +30,16 @@
 #ifndef _include_amtl_refcounting_h_
 #define _include_amtl_refcounting_h_
 
+#include <amtl/am-moveable.h>
+#include <amtl/am-raii.h>
 #include <assert.h>
 #include <stddef.h>
 #include <stdint.h>
-#include <amtl/am-moveable.h>
-#include <amtl/am-raii.h>
 
 namespace ke {
 
-template <typename T> class RefPtr;
+template <typename T>
+class RefPtr;
 
 // Objects in AMTL inheriting from Refcounted will have an initial refcount
 // of 0. However, in some systems (such as COM), the initial refcount is 1,
@@ -55,21 +56,19 @@ class AlreadyRefed
 {
   public:
     AlreadyRefed(decltype(nullptr))
-      : thing_(nullptr)
-    {
-    }
+     : thing_(nullptr)
+    {}
     explicit AlreadyRefed(T* t)
-      : thing_(t)
-    {
-    }
+     : thing_(t)
+    {}
     AlreadyRefed(const AlreadyRefed<T>& other)
-      : thing_(other.thing_)
+     : thing_(other.thing_)
     {
         if (thing_)
             thing_->AddRef();
     }
     AlreadyRefed(AlreadyRefed<T>&& other)
-      : thing_(other.thing_)
+     : thing_(other.thing_)
     {
         other.thing_ = nullptr;
     }
@@ -117,9 +116,8 @@ class Refcounted
 {
   public:
     Refcounted()
-      : refcount_(0)
-    {
-    }
+     : refcount_(0)
+    {}
 
     void AddRef() {
         refcount_++;
@@ -131,62 +129,61 @@ class Refcounted
     }
 
   protected:
-    ~Refcounted() {
-    }
+    ~Refcounted() {}
 
   private:
     uintptr_t refcount_;
 };
 
 // Use this to forward to ke::Refcounted<X>, when implementing IRefcounted.
-#define KE_IMPL_REFCOUNTING(classname)                                        \
-   void AddRef() {                                                            \
-     ke::Refcounted<classname>::AddRef();                                     \
-   }                                                                          \
-   void Release() {                                                           \
-     ke::Refcounted<classname>::Release();                                    \
-   }
+#define KE_IMPL_REFCOUNTING(classname)        \
+    void AddRef() {                           \
+        ke::Refcounted<classname>::AddRef();  \
+    }                                         \
+    void Release() {                          \
+        ke::Refcounted<classname>::Release(); \
+    }
 
 // This can be used for classes which will inherit from VirtualRefcounted.
 class IRefcounted
 {
- public:
-  virtual ~IRefcounted() {}
-  virtual void AddRef() = 0;
-  virtual void Release() = 0;
+  public:
+    virtual ~IRefcounted() {}
+    virtual void AddRef() = 0;
+    virtual void Release() = 0;
 };
 
 // Classes may be multiply-inherited may wish to derive from this Refcounted
 // instead.
 class VirtualRefcounted : public IRefcounted
 {
- public:
-  VirtualRefcounted() : refcount_(0)
-  {
+  public:
+    VirtualRefcounted()
+     : refcount_(0)
+    {
 #if !defined(NDEBUG)
-    destroying_ = false;
+        destroying_ = false;
 #endif
-  }
-  virtual ~VirtualRefcounted()
-  {}
-  void AddRef() override {
-    assert(!destroying_);
-    refcount_++;
-  }
-  void Release() override {
-    assert(refcount_ > 0);
-    if (--refcount_ == 0) {
-#if !defined(NDEBUG)
-      destroying_ = true;
-#endif
-      delete this;
     }
-  }
-
- private:
-  uintptr_t refcount_;
+    virtual ~VirtualRefcounted() {}
+    void AddRef() override {
+        assert(!destroying_);
+        refcount_++;
+    }
+    void Release() override {
+        assert(refcount_ > 0);
+        if (--refcount_ == 0) {
 #if !defined(NDEBUG)
-  bool destroying_;
+            destroying_ = true;
+#endif
+            delete this;
+        }
+    }
+
+  private:
+    uintptr_t refcount_;
+#if !defined(NDEBUG)
+    bool destroying_;
 #endif
 };
 
@@ -196,55 +193,50 @@ class RefPtr
 {
   public:
     RefPtr(T* thing)
-      : thing_(thing)
+     : thing_(thing)
     {
         AddRef();
     }
 
     RefPtr()
-      : thing_(nullptr)
-    {
-    }
+     : thing_(nullptr)
+    {}
 
     RefPtr(const RefPtr& other)
-      : thing_(other.thing_)
+     : thing_(other.thing_)
     {
         AddRef();
     }
     RefPtr(RefPtr&& other)
-      : thing_(other.thing_)
+     : thing_(other.thing_)
     {
         other.thing_ = nullptr;
     }
     template <typename S>
     RefPtr(const RefPtr<S>& other)
-      : thing_(*other)
+     : thing_(*other)
     {
         AddRef();
     }
     template <typename S>
     RefPtr(RefPtr<S>&& other)
-      : thing_(other.forget().take())
-    {
-    }
+     : thing_(other.forget().take())
+    {}
     RefPtr(const AlreadyRefed<T>& other)
-      : thing_(other.take())
-    {
-    }
+     : thing_(other.take())
+    {}
     template <typename S>
     RefPtr(const AlreadyRefed<S>& other)
-      : thing_(other.take())
-    {
-    }
-    ~RefPtr()
-    {
+     : thing_(other.take())
+    {}
+    ~RefPtr() {
         Release();
     }
 
     T* operator ->() const {
         return operator*();
     }
-    T* operator*() const {
+    T* operator *() const {
         return thing_;
     }
     operator T*() {
@@ -277,7 +269,7 @@ class RefPtr
         AddRef();
         return *this;
     }
-    
+
     template <typename S>
     RefPtr& operator =(const AlreadyRefed<S>& other) {
         Release();
@@ -305,7 +297,7 @@ class RefPtr
     T** byref() {
         return &thing_;
     }
-    T * const* byref_const() const {
+    T* const* byref_const() const {
         return &thing_;
     }
     void** address() {
@@ -329,4 +321,3 @@ class RefPtr
 } // namespace ke
 
 #endif // _include_amtl_refcounting_h_
-

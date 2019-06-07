@@ -2,10 +2,10 @@
 //
 // Copyright (C) 2013-2015, David Anderson and AlliedModders LLC
 // All rights reserved.
-// 
+//
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
-// 
+//
 //  * Redistributions of source code must retain the above copyright notice, this
 //    list of conditions and the following disclaimer.
 //  * Redistributions in binary form must reproduce the above copyright notice,
@@ -30,47 +30,39 @@
 #define _include_amtl_os_system_errors_h_
 
 #if defined(KE_WINDOWS)
-# define WIN32_LEAN_AND_MEAN
-# include <Windows.h>
+#    define WIN32_LEAN_AND_MEAN
+#    include <Windows.h>
 #else
-# include <errno.h>
+#    include <errno.h>
 #endif
-#include <string.h>
 #include <amtl/am-string.h>
+#include <string.h>
 
 namespace ke {
 
 static inline void
-FormatSystemErrorCode(int code, char* error, size_t maxlength)
-{
+FormatSystemErrorCode(int code, char* error, size_t maxlength) {
 #if defined(KE_WINDOWS)
-  if (!FormatMessageA(FORMAT_MESSAGE_FROM_SYSTEM|FORMAT_MESSAGE_IGNORE_INSERTS,
-                     nullptr,
-                     code,
-                     MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
-                     error,
-                     maxlength,
-                     nullptr))
-  {
-    SafeSprintf(error, maxlength, "error code %08x", code);
-    return;
-  }
+    if (!FormatMessageA(FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS, nullptr, code,
+                        MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), error, maxlength, nullptr)) {
+        SafeSprintf(error, maxlength, "error code %08x", code);
+        return;
+    }
 #elif defined(KE_LINUX) && defined(__GLIBC__)
-  const char* ptr = strerror_r(code, error, maxlength);
-  if (ptr != error)
-    ke::SafeSprintf(error, maxlength, "%s", ptr);
+    const char* ptr = strerror_r(code, error, maxlength);
+    if (ptr != error)
+        ke::SafeSprintf(error, maxlength, "%s", ptr);
 #else
-  strerror_r(code, error, maxlength);
+    strerror_r(code, error, maxlength);
 #endif
 }
 
 static inline void
-FormatSystemError(char* error, size_t maxlength)
-{
+FormatSystemError(char* error, size_t maxlength) {
 #if defined(KE_WINDOWS)
-  FormatSystemErrorCode(GetLastError(), error, maxlength);
+    FormatSystemErrorCode(GetLastError(), error, maxlength);
 #else
-  FormatSystemErrorCode(errno, error, maxlength);
+    FormatSystemErrorCode(errno, error, maxlength);
 #endif
 }
 

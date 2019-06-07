@@ -30,11 +30,11 @@
 #ifndef _include_amtl_uniqueptr_h_
 #define _include_amtl_uniqueptr_h_
 
-#include <assert.h>
 #include <amtl/am-cxx.h>
 #include <amtl/am-moveable.h>
 #include <amtl/am-raii.h>
 #include <amtl/am-type-traits.h>
+#include <assert.h>
 
 namespace ke {
 
@@ -43,59 +43,57 @@ namespace ke {
 template <typename T>
 class UniquePtr
 {
- public:
-  UniquePtr()
-   : t_(nullptr)
-  {
-  }
-  explicit UniquePtr(T* t)
-   : t_(t)
-  {}
-  UniquePtr(decltype(nullptr) n)
-   : t_(nullptr)
-  {}
-  UniquePtr(UniquePtr&& other)
-  {
-    t_ = other.t_;
-    other.t_ = nullptr;
-  }
-  ~UniquePtr() {
-    delete t_;
-  }
-  T* get() const {
-    return t_;
-  }
-  T* take() {
-    return ReturnAndVoid(t_);
-  }
-  void assign(T* ptr) {
-    delete t_;
-    t_ = ptr;
-  }
-  T* operator*() const {
-    return t_;
-  }
-  T* operator ->() const {
-    return t_;
-  }
-  T* operator =(UniquePtr&& other) {
-    assign(other.take());
-    return t_;
-  }
-  UniquePtr& operator =(decltype(nullptr)) {
-    assign(nullptr);
-    return *this;
-  }
-  explicit operator bool() const {
-    return t_ != nullptr;
-  }
+  public:
+    UniquePtr()
+     : t_(nullptr) {
+    }
+    explicit UniquePtr(T* t)
+     : t_(t) {
+    }
+    UniquePtr(decltype(nullptr) n)
+     : t_(nullptr) {
+    }
+    UniquePtr(UniquePtr&& other) {
+        t_ = other.t_;
+        other.t_ = nullptr;
+    }
+    ~UniquePtr() {
+        delete t_;
+    }
+    T* get() const {
+        return t_;
+    }
+    T* take() {
+        return ReturnAndVoid(t_);
+    }
+    void assign(T* ptr) {
+        delete t_;
+        t_ = ptr;
+    }
+    T* operator*() const {
+        return t_;
+    }
+    T* operator->() const {
+        return t_;
+    }
+    T* operator=(UniquePtr&& other) {
+        assign(other.take());
+        return t_;
+    }
+    UniquePtr& operator=(decltype(nullptr)) {
+        assign(nullptr);
+        return *this;
+    }
+    explicit operator bool() const {
+        return t_ != nullptr;
+    }
 
- private:
-  UniquePtr(const UniquePtr& other) = delete;
-  UniquePtr& operator =(const UniquePtr& other) = delete;
+  private:
+    UniquePtr(const UniquePtr& other) = delete;
+    UniquePtr& operator=(const UniquePtr& other) = delete;
 
- private:
-  T* t_;
+  private:
+    T* t_;
 };
 
 // Wrapper that automatically deletes its contents. The pointer can be taken
@@ -103,60 +101,57 @@ class UniquePtr
 template <typename T>
 class UniquePtr<T[]>
 {
- public:
-  UniquePtr()
-   : t_(nullptr)
-  {
-  }
-  UniquePtr(UniquePtr&& other)
-    : t_(other.t_)
-  {
-    other.t_ = nullptr;
-  }
-  explicit UniquePtr(T* t)
-   : t_(t)
-  {
-  }
-  ~UniquePtr() {
-    delete [] t_;
-  }
-  T* get() const {
-    return t_;
-  }
-  T* take() {
-    return ReturnAndVoid(t_);
-  }
-  explicit operator bool() const {
-    return t_ != nullptr;
-  }
+  public:
+    UniquePtr()
+     : t_(nullptr) {
+    }
+    UniquePtr(UniquePtr&& other)
+     : t_(other.t_) {
+        other.t_ = nullptr;
+    }
+    explicit UniquePtr(T* t)
+     : t_(t) {
+    }
+    ~UniquePtr() {
+        delete[] t_;
+    }
+    T* get() const {
+        return t_;
+    }
+    T* take() {
+        return ReturnAndVoid(t_);
+    }
+    explicit operator bool() const {
+        return t_ != nullptr;
+    }
 
-  void assign(T* ptr) {
-    delete[] t_;
-    t_ = ptr;
-  }
+    void assign(T* ptr) {
+        delete[] t_;
+        t_ = ptr;
+    }
 
-  T& operator[](size_t index) {
-    return t_[index];
-  }
-  const T& operator[](size_t index) const {
-    return t_[index];
-  }
+    T& operator[](size_t index) {
+        return t_[index];
+    }
+    const T& operator[](size_t index) const {
+        return t_[index];
+    }
 
-  UniquePtr& operator =(decltype(nullptr)) {
-    assign(nullptr);
-    return *this;
-  }
-  UniquePtr& operator =(UniquePtr&& other) {
-    assign(other.take());
-    return *this;
-  }
+    UniquePtr& operator=(decltype(nullptr)) {
+        assign(nullptr);
+        return *this;
+    }
+    UniquePtr& operator=(UniquePtr&& other) {
+        assign(other.take());
+        return *this;
+    }
 
- private:
-  UniquePtr(const UniquePtr& other) = delete;
-  UniquePtr& operator =(const UniquePtr& other) = delete;
+  private:
+    UniquePtr(const UniquePtr& other) = delete;
+    UniquePtr& operator=(const UniquePtr& other) = delete;
 
- private:
-  T* t_;
+  private:
+    T* t_;
 };
 
 namespace impl {
@@ -164,41 +159,38 @@ namespace impl {
 // From N3656.
 template <typename T>
 struct UniquePtrMatcher {
-  typedef UniquePtr<T> SingleObject;
+    typedef UniquePtr<T> SingleObject;
 };
 
 template <typename T>
 struct UniquePtrMatcher<T[]> {
-  typedef UniquePtr<T[]> UnknownBound;
+    typedef UniquePtr<T[]> UnknownBound;
 };
 
 template <typename T, size_t N>
 struct UniquePtrMatcher<T[N]> {
-  typedef void KnownBound;
+    typedef void KnownBound;
 };
 
 } // namespace impl
 
 // C++14 make_unique port.
-template <typename T, typename ... Args>
+template <typename T, typename... Args>
 typename impl::UniquePtrMatcher<T>::SingleObject
-MakeUnique(Args&&... args)
-{
-  return UniquePtr<T>(new T(Forward<Args>(args)...));
+MakeUnique(Args&&... args) {
+    return UniquePtr<T>(new T(Forward<Args>(args)...));
 }
 
 template <typename T>
 typename impl::UniquePtrMatcher<T>::UnknownBound
-MakeUnique(size_t count)
-{
-  typedef typename remove_extent<T>::type BaseType;
-  return UniquePtr<T>(new BaseType[count]());
+MakeUnique(size_t count) {
+    typedef typename remove_extent<T>::type BaseType;
+    return UniquePtr<T>(new BaseType[count]());
 }
 
 // Forbidden to use T[N] or T[](args).
-template <typename T, typename ... Args>
-typename impl::UniquePtrMatcher<T>::KnownBound
-MakeUnique(Args&&... args) = delete;
+template <typename T, typename... Args>
+typename impl::UniquePtrMatcher<T>::KnownBound MakeUnique(Args&&... args) = delete;
 
 } // namespace ke
 

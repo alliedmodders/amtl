@@ -2,10 +2,10 @@
 //
 // Copyright (C) 2013, David Anderson and AlliedModders LLC
 // All rights reserved.
-// 
+//
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
-// 
+//
 //  * Redistributions of source code must retain the above copyright notice, this
 //    list of conditions and the following disclaimer.
 //  * Redistributions in binary form must reproduce the above copyright notice,
@@ -30,34 +30,34 @@
 #ifndef _include_amtl_thread_windows_h_
 #define _include_amtl_thread_windows_h_
 
-#include <windows.h>
 #include <amtl/am-function.h>
+#include <windows.h>
 
 namespace ke {
 
 class CriticalSection : public Lockable
 {
- public:
-  CriticalSection() {
-    InitializeCriticalSection(&cs_);
-  }
-  ~CriticalSection() {
-    DeleteCriticalSection(&cs_);
-  }
+  public:
+    CriticalSection() {
+        InitializeCriticalSection(&cs_);
+    }
+    ~CriticalSection() {
+        DeleteCriticalSection(&cs_);
+    }
 
-  bool DoTryLock() override {
-    return !!TryEnterCriticalSection(&cs_);
-  }
-  void DoLock() override {
-    EnterCriticalSection(&cs_);
-  }
+    bool DoTryLock() override {
+        return !!TryEnterCriticalSection(&cs_);
+    }
+    void DoLock() override {
+        EnterCriticalSection(&cs_);
+    }
 
-  void DoUnlock() override {
-    LeaveCriticalSection(&cs_);
-  }
+    void DoUnlock() override {
+        LeaveCriticalSection(&cs_);
+    }
 
- private:
-  CRITICAL_SECTION cs_;
+  private:
+    CRITICAL_SECTION cs_;
 };
 
 typedef CriticalSection Mutex;
@@ -65,101 +65,101 @@ typedef CriticalSection Mutex;
 // Currently, this class only supports single-listener CVs.
 class ConditionVariable : public Lockable
 {
- public:
-  ConditionVariable() {
-    event_ = CreateEvent(nullptr, FALSE, FALSE, nullptr);
-  }
-  ~ConditionVariable() {
-    CloseHandle(event_);
-  }
+  public:
+    ConditionVariable() {
+        event_ = CreateEvent(nullptr, FALSE, FALSE, nullptr);
+    }
+    ~ConditionVariable() {
+        CloseHandle(event_);
+    }
 
-  bool DoTryLock() override {
-    return cs_.DoTryLock();
-  }
-  void DoLock() override {
-    cs_.DoLock();
-  }
-  void DoUnlock() override {
-    cs_.DoUnlock();
-  }
+    bool DoTryLock() override {
+        return cs_.DoTryLock();
+    }
+    void DoLock() override {
+        cs_.DoLock();
+    }
+    void DoUnlock() override {
+        cs_.DoUnlock();
+    }
 
-  void Notify() {
-    AssertCurrentThreadOwns();
-    SetEvent(event_);
-  }
+    void Notify() {
+        AssertCurrentThreadOwns();
+        SetEvent(event_);
+    }
 
-  WaitResult Wait(size_t timeoutMs) {
-    // This will assert if the lock has not been acquired. We don't need to be
-    // atomic here, like pthread_cond_wait, because the event bit will stick
-    // until reset by a wait function.
-    Unlock();
-    DWORD rv = WaitForSingleObject(event_, int(timeoutMs));
-    Lock();
+    WaitResult Wait(size_t timeoutMs) {
+        // This will assert if the lock has not been acquired. We don't need to be
+        // atomic here, like pthread_cond_wait, because the event bit will stick
+        // until reset by a wait function.
+        Unlock();
+        DWORD rv = WaitForSingleObject(event_, int(timeoutMs));
+        Lock();
 
-    if (rv == WAIT_TIMEOUT)
-      return Wait_Timeout;
-    if (rv == WAIT_FAILED)
-      return Wait_Error;
-    return Wait_Signaled;
-  }
+        if (rv == WAIT_TIMEOUT)
+            return Wait_Timeout;
+        if (rv == WAIT_FAILED)
+            return Wait_Error;
+        return Wait_Signaled;
+    }
 
-  WaitResult Wait() {
-    return Wait(INFINITE);
-  }
+    WaitResult Wait() {
+        return Wait(INFINITE);
+    }
 
- private:
-  CriticalSection cs_;
-  HANDLE event_;
+  private:
+    CriticalSection cs_;
+    HANDLE event_;
 };
 
 class Thread
 {
- public:
-  Thread(ke::Function<void()>&& callback, const char* name = nullptr) {
-    auto ptr = new ke::Function<void()>(ke::Move(callback));
-    thread_ = CreateThread(nullptr, 0, MainCallback, ptr, 0, nullptr);
-    if (!thread_)
-      delete ptr;
-  }
-  ~Thread() {
-    if (!thread_)
-      return;
-    CloseHandle(thread_);
-  }
+  public:
+    Thread(ke::Function<void()>&& callback, const char* name = nullptr) {
+        auto ptr = new ke::Function<void()>(ke::Move(callback));
+        thread_ = CreateThread(nullptr, 0, MainCallback, ptr, 0, nullptr);
+        if (!thread_)
+            delete ptr;
+    }
+    ~Thread() {
+        if (!thread_)
+            return;
+        CloseHandle(thread_);
+    }
 
-  bool Succeeded() const {
-    return !!thread_;
-  }
+    bool Succeeded() const {
+        return !!thread_;
+    }
 
-  void Join() {
-    if (!Succeeded())
-      return;
-    WaitForSingleObject(thread_, INFINITE);
-  }
+    void Join() {
+        if (!Succeeded())
+            return;
+        WaitForSingleObject(thread_, INFINITE);
+    }
 
-  HANDLE handle() const {
-	  return thread_;
-  }
+    HANDLE handle() const {
+        return thread_;
+    }
 
- private:
-  static DWORD WINAPI MainCallback(LPVOID arg) {
-    auto ptr = reinterpret_cast<ke::Lambda<void()>*>(arg);
-    (*ptr)();
-    delete ptr;
-    return 0;
-  }
+  private:
+    static DWORD WINAPI MainCallback(LPVOID arg) {
+        auto ptr = reinterpret_cast<ke::Lambda<void()>*>(arg);
+        (*ptr)();
+        delete ptr;
+        return 0;
+    }
 
 #pragma pack(push, 8)
-  struct ThreadNameInfo {
-    DWORD dwType;
-    LPCSTR szName;
-    DWORD dwThreadID;
-    DWORD dwFlags;
-  };
+    struct ThreadNameInfo {
+        DWORD dwType;
+        LPCSTR szName;
+        DWORD dwThreadID;
+        DWORD dwFlags;
+    };
 #pragma pack(pop)
 
- private:
-  HANDLE thread_;
+  private:
+    HANDLE thread_;
 };
 
 } // namespace ke

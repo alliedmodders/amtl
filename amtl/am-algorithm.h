@@ -2,10 +2,10 @@
 //
 // Copyright (C) 2013-2014, David Anderson and AlliedModders LLC
 // All rights reserved.
-// 
+//
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
-// 
+//
 //  * Redistributions of source code must retain the above copyright notice, this
 //    list of conditions and the following disclaimer.
 //  * Redistributions in binary form must reproduce the above copyright notice,
@@ -29,45 +29,48 @@
 #ifndef _include_amtl_algorithm_h_
 #define _include_amtl_algorithm_h_
 
+#include <stdint.h>
+
 #include <amtl/am-cxx.h>
 #include <amtl/am-moveable.h>
 
 namespace ke {
 
-template <typename T> static inline T
+template <typename T>
+static inline T
 Min(const T& t1, const T& t2)
 {
     return t1 < t2 ? t1 : t2;
 }
 
-template <typename T> static inline T
+template <typename T>
+static inline T
 Max(const T& t1, const T& t2)
 {
     return t1 > t2 ? t1 : t2;
 }
 
-template <typename T> static inline void
+template <typename T>
+static inline void
 Swap(T& left, T& right)
 {
-  T tmp(Move(left));
-  left = Move(right);
-  right = Move(tmp);
+    T tmp(Move(left));
+    left = Move(right);
+    right = Move(tmp);
 }
 
 template <typename T>
-struct LessThan
-{
-  constexpr bool operator ()(const T& left, const T& right) const {
-    return left < right;
-  }
+struct LessThan {
+    constexpr bool operator ()(const T& left, const T& right) const {
+        return left < right;
+    }
 };
 
 template <typename T>
-struct GreaterThan
-{
-  constexpr bool operator ()(const T& left, const T& right) const {
-    return left > right;
-  }
+struct GreaterThan {
+    constexpr bool operator ()(const T& left, const T& right) const {
+        return left > right;
+    }
 };
 
 } // namespace ke

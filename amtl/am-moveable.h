@@ -2,10 +2,10 @@
 //
 // Copyright (C) 2013, David Anderson and AlliedModders LLC
 // All rights reserved.
-// 
+//
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
-// 
+//
 //  * Redistributions of source code must retain the above copyright notice, this
 //    list of conditions and the following disclaimer.
 //  * Redistributions in binary form must reproduce the above copyright notice,
@@ -37,37 +37,37 @@ namespace ke {
 // Previously, we implemented Move semantics without C++11. Now that we use
 // C++11, we implement this as STL does for std::move.
 template <typename T>
-static inline typename remove_reference<T>::type &&
+static inline typename remove_reference<T>::type&&
 Move(T&& t)
 {
-  return static_cast<typename remove_reference<T>::type&&>(t);
+    return static_cast<typename remove_reference<T>::type&&>(t);
 }
 
 // std::forward replacement. See:
 //   http://thbecker.net/articles/rvalue_references/section_07.html and
 //   http://thbecker.net/articles/rvalue_references/section_08.html
 template <typename T>
-static constexpr inline T &&
+static constexpr inline T&&
 Forward(typename remove_reference<T>::type& t) noexcept
 {
-  return static_cast<T&&>(t);
+    return static_cast<T&&>(t);
 }
 
 template <typename T>
-static constexpr inline T &&
+static constexpr inline T&&
 Forward(typename remove_reference<T>::type&& t) noexcept
 {
-  return static_cast<T&&>(t);
+    return static_cast<T&&>(t);
 }
 
 template <typename T>
 static inline void
 MoveRange(T* dest, T* src, size_t length)
 {
-  for (size_t i = 0; i < length; i++) {
-    new (&dest[i]) T(ke::Move(src[i]));
-    src[i].~T();
-  }
+    for (size_t i = 0; i < length; i++) {
+        new (&dest[i]) T(ke::Move(src[i]));
+        src[i].~T();
+    }
 }
 
 } // namespace ke

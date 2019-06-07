@@ -31,7 +31,6 @@ libgtest = builder.Add(binary)
 binary = KE.Program(builder, 'testrunner')
 compiler = binary.compiler
 compiler.includes += [
-  os.path.join(builder.sourcePath, 'amtl'),
   os.path.join(builder.sourcePath),
   os.path.join(builder.sourcePath, 'third_party', 'googletest', 'googletest', 'include'),
 ]

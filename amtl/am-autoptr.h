@@ -30,12 +30,12 @@
 #ifndef _include_amtl_autoptr_h_
 #define _include_amtl_autoptr_h_
 
-#include <assert.h>
 #include <amtl/am-cxx.h>
 #include <amtl/am-moveable.h>
 #include <amtl/am-raii.h>
 #include <amtl/am-type-traits.h>
 #include <amtl/am-uniqueptr.h>
+#include <assert.h>
 
 namespace ke {
 
@@ -44,71 +44,67 @@ namespace ke {
 template <typename T>
 class AutoPtr
 {
- public:
-  AutoPtr()
-   : t_(nullptr)
-  {
-  }
-  explicit AutoPtr(T* t)
-   : t_(t)
-  {
-  }
-  AutoPtr(UniquePtr<T>&& other)
-   : t_(other.take())
-  {
-  }
-  AutoPtr(AutoPtr&& other)
-   : t_(other.take())
-  {
-  }
-  ~AutoPtr() {
-    delete t_;
-  }
-  T* get() const {
-    return t_;
-  }
-  T* take() {
-    return ReturnAndVoid(t_);
-  }
-  T* operator*() const {
-    return t_;
-  }
-  T* operator ->() const {
-    return t_;
-  }
-  operator T* () const {
-    return t_;
-  }
-  void assign(T* t) {
-    delete t_;
-    t_ = t;
-  }
-  AutoPtr& operator =(decltype(nullptr)) {
-    assign(nullptr);
-    return *this;
-  }
-  AutoPtr& operator =(T* t) {
-    assign(t);
-    return *this;
-  }
-  AutoPtr& operator =(AutoPtr&& other) {
-    assign(other.take());
-    return *this;
-  }
-  AutoPtr& operator =(UniquePtr<T>&& other) {
-    assign(other.take());
-    return *this;
-  }
-  explicit operator bool() const {
-    return !!t_;
-  }
+  public:
+    AutoPtr()
+     : t_(nullptr)
+    {}
+    explicit AutoPtr(T* t)
+     : t_(t)
+    {}
+    AutoPtr(UniquePtr<T>&& other)
+     : t_(other.take())
+    {}
+    AutoPtr(AutoPtr&& other)
+     : t_(other.take())
+    {}
+    ~AutoPtr() {
+        delete t_;
+    }
+    T* get() const {
+        return t_;
+    }
+    T* take() {
+        return ReturnAndVoid(t_);
+    }
+    T* operator *() const {
+        return t_;
+    }
+    T* operator ->() const {
+        return t_;
+    }
+    operator T*() const {
+        return t_;
+    }
+    void assign(T* t) {
+        delete t_;
+        t_ = t;
+    }
+    AutoPtr& operator =(decltype(nullptr)) {
+        assign(nullptr);
+        return *this;
+    }
+    AutoPtr& operator =(T* t) {
+        assign(t);
+        return *this;
+    }
+    AutoPtr& operator =(AutoPtr&& other) {
+        assign(other.take());
+        return *this;
+    }
+    AutoPtr& operator =(UniquePtr<T>&& other) {
+        assign(other.take());
+        return *this;
+    }
+    explicit operator bool() const {
+        return !!t_;
+    }
 
- private:
-  AutoPtr(const AutoPtr& other) = delete;
-  AutoPtr& operator =(const AutoPtr& other) = delete;
+  private:
+    AutoPtr(const AutoPtr& other) = delete;
+    AutoPtr& operator =(const AutoPtr& other) = delete;
 
- private:
-  T* t_;
+  private:
+    T* t_;
 };
 
 // Wrapper that automatically deletes its contents. The pointer can be taken
@@ -116,67 +112,63 @@ class AutoPtr
 template <typename T>
 class AutoPtr<T[]>
 {
- public:
-  AutoPtr()
-   : t_(nullptr)
-  {
-  }
-  AutoPtr(AutoPtr&& other)
-   : t_(other.take())
-  {
-  }
-  AutoPtr(UniquePtr<T[]>&& other)
-   : t_(other.take())
-  {
-  }
-  explicit AutoPtr(T* t)
-   : t_(t)
-  {
-  }
-  ~AutoPtr() {
-    delete [] t_;
-  }
-  T* get() const {
-    return t_;
-  }
-  T* take() {
-    return ReturnAndVoid(t_);
-  }
-  T* forget() {
-    return ReturnAndVoid(t_);
-  }
-  explicit operator bool() const {
-    return t_ != nullptr;
-  }
+  public:
+    AutoPtr()
+     : t_(nullptr)
+    {}
+    AutoPtr(AutoPtr&& other)
+     : t_(other.take())
+    {}
+    AutoPtr(UniquePtr<T[]>&& other)
+     : t_(other.take())
+    {}
+    explicit AutoPtr(T* t)
+     : t_(t)
+    {}
+    ~AutoPtr() {
+        delete[] t_;
+    }
+    T* get() const {
+        return t_;
+    }
+    T* take() {
+        return ReturnAndVoid(t_);
+    }
+    T* forget() {
+        return ReturnAndVoid(t_);
+    }
+    explicit operator bool() const {
+        return t_ != nullptr;
+    }
 
-  void assign(T* ptr) {
-    delete[] t_;
-    t_ = ptr;
-  }
+    void assign(T* ptr) {
+        delete[] t_;
+        t_ = ptr;
+    }
 
-  T& operator[](size_t index) {
-    return t_[index];
-  }
+    T& operator [](size_t index) {
+        return t_[index];
+    }
 
-  AutoPtr& operator =(decltype(nullptr)) {
-    assign(nullptr);
-    return *this;
-  }
-  AutoPtr& operator =(AutoPtr&& other) {
-    assign(other.take());
-    return *this;
-  }
-  AutoPtr& operator =(UniquePtr<T[]>&& other) {
-    assign(other.take());
-    return *this;
-  }
+    AutoPtr& operator =(decltype(nullptr)) {
+        assign(nullptr);
+        return *this;
+    }
+    AutoPtr& operator =(AutoPtr&& other) {
+        assign(other.take());
+        return *this;
+    }
+    AutoPtr& operator =(UniquePtr<T[]>&& other) {
+        assign(other.take());
+        return *this;
+    }
 
- private:
-  AutoPtr(const AutoPtr& other) = delete;
-  AutoPtr& operator =(const AutoPtr& other) = delete;
+  private:
+    AutoPtr(const AutoPtr& other) = delete;
+    AutoPtr& operator =(const AutoPtr& other) = delete;
 
- private:
-  T* t_;
+  private:
+    T* t_;
 };
 
 } // namespace ke

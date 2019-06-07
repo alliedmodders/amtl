@@ -40,23 +40,22 @@ namespace ke {
 
 class AtomicRefcount
 {
- public:
-  explicit AtomicRefcount(uintptr_t value)
-   : value_(value)
-  {
-  }
+  public:
+    explicit AtomicRefcount(uintptr_t value)
+     : value_(value)
+    {}
 
-  void increment() {
-    value_.fetch_add(1);
-  }
+    void increment() {
+        value_.fetch_add(1);
+    }
 
-  // Return false if all references are gone.
-  bool decrement() {
-    return value_.fetch_sub(1) != 1;
-  }
+    // Return false if all references are gone.
+    bool decrement() {
+        return value_.fetch_sub(1) != 1;
+    }
 
- private:
-  std::atomic<uintptr_t> value_;
+  private:
+    std::atomic<uintptr_t> value_;
 };
 
 } // namespace ke

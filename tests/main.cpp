@@ -2,10 +2,10 @@
 //
 // Copyright (C) 2013, David Anderson and AlliedModders LLC
 // All rights reserved.
-// 
+//
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
-// 
+//
 //  * Redistributions of source code must retain the above copyright notice, this
 //    list of conditions and the following disclaimer.
 //  * Redistributions in binary form must reproduce the above copyright notice,
@@ -27,44 +27,50 @@
 // ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 // POSSIBILITY OF SUCH DAMAGE.
 
+#include <gtest/gtest.h>
 #include <stddef.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <gtest/gtest.h>
 #include "runner.h"
 
 using namespace ke;
 
-int main(int argc, char** argv)
+int
+main(int argc, char** argv)
 {
-  ::testing::InitGoogleTest(&argc, argv);
-  return RUN_ALL_TESTS();
+    ::testing::InitGoogleTest(&argc, argv);
+    return RUN_ALL_TESTS();
 }
 
 #if defined(__GNUC__)
-extern "C" void __cxa_pure_virtual()
+extern "C" void
+__cxa_pure_virtual()
 {
-  abort();
+    abort();
 }
 
-void* operator new(size_t amount)
+void*
+operator new(size_t amount)
 {
-  return malloc(amount);
+    return malloc(amount);
 }
 
-void* operator new[](size_t amount)
+void*
+operator new[](size_t amount)
 {
-  return malloc(amount);
+    return malloc(amount);
 }
 
-void operator delete(void* p)
+void
+operator delete(void* p)
 {
-  free(p);
+    free(p);
 }
 
-void operator delete[](void* p)
+void
+operator delete[](void* p)
 {
-  free(p);
+    free(p);
 }
 #endif

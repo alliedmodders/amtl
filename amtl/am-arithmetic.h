@@ -2,10 +2,10 @@
 //
 // Copyright (C) 2013-2014, David Anderson and AlliedModders LLC
 // All rights reserved.
-// 
+//
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
-// 
+//
 //  * Redistributions of source code must retain the above copyright notice, this
 //    list of conditions and the following disclaimer.
 //  * Redistributions in binary form must reproduce the above copyright notice,
@@ -36,30 +36,30 @@ namespace ke {
 static inline bool
 TryUint64Multiply(uint64_t left, uint64_t right, uint64_t* out)
 {
-  uint64_t r = left * right;
-  if (r != 0 && ((r / left) != right))
-    return false;
+    uint64_t r = left * right;
+    if (r != 0 && ((r / left) != right))
+        return false;
 
-  *out = r;
-  return true;
+    *out = r;
+    return true;
 }
 
 static inline bool
 TryUint32Add(uint32_t left, uint32_t right, uint32_t* out)
 {
-  if (left + right < Max(left, right))
-    return false;
-  *out = left + right;
-  return true;
+    if (left + right < Max(left, right))
+        return false;
+    *out = left + right;
+    return true;
 }
 
 static inline bool
 TryUint64Add(uint64_t left, uint64_t right, uint64_t* out)
 {
-  if (left + right < Max(left, right))
-    return false;
-  *out = left + right;
-  return true;
+    if (left + right < Max(left, right))
+        return false;
+    *out = left + right;
+    return true;
 }
 
 } // namespace ke

@@ -2,10 +2,10 @@
 //
 // Copyright (C) 2013, David Anderson and AlliedModders LLC
 // All rights reserved.
-// 
+//
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
-// 
+//
 //  * Redistributions of source code must retain the above copyright notice, this
 //    list of conditions and the following disclaimer.
 //  * Redistributions in binary form must reproduce the above copyright notice,
@@ -32,17 +32,17 @@
 
 #include <assert.h>
 #if defined(_MSC_VER)
-# include <windows.h>
-# include <WinBase.h>
+#    include <windows.h>
+#    include <WinBase.h>
 #else
-# include <pthread.h>
+#    include <pthread.h>
 #endif
 #include <amtl/am-autoptr.h>
 
 // Thread primitives for SourcePawn.
 //
 // Linking Requirements:
-// 
+//
 // OS X: None (-lpthread and -ldl are optional)
 // Windows: None
 // Linux: -lpthread -lrt required
@@ -101,16 +101,16 @@ namespace ke {
 #if defined(_MSC_VER)
 typedef DWORD ThreadId;
 
-static inline ThreadId GetCurrentThreadId()
-{
-  return ::GetCurrentThreadId();
+static inline ThreadId
+GetCurrentThreadId() {
+    return ::GetCurrentThreadId();
 }
 #else
 typedef pthread_t ThreadId;
 
-static inline ThreadId GetCurrentThreadId()
-{
-  return pthread_self();
+static inline ThreadId
+GetCurrentThreadId() {
+    return pthread_self();
 }
 #endif
 
@@ -118,204 +118,199 @@ static inline ThreadId GetCurrentThreadId()
 // inherit from this and implement DoLock/DoUnlock.
 class Lockable
 {
- public:
-  Lockable()
-  {
+  public:
+    Lockable() {
 #if !defined(NDEBUG)
-    owner_ = 0;
+        owner_ = 0;
 #endif
-  }
-  virtual ~Lockable() {
-  }
-
-  bool TryLock() {
-    if (DoTryLock()) {
-      DebugSetLocked();
-      return true;
     }
-    return false;
-  }
+    virtual ~Lockable() {
+    }
 
-  void Lock() {
-    assert(Owner() != GetCurrentThreadId());
-    DoLock();
-    DebugSetLocked();
-  }
+    bool TryLock() {
+        if (DoTryLock()) {
+            DebugSetLocked();
+            return true;
+        }
+        return false;
+    }
 
-  void Unlock() {
-    assert(Owner() == GetCurrentThreadId());
-    DebugSetUnlocked();
-    DoUnlock();
-  }
+    void Lock() {
+        assert(Owner() != GetCurrentThreadId());
+        DoLock();
+        DebugSetLocked();
+    }
 
-  void AssertCurrentThreadOwns() const {
-    assert(Owner() == GetCurrentThreadId());
-  }
+    void Unlock() {
+        assert(Owner() == GetCurrentThreadId());
+        DebugSetUnlocked();
+        DoUnlock();
+    }
+
+    void AssertCurrentThreadOwns() const {
+        assert(Owner() == GetCurrentThreadId());
+    }
 #if !defined(NDEBUG)
-  bool Locked() const {
-    return owner_ != 0;
-  }
-  ThreadId Owner() const {
-    return owner_;
-  }
+    bool Locked() const {
+        return owner_ != 0;
+    }
+    ThreadId Owner() const {
+        return owner_;
+    }
 #endif
 
-  virtual bool DoTryLock() = 0;
-  virtual void DoLock() = 0;
-  virtual void DoUnlock() = 0;
+    virtual bool DoTryLock() = 0;
+    virtual void DoLock() = 0;
+    virtual void DoUnlock() = 0;
 
- protected:
-  void DebugSetUnlocked() {
+  protected:
+    void DebugSetUnlocked() {
 #if !defined(NDEBUG)
-    owner_ = 0;
+        owner_ = 0;
 #endif
-  }
-  void DebugSetLocked() {
+    }
+    void DebugSetLocked() {
 #if !defined(NDEBUG)
-    owner_ = GetCurrentThreadId();
+        owner_ = GetCurrentThreadId();
 #endif
-  }
+    }
 
- protected:
+  protected:
 #if !defined(NDEBUG)
-  ThreadId owner_;
+    ThreadId owner_;
 #endif
 };
 
 // RAII for automatically locking and unlocking an object.
 class AutoLock
 {
- public:
-  AutoLock(Lockable* lock)
-   : lock_(lock)
-  {
-    lock_->Lock();
-  }
-  ~AutoLock() {
-    lock_->Unlock();
-  }
+  public:
+    AutoLock(Lockable* lock)
+     : lock_(lock) {
+        lock_->Lock();
+    }
+    ~AutoLock() {
+        lock_->Unlock();
+    }
 
- private:
-  Lockable* lock_;
+  private:
+    Lockable* lock_;
 };
 
 class AutoMaybeLock
 {
-  friend class AutoMaybeUnlock;
+    friend class AutoMaybeUnlock;
 
- public:
-  AutoMaybeLock(Lockable* lock)
-   : lock_(lock)
-  {
-    if (lock_)
-      lock_->Lock();
-  }
-  ~AutoMaybeLock() {
-    if (lock_)
-      lock_->Unlock();
-  }
-
-  // Unlock and void the locked object. After calling this, the region covered
-  // by the AutoMaybeLocked is not guaranteed to be locked! This is useful for
-  // patterns like:
-  //
-  //   AutoMaybeLock lock(x);
-  //   {
-  //     ...
-  //     return helper(&lock);
-  //   }
-  //
-  // helper_while_locked(AutoMaybeLock* mlock) {
-  //   ...
-  //   mlock->unlock();
-  //   callback
-  // }
-  //
-  // In this situation, we can avoid using AutoMaybeUnlock which would re-lock
-  // only to unlock again immediately.
-  void unlock() {
-    if (lock_) {
-      lock_->Unlock();
-      lock_ = nullptr;
+  public:
+    AutoMaybeLock(Lockable* lock)
+     : lock_(lock) {
+        if (lock_)
+            lock_->Lock();
     }
-  }
+    ~AutoMaybeLock() {
+        if (lock_)
+            lock_->Unlock();
+    }
 
- private:
-  Lockable* lock_;
+    // Unlock and void the locked object. After calling this, the region covered
+    // by the AutoMaybeLocked is not guaranteed to be locked! This is useful for
+    // patterns like:
+    //
+    //   AutoMaybeLock lock(x);
+    //   {
+    //     ...
+    //     return helper(&lock);
+    //   }
+    //
+    // helper_while_locked(AutoMaybeLock* mlock) {
+    //   ...
+    //   mlock->unlock();
+    //   callback
+    // }
+    //
+    // In this situation, we can avoid using AutoMaybeUnlock which would re-lock
+    // only to unlock again immediately.
+    void unlock() {
+        if (lock_) {
+            lock_->Unlock();
+            lock_ = nullptr;
+        }
+    }
+
+  private:
+    Lockable* lock_;
 };
 
 class AutoMaybeUnlock
 {
- public:
-  AutoMaybeUnlock(Lockable* lock)
-   : lock_(lock)
-  {
-    if (lock_)
-      lock_->Unlock();
-  }
-  ~AutoMaybeUnlock() {
-    if (lock_)
-      lock_->Lock();
-  }
+  public:
+    AutoMaybeUnlock(Lockable* lock)
+     : lock_(lock) {
+        if (lock_)
+            lock_->Unlock();
+    }
+    ~AutoMaybeUnlock() {
+        if (lock_)
+            lock_->Lock();
+    }
 
- private:
-  Lockable* lock_;
+  private:
+    Lockable* lock_;
 };
 
 class AutoTryLock
 {
- public:
-  AutoTryLock(Lockable* lock) {
-    lock_ = lock->TryLock() ? lock : nullptr;
-  }
-  ~AutoTryLock() {
-    if (lock_)
-      lock_->Unlock();
-  }
+  public:
+    AutoTryLock(Lockable* lock) {
+        lock_ = lock->TryLock() ? lock : nullptr;
+    }
+    ~AutoTryLock() {
+        if (lock_)
+            lock_->Unlock();
+    }
 
-  explicit operator bool() const {
-    return !!lock_;
-  }
+    explicit operator bool() const {
+        return !!lock_;
+    }
 
- private:
-  Lockable* lock_;
+  private:
+    Lockable* lock_;
 };
 
 // RAII for automatically unlocking and relocking an object.
 class AutoUnlock
 {
- public:
-  AutoUnlock(Lockable* lock)
-   : lock_(lock)
-  {
-    lock_->Unlock();
-  }
-  ~AutoUnlock() {
-    lock_->Lock();
-  }
+  public:
+    AutoUnlock(Lockable* lock)
+     : lock_(lock) {
+        lock_->Unlock();
+    }
+    ~AutoUnlock() {
+        lock_->Lock();
+    }
 
- private:
-  Lockable* lock_;
+  private:
+    Lockable* lock_;
 };
 
 enum WaitResult {
-  // Woke up because something happened.
-  Wait_Signaled,
+    // Woke up because something happened.
+    Wait_Signaled,
 
-  // Woke up because nothing happened and a timeout was specified.
-  Wait_Timeout,
+    // Woke up because nothing happened and a timeout was specified.
+    Wait_Timeout,
 
-  // Woke up, but because of an error.
-  Wait_Error
+    // Woke up, but because of an error.
+    Wait_Error
 };
 
 } // namespace ke
 
 // Include the actual thread implementations.
 #if defined(_MSC_VER)
-# include "am-thread-windows.h"
+#    include "am-thread-windows.h"
 #else
-# include "am-thread-posix.h"
+#    include "am-thread-posix.h"
 #endif
 
 #endif // _include_amtl_threads_
