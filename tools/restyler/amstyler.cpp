@@ -214,6 +214,7 @@ public:
       return true;
 
     SourceLocation rparenLoc = getRParenLoc(s->getExceptionDecl()->getLocEnd());
+    assert(rparenLoc.isValid());
     return maybeSplitBrace(s->getLocStart(), rparenLoc, s->getHandlerBlock());
   }
 
@@ -225,6 +226,10 @@ public:
       return true;
 
     SourceLocation rparenLoc = getRParenLoc(s);
+    if (rparenLoc.isInvalid())
+      rparenLoc = getRParenLocBackwards(s->getLocStart(), body->getLocStart());
+    if (rparenLoc.isInvalid())
+      return true;
     return maybeSplitBrace(s->getLocStart(), rparenLoc, body);
   }
 
@@ -387,7 +392,7 @@ private:
         llvm::errs() << "Invalid rparen loc in ctor.\n";
         return;
       }
-      auto next_loc = getNextToken(rparen_loc);
+      auto next_loc = getNextToken(rparen_loc.getLocWithOffset(1));
       if (getTokenKind(next_loc) != tok::comma)
         continue;
       if (getLine(rparen_loc) == getLine(next_loc))
@@ -453,19 +458,37 @@ private:
     SourceLocation end_loc = stmt->getCond()->getLocEnd();
     if (auto cond_var = stmt->getConditionVariableDeclStmt())
       end_loc = cond_var->getLocEnd();
+    if (end_loc.isInvalid())
+      return end_loc;
     return getRParenLoc(end_loc);
+  }
+
+  SourceLocation getRParenLocBackwards(const SourceLocation& stop_at, const SourceLocation& brace_loc) {
+    SourceLocation loc = brace_loc;
+    while (loc != stop_at) {
+      FullSourceLoc full_loc(loc, src_mgr_);
+      char c = *full_loc.getCharacterData();
+      if (c == ')')
+        return loc;
+      loc = loc.getLocWithOffset(-1);
+    }
+    return SourceLocation();
   }
 
   SourceLocation getRParenLoc(SourceLocation end_loc) {
     end_loc = skipToken(end_loc);
-    end_loc = skipWhitespace(end_loc);
+    end_loc = getNextToken(end_loc);
+
+    if (getTokenKind(end_loc) == tok::hash) {
+      // This is too complex to handle.
+      return SourceLocation();
+    }
 
     assert(getTokenKind(end_loc) == tok::r_paren);
     return end_loc;
   }
 
   SourceLocation getNextToken(SourceLocation loc) {
-    loc = loc.getLocWithOffset(1);
     for (;;) {
       loc = skipWhitespace(loc);
       if (getTokenKind(loc) != tok::comment)
