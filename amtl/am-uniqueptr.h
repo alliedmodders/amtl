@@ -1,4 +1,4 @@
-// vim: set sts=8 ts=2 sw=2 tw=99 et:
+// vim: set sts=8 ts=4 sw=4 tw=99 et:
 //
 // Copyright (C) 2013-2014, David Anderson and AlliedModders LLC
 // All rights reserved.
@@ -54,8 +54,10 @@ class UniquePtr
      : t_(nullptr) {
     }
     UniquePtr(UniquePtr&& other) {
-        t_ = other.t_;
-        other.t_ = nullptr;
+        t_ = other.take();
+    }
+    template <typename U> UniquePtr(UniquePtr<U>&& other) {
+        t_ = other.take();
     }
     ~UniquePtr() {
         delete t_;
@@ -70,13 +72,17 @@ class UniquePtr
         delete t_;
         t_ = ptr;
     }
-    T* operator*() const {
+    T* operator *() const {
         return t_;
     }
-    T* operator->() const {
+    T* operator ->() const {
         return t_;
     }
-    T* operator=(UniquePtr&& other) {
+    T* operator =(UniquePtr&& other) {
+        assign(other.take());
+        return t_;
+    }
+    template <typename U> T* operator =(UniquePtr<U>&& other) {
         assign(other.take());
         return t_;
     }
