@@ -125,3 +125,12 @@ TEST(String, StrCpy) {
     SafeStrcpyN(buffer, sizeof(buffer), "qwertyuiop", 3);
     EXPECT_EQ(strcmp(buffer, "qwe"), 0);
 }
+
+TEST(String, StartsWith) {
+    AString str("blah");
+
+    EXPECT_TRUE(str.startsWith("b"));
+    EXPECT_TRUE(str.startsWith("blah"));
+    EXPECT_FALSE(str.startsWith("a"));
+    EXPECT_FALSE(str.startsWith("blah2"));
+}

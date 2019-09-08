@@ -159,6 +159,10 @@ class AString
         return chars_.get();
     }
 
+    bool startsWith(const char* other) const {
+      return strncmp(chars(), other, strlen(other)) == 0;
+    }
+
     AString uppercase() const {
         UniquePtr<char[]> buffer = MakeUnique<char[]>(length_ + 1);
         for (size_t i = 0; i < length_; i++)
