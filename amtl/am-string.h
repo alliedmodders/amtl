@@ -1,4 +1,4 @@
-// vim: set sts=8 ts=2 sw=2 tw=99 et:
+// vim: set sts=8 ts=4 sw=4 tw=99 et:
 //
 // Copyright (C) 2013, David Anderson and AlliedModders LLC
 // All rights reserved.
@@ -176,6 +176,10 @@ class AString
             buffer[i] = tolower(chars_[i]);
         buffer[length_] = '\0';
         return AString(Move(buffer), length_);
+    }
+
+    bool empty() const {
+        return length_ == 0;
     }
 
   private:

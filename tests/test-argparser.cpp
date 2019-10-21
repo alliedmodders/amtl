@@ -1,4 +1,4 @@
-// vim: set sts=8 ts=2 sw=2 tw=99 et:
+// vim: set sts=8 ts=4 sw=4 tw=99 et:
 //
 // Copyright (C) 2013, David Anderson and AlliedModders LLC
 // All rights reserved.
@@ -184,4 +184,46 @@ TEST(ArgParser, StopArg2) {
 
     EXPECT_TRUE(parser.parsev("-v", "-w", nullptr));
     EXPECT_TRUE(show_version.value());
+}
+
+TEST(ArgParser, NoSeparator) {
+    Parser parser("help");
+    parser.enable_inline_values();
+
+    IntOption opt(parser, "-O", nullptr, {}, "Optimization level");
+
+    ASSERT_TRUE(parser.parsev("-O2", nullptr));
+    EXPECT_EQ(opt.value(), 2);
+}
+
+TEST(ArgParser, ColonSeparator) {
+    Parser parser("help");
+    parser.enable_inline_values();
+
+    IntOption opt(parser, "-O", nullptr, {}, "Optimization level");
+
+    ASSERT_TRUE(parser.parsev("-O:2", nullptr));
+    EXPECT_EQ(opt.value(), 2);
+}
+
+TEST(ArgParser, Slashes) {
+    Parser parser("help");
+    parser.enable_inline_values();
+    parser.allow_slashes();
+
+    IntOption opt(parser, "-O", nullptr, {}, "Optimization level");
+
+    ASSERT_TRUE(parser.parsev("/O:2", nullptr));
+    EXPECT_EQ(opt.value(), 2);
+}
+
+TEST(ArgParser, CollectExtra) {
+    Parser parser("help");
+    parser.collect_extra_args();
+
+    ASSERT_TRUE(parser.parsev("a", "b", "c", nullptr));
+    ASSERT_EQ(parser.extra_args().length(), (unsigned)3);
+    EXPECT_EQ(parser.extra_args()[0].compare("a"), 0);
+    EXPECT_EQ(parser.extra_args()[1].compare("b"), 0);
+    EXPECT_EQ(parser.extra_args()[2].compare("c"), 0);
 }

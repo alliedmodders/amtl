@@ -1,4 +1,4 @@
-// vim: set sts=8 ts=2 sw=2 tw=99 et:
+// vim: set sts=8 ts=4 sw=4 tw=99 et:
 //
 // Copyright (C) 2018, David Anderson and AlliedModders LLC
 // All rights reserved.
@@ -49,7 +49,7 @@ class Parser
     friend class Option;
 
   public:
-    explicit inline Parser(const char* help);
+    explicit inline Parser(const char* help = nullptr);
 
     inline void add(IOption* option);
     inline bool parse(int argc, char** argv);
@@ -62,11 +62,46 @@ class Parser
 
     inline void reset();
 
+    // Enable the following patterns:
+    //    -s:N
+    //    -sN
+    // This is for compatibility with spcomp. It only works when the short
+    // form is one character.
+    void enable_inline_values() {
+        inline_values_ = true;
+    }
+
+    // Allow /Option instead of -Option.
+    void allow_slashes() {
+        allow_slashes_ = true;
+    }
+
+    // Collect values that are not options (i.e. do not start with a dash or
+    // slash), and are not positionals.
+    void collect_extra_args() {
+        collect_extra_args_ = true;
+    }
+
+    const Vector<AString>& extra_args() const {
+        return extra_args_;
+    }
+
+    void set_usage_line(const char* usage) {
+        usage_line_ = usage;
+    }
+
+    static void add_static_option(IOption* option) {
+        if (!sStaticOptions)
+            sStaticOptions = new Vector<IOption*>();
+        sStaticOptions->append(option);
+    }
+
   private:
     inline bool parse_impl(const Vector<const char*>& args);
 
     inline IOption* find_short(const char* short_form, size_t len);
     inline IOption* find_long(const char* long_form, size_t len);
+    inline IOption* find_inline_short(char c);
 
     inline bool unrecognized_option(const char* arg);
     inline bool unrecognized_extra();
@@ -75,12 +110,19 @@ class Parser
     inline bool missing_positional(IOption* option);
     inline bool option_already_specified(IOption* option);
 
+    static Vector<IOption*> *sStaticOptions;
+
   private:
     Vector<IOption*> options_;
     Vector<IOption*> positionals_;
-    const char* help_;
+    ke::AString help_;
     ke::AString error_;
+    ke::AString usage_line_;
+    bool inline_values_ = false;
+    bool allow_slashes_ = false;
+    bool collect_extra_args_ = false;
     UniquePtr<IOption> help_option_;
+    Vector<AString> extra_args_;
 };
 
 class IOption
@@ -107,11 +149,12 @@ class IOption
 
   protected:
     IOption(const char* short_form, const char* long_form, const char* name, const char* help)
-     : short_form_(short_form)
-     , long_form_(long_form)
-     , name_(name)
-     , help_(help)
-     , has_value_(false) {
+     : short_form_(short_form),
+       long_form_(long_form),
+       name_(name),
+       help_(help),
+       has_value_(false)
+    {
         // Cannot have both short/longform and name.
         assert(((short_form || long_form) && !name_) || (!short_form && !long_form && name_));
 
@@ -173,16 +216,37 @@ class Option : public IOption
   public:
     Option(Parser& parser, const char* short_form, const char* long_form,
            const Maybe<ValueType>& default_value, const char* help)
-     : IOption(short_form, long_form, nullptr, help)
-     , default_value_(default_value) {
+     : IOption(short_form, long_form, nullptr, help),
+       default_value_(default_value)
+    {
         if (default_value_)
             value_ = *default_value_;
         parser.add(this);
     }
 
     Option(Parser& parser, const char* name, const char* help)
-     : IOption(nullptr, nullptr, name, help) {
+     : IOption(nullptr, nullptr, name, help)
+    {
         parser.add(this);
+    }
+
+    Option(const char* short_form, const char* long_form,
+           const Maybe<ValueType>& default_value, const char* help)
+     : IOption(short_form, long_form, nullptr, help),
+       default_value_(default_value)
+    {
+        if (default_value_)
+            value_ = *default_value_;
+        Parser::add_static_option(this);
+    }
+
+    Option(const char* name, const char* help)
+     : IOption(nullptr, nullptr, name, help)
+    {
+        Parser::add_static_option(this);
+    }
+
+    ~Option() {
     }
 
     bool hasValue() const {
@@ -229,12 +293,24 @@ class ToggleOption : public IOption
   public:
     ToggleOption(Parser& parser, const char* short_form, const char* long_form,
                  const Maybe<bool>& default_value, const char* help)
-     : IOption(short_form, long_form, nullptr, help) {
+     : IOption(short_form, long_form, nullptr, help)
+    {
         if (default_value)
             default_value_ = *default_value;
         else
             default_value_ = false;
         parser.add(this);
+    }
+
+    ToggleOption(const char* short_form, const char* long_form,
+                 const Maybe<bool>& default_value, const char* help)
+     : IOption(short_form, long_form, nullptr, help)
+    {
+        if (default_value)
+            default_value_ = *default_value;
+        else
+            default_value_ = false;
+        Parser::add_static_option(this);
     }
 
     bool value() const {
@@ -278,8 +354,13 @@ class StopOption : public ToggleOption
   public:
     StopOption(Parser& parser, const char* short_form, const char* long_form,
                const Maybe<bool>& default_value, const char* help)
-     : ToggleOption(parser, short_form, long_form, default_value, help) {
-    }
+     : ToggleOption(parser, short_form, long_form, default_value, help)
+    {}
+
+    StopOption(const char* short_form, const char* long_form,
+               const Maybe<bool>& default_value, const char* help)
+     : ToggleOption(short_form, long_form, default_value, help)
+    {}
 
   protected:
     bool haltOnValue() const override {
@@ -297,8 +378,15 @@ class VectorOption : public IOption
 
   public:
     VectorOption(Parser& parser, const char* short_form, const char* long_form, const char* help)
-     : IOption(short_form, long_form, nullptr, help) {
+     : IOption(short_form, long_form, nullptr, help)
+    {
         parser.add(this);
+    }
+
+    VectorOption(const char* short_form, const char* long_form, const char* help)
+     : IOption(short_form, long_form, nullptr, help)
+    {
+        Parser::add_static_option(this);
     }
 
     Vector<ValueType>& values() {
@@ -335,8 +423,12 @@ class RepeatOption : public VectorOption<Type>
 {
   public:
     RepeatOption(Parser& parser, const char* short_form, const char* long_form, const char* help)
-     : VectorOption<Type>(parser, short_form, long_form, help) {
-    }
+     : VectorOption<Type>(parser, short_form, long_form, help)
+    {}
+
+    RepeatOption(const char* short_form, const char* long_form, const char* help)
+     : VectorOption<Type>(short_form, long_form, help)
+    {}
 };
 
 // Value policies should inherit from this.
@@ -373,6 +465,8 @@ struct ValuePolicy<bool> {
 template <>
 struct ValuePolicy<AString> : public BaseValuePolicy {
     static bool consumeValue(const char* arg, ke::AString* out) {
+        if (strlen(arg) == 0)
+            return false;
         *out = arg;
         return true;
     }
@@ -394,14 +488,23 @@ typedef Option<AString> StringOption;
 typedef Option<int> IntOption;
 
 inline Parser::Parser(const char* help)
- : help_(help) {
+{
+    if (help)
+        help_ = help;
+
     Option<bool>* help_option =
         new Option<bool>(*this, "h", "help", Nothing(), "Display this help menu.");
     help_option_ = UniquePtr<IOption>(help_option);
+
+    if (sStaticOptions) {
+        for (const auto& option : *sStaticOptions)
+            add(option);
+    }
 }
 
 inline void
-Parser::add(IOption* option) {
+Parser::add(IOption* option)
+{
     if (option->short_form() || option->long_form())
         options_.append(option);
     else
@@ -409,7 +512,8 @@ Parser::add(IOption* option) {
 }
 
 inline bool
-Parser::parse(int argc, char** argv) {
+Parser::parse(int argc, char** argv)
+{
     Vector<const char*> args;
     for (int i = 1; i < argc; i++)
         args.append(argv[i]);
@@ -417,12 +521,14 @@ Parser::parse(int argc, char** argv) {
 }
 
 inline bool
-Parser::parse(const Vector<const char*>& args) {
+Parser::parse(const Vector<const char*>& args)
+{
     return parse_impl(args);
 }
 
 inline bool
-Parser::parse(const Vector<AString>& args) {
+Parser::parse(const Vector<AString>& args)
+{
     Vector<const char*> ptr_args;
     for (size_t i = 0; i < args.length(); i++)
         ptr_args.append(args[i].chars());
@@ -430,7 +536,8 @@ Parser::parse(const Vector<AString>& args) {
 }
 
 inline bool
-Parser::parsev(const char* arg1, ...) {
+Parser::parsev(const char* arg1, ...)
+{
     va_list ap;
     va_start(ap, arg1);
 
@@ -445,7 +552,8 @@ Parser::parsev(const char* arg1, ...) {
 }
 
 inline bool
-Parser::parse_impl(const Vector<const char*>& args) {
+Parser::parse_impl(const Vector<const char*>& args)
+{
     size_t positional = 0;
 
     for (size_t i = 0; i < args.length(); i++) {
@@ -453,39 +561,57 @@ Parser::parse_impl(const Vector<const char*>& args) {
         IOption* option = nullptr;
 
         const char* value_ptr = nullptr;
-        if (arg[0] == '-') {
-            // Short form arguments can look like:
+        if (arg[0] == '-' || (allow_slashes_ && arg[0] == '/')) {
+            // Arguments can look like:
             //   -key
             //   -key val
             //   -key=val
             //   --key
             //   --key val
             //   --key=val
+            // Or with inline values enabled,
+            //   -keyval
+            //   -key:val
             size_t len = strlen(arg);
-            const char* equals = strchr(arg, '=');
-            if (equals)
-                len = equals - arg;
+            const char* sep = strchr(arg, '=');
+            if (!sep && inline_values_)
+                sep = strchr(arg, ':');
+            if (inline_values_ && sep && strlen(sep + 1) == 0)
+                sep = nullptr;    // Don't allow -key= or -key: with no arg.
+            if (sep)
+                len = sep - arg;
 
-            if (arg[1] == '-')
+            if (arg[0] == '-' && arg[1] == '-') {
                 option = find_long(&arg[2], len - 2);
-            else
+            } else {
                 option = find_short(&arg[1], len - 1);
+                if (!option && inline_values_) {
+                    option = find_inline_short(arg[1]);
+                    if (option && len > 2)
+                        sep = arg + 1;
+                }
+            }
 
             if (!option)
                 return unrecognized_option(arg);
             if (option->has_value() && !option->repeatable())
                 return option_already_specified(option);
 
-            if (equals) {
+            if (sep) {
                 if (option->isToggle())
-                    return option_invalid_value(option, equals + 1);
-                value_ptr = equals + 1;
+                    return option_invalid_value(option, sep + 1);
+                value_ptr = sep + 1;
             }
         } else {
             // Positional arguments have an implicit key - the next argument in
             // position.
-            if (positional >= positionals_.length())
-                return unrecognized_extra();
+            if (positional >= positionals_.length()) {
+                if (!collect_extra_args_)
+                    return unrecognized_extra();
+
+                extra_args_.append(arg);
+                continue;
+            }
 
             option = positionals_[positional++];
             value_ptr = arg;
@@ -524,7 +650,8 @@ Parser::parse_impl(const Vector<const char*>& args) {
 }
 
 inline IOption*
-Parser::find_short(const char* short_form, size_t len) {
+Parser::find_short(const char* short_form, size_t len)
+{
     for (IOption* option : options_) {
         if (!option->short_form())
             continue;
@@ -537,7 +664,20 @@ Parser::find_short(const char* short_form, size_t len) {
 }
 
 inline IOption*
-Parser::find_long(const char* long_form, size_t len) {
+Parser::find_inline_short(char c)
+{
+    for (IOption* option : options_) {
+        if (!option->short_form())
+            continue;
+        if (strlen(option->short_form()) == 1 && option->short_form()[0] == c)
+            return option;
+    }
+    return nullptr;
+}
+
+inline IOption*
+Parser::find_long(const char* long_form, size_t len)
+{
     for (IOption* option : options_) {
         if (!option->long_form())
             continue;
@@ -550,43 +690,50 @@ Parser::find_long(const char* long_form, size_t len) {
 }
 
 inline bool
-Parser::unrecognized_option(const char* arg) {
+Parser::unrecognized_option(const char* arg)
+{
     error_.format("Unrecognized option: %s", arg);
     return false;
 }
 
 inline bool
-Parser::unrecognized_extra() {
+Parser::unrecognized_extra()
+{
     error_ = "Unrecognized extra arguments at end of command.";
     return false;
 }
 
 inline bool
-Parser::option_needs_value(IOption* option) {
+Parser::option_needs_value(IOption* option)
+{
     error_.format("Option '%s' needs a value.", option->pretty_name());
     return false;
 }
 
 inline bool
-Parser::option_invalid_value(IOption* option, const char* value) {
+Parser::option_invalid_value(IOption* option, const char* value)
+{
     error_.format("Argument '%s' did not recognize value: %s", option->pretty_name(), value);
     return false;
 }
 
 inline bool
-Parser::missing_positional(IOption* option) {
+Parser::missing_positional(IOption* option)
+{
     error_.format("Missing value for '%s'.", option->pretty_name());
     return false;
 }
 
 inline bool
-Parser::option_already_specified(IOption* option) {
+Parser::option_already_specified(IOption* option)
+{
     error_.format("Option '%s' was specified more than once.", option->pretty_name());
     return false;
 }
 
 inline void
-Parser::usage(FILE* fp, int argc, char** argv) {
+Parser::usage(FILE* fp, int argc, char** argv)
+{
     bool display_full_help = false;
 
     if (error_.length()) {
@@ -607,22 +754,24 @@ Parser::usage(FILE* fp, int argc, char** argv) {
         // Otherwise, discard the error, and show the full help menu.
     }
 
-    fprintf(fp, "%s\n", help_);
-    fprintf(fp, "\n");
+    if (!help_.empty()) {
+        fprintf(fp, "%s\n", help_.chars());
+        fprintf(fp, "\n");
+    }
 
     usage_line(argv, fp);
 
     struct Entry {
         explicit Entry(IOption* option)
-         : col_width(0)
-         , option(option) {
-        }
+         : col_width(0),
+           option(option)
+        {}
         Entry(Entry&& other)
-         : opt_lines(Move(other.opt_lines))
-         , help_lines(Move(other.help_lines))
-         , col_width(other.col_width)
-         , option(other.option) {
-        }
+         : opt_lines(Move(other.opt_lines)),
+           help_lines(Move(other.help_lines)),
+           col_width(other.col_width),
+           option(other.option)
+        {}
         Vector<AString> opt_lines;
         Vector<AString> help_lines;
         size_t col_width;
@@ -720,9 +869,14 @@ Parser::usage(FILE* fp, int argc, char** argv) {
     // Finally, print detailed usage. When possible we put both the option and
     // its help on one line, but if the left-hand cell is too big we use
     // separate lines.
-    fprintf(fp, "\n");
-    if (!positionals_.empty())
+    if (!positionals_.empty()) {
+        fprintf(fp, "\n");
         fprintf(fp, "positional arguments:\n");
+    }
+
+    char spaces[29];
+    memset(spaces, ' ', sizeof(spaces) - 1);
+    spaces[sizeof(spaces) - 1] = '\0';
 
     bool started_optional = false;
     for (const Entry& entry : entries) {
@@ -746,7 +900,7 @@ Parser::usage(FILE* fp, int argc, char** argv) {
         }
 
         for (size_t i = help_line_cursor; i < entry.help_lines.length(); i++)
-            fprintf(fp, "%28s\n", entry.help_lines[i].chars());
+            fprintf(fp, "%s%s\n", spaces, entry.help_lines[i].chars());
     }
 }
 
@@ -756,16 +910,21 @@ Parser::usage_line(char** argv, FILE* out) {
 
     words.append("Usage:");
     words.append(argv ? argv[0] : " ");
-    words.append("[-h]");
-    for (IOption* option : positionals_)
-        words.append(option->name());
+    if (usage_line_.empty()) {
+        words.append("[-h]");
+        for (IOption* option : positionals_)
+            words.append(option->name());
+    } else {
+        words.append(usage_line_);
+    }
 
     AString text = Join(words, " ");
     fprintf(out, "%s\n", text.chars());
 }
 
 inline void
-Parser::reset() {
+Parser::reset()
+{
     for (IOption* option : options_)
         option->reset();
     for (IOption* option : positionals_)

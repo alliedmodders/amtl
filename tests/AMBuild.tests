@@ -40,6 +40,7 @@ if compiler.like('msvc'):
 if builder.target_platform == 'linux':
   compiler.linkflags.append('-ldl')
 compiler.linkflags.append(libgtest.binary)
+compiler.linkflags.append(KE.libamtl)
 
 binary.sources += [
   'main.cpp',
