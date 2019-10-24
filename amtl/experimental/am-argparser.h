@@ -60,6 +60,8 @@ class Parser
     inline void usage(FILE* fp, int argc, char** argv);
     inline void usage_line(char** argv, FILE* out);
 
+    inline void add_usage_line(const char* option, const char* help);
+
     inline void reset();
 
     // Enable the following patterns:
@@ -123,6 +125,7 @@ class Parser
     bool collect_extra_args_ = false;
     UniquePtr<IOption> help_option_;
     Vector<AString> extra_args_;
+    Vector<UniquePtr<IOption>> extra_usage_;
 };
 
 class IOption
@@ -203,6 +206,18 @@ class IOption
     const char* name_;
     const char* help_;
     bool has_value_;
+};
+
+class UsageOnlyOption final : public IOption
+{
+  public:
+    UsageOnlyOption(const char* option, const char* help)
+      : IOption(nullptr, nullptr, option, help)
+    {}
+
+    bool consumeValue(const char* arg) override {
+        return false;
+    }
 };
 
 template <typename T>
@@ -837,6 +852,16 @@ Parser::usage(FILE* fp, int argc, char** argv)
         entries.append(Move(entry));
     }
 
+    // Add extra usage lines.
+    for (const auto& option : extra_usage_) {
+        Entry entry(option.get());
+
+        AString name;
+        name.format("%s%s", indent.get(), option->name());
+        entry.opt_lines.append(Move(name));
+        entries.append(Move(entry));
+    }
+
     // If we don't have any arguments to display, stop here.
     if (entries.empty())
         return;
@@ -905,7 +930,8 @@ Parser::usage(FILE* fp, int argc, char** argv)
 }
 
 void
-Parser::usage_line(char** argv, FILE* out) {
+Parser::usage_line(char** argv, FILE* out)
+{
     Vector<AString> words;
 
     words.append("Usage:");
@@ -920,6 +946,12 @@ Parser::usage_line(char** argv, FILE* out) {
 
     AString text = Join(words, " ");
     fprintf(out, "%s\n", text.chars());
+}
+
+void
+Parser::add_usage_line(const char* option, const char* help)
+{
+    extra_usage_.append(MakeUnique<UsageOnlyOption>(option, help));
 }
 
 inline void

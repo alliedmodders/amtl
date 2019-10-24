@@ -23,7 +23,7 @@ binary.compiler.includes += [
   os.path.join(builder.sourcePath),
 ]
 binary.sources += [
-  'experimental/am-argparser.cc',
+  'experimental/am-argparser.cpp',
 ]
 
 rvalue = builder.Add(binary)
