@@ -93,6 +93,14 @@ class Maybe
         assert(isValid());
         return *t_.address();
     }
+    T& get() {
+        assert(isValid());
+        return *t_.address();
+    }
+    const T& get() const {
+        assert(isValid());
+        return *t_.address();
+    }
 
     explicit operator bool() const {
         return isValid();

@@ -53,18 +53,14 @@ TEST(ArgParser, BoolArg) {
     EXPECT_TRUE(parser.parsev(nullptr));
     EXPECT_FALSE(no_default.hasValue());
     EXPECT_TRUE(default_true.hasValue());
-    EXPECT_FALSE(default_true.hasUserValue());
     EXPECT_TRUE(default_true.value());
     EXPECT_TRUE(default_false.hasValue());
-    EXPECT_FALSE(default_false.hasUserValue());
     EXPECT_FALSE(default_false.value());
 
     parser.reset();
     EXPECT_TRUE(parser.parsev("-b", nullptr));
     EXPECT_TRUE(no_default.hasValue());
     EXPECT_TRUE(no_default.value());
-    EXPECT_FALSE(default_true.hasUserValue());
-    EXPECT_FALSE(default_false.hasUserValue());
 
     parser.reset();
     EXPECT_TRUE(parser.parsev("--bool=false", nullptr));
@@ -226,4 +222,21 @@ TEST(ArgParser, CollectExtra) {
     EXPECT_EQ(parser.extra_args()[0].compare("a"), 0);
     EXPECT_EQ(parser.extra_args()[1].compare("b"), 0);
     EXPECT_EQ(parser.extra_args()[2].compare("c"), 0);
+}
+
+TEST(ArgParser, OptionWithNo) {
+    Parser parser("help");
+
+    EnableOption stuff(parser, nullptr, "--stuff", false, "Stuff or whatever");
+    EnableOption other(parser, nullptr, "--other", true, "Other or whatever");
+
+    ASSERT_TRUE(parser.parsev("--stuff", "--other", nullptr));
+    ASSERT_TRUE(stuff.value());
+    ASSERT_TRUE(other.value());
+
+    parser.reset();
+
+    ASSERT_TRUE(parser.parsev("--no-stuff", "--no-other", nullptr));
+    ASSERT_FALSE(stuff.value());
+    ASSERT_FALSE(other.value());
 }

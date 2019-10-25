@@ -42,6 +42,7 @@ namespace ke {
 namespace args {
 
 class IOption;
+class StopOption;
 
 class Parser
 {
@@ -112,7 +113,7 @@ class Parser
     inline bool missing_positional(IOption* option);
     inline bool option_already_specified(IOption* option);
 
-    static Vector<IOption*> *sStaticOptions;
+    static Vector<IOption*>* sStaticOptions;
 
   private:
     Vector<IOption*> options_;
@@ -123,7 +124,7 @@ class Parser
     bool inline_values_ = false;
     bool allow_slashes_ = false;
     bool collect_extra_args_ = false;
-    UniquePtr<IOption> help_option_;
+    UniquePtr<StopOption> help_option_;
     Vector<AString> extra_args_;
     Vector<UniquePtr<IOption>> extra_usage_;
 };
@@ -132,19 +133,23 @@ class IOption
 {
     friend class Parser;
 
-    virtual bool isToggle() const {
+    virtual bool mustOmitValue() const {
         return false;
     }
     virtual bool canOmitValue() const {
         return false;
     }
-    virtual bool repeatable() const {
-        return false;
-    }
     virtual bool haltOnValue() const {
         return false;
     }
+    virtual bool canPrefixWithNo() const {
+        return false;
+    }
     virtual bool consumeValue(const char* arg) = 0;
+    virtual void reset() {}
+    virtual bool willRepeat() const {
+        return false;
+    }
 
   public:
     virtual ~IOption() {
@@ -155,8 +160,7 @@ class IOption
      : short_form_(short_form),
        long_form_(long_form),
        name_(name),
-       help_(help),
-       has_value_(false)
+       help_(help)
     {
         // Cannot have both short/longform and name.
         assert(((short_form || long_form) && !name_) || (!short_form && !long_form && name_));
@@ -184,9 +188,6 @@ class IOption
     const char* help() const {
         return help_;
     }
-    bool has_value() const {
-        return has_value_;
-    }
 
     const char* pretty_name() const {
         if (name_)
@@ -196,16 +197,11 @@ class IOption
         return short_form_;
     }
 
-    virtual void reset() {
-        has_value_ = false;
-    }
-
   protected:
     const char* short_form_;
     const char* long_form_;
     const char* name_;
     const char* help_;
-    bool has_value_;
 };
 
 class UsageOnlyOption final : public IOption
@@ -234,8 +230,6 @@ class Option : public IOption
      : IOption(short_form, long_form, nullptr, help),
        default_value_(default_value)
     {
-        if (default_value_)
-            value_ = *default_value_;
         parser.add(this);
     }
 
@@ -250,8 +244,6 @@ class Option : public IOption
      : IOption(short_form, long_form, nullptr, help),
        default_value_(default_value)
     {
-        if (default_value_)
-            value_ = *default_value_;
         Parser::add_static_option(this);
     }
 
@@ -261,23 +253,22 @@ class Option : public IOption
         Parser::add_static_option(this);
     }
 
-    ~Option() {
-    }
+    ~Option()
+    {}
 
     bool hasValue() const {
-        return has_value_ || default_value_;
-    }
-    bool hasUserValue() const {
-        return has_value_;
+        return value_.isValid() || default_value_.isValid();
     }
     const ValueType& value() const {
-        assert(hasValue());
-        return value_;
+        return value_.isValid() ? value_.get() : default_value_.get();
     }
     Maybe<ValueType> maybeValue() const {
-        if (hasValue())
-            return Some(value_);
-        return Nothing();
+        if (value_.isValid())
+            return value_;
+        return default_value_;
+    }
+    bool willRepeat() const override {
+        return !value_.isValid();
     }
 
   protected:
@@ -285,79 +276,121 @@ class Option : public IOption
         return !name_ && T::canOmitValue();
     }
     bool consumeValue(const char* arg) override {
-        if (!T::consumeValue(arg, &value_))
+        ValueType value;
+        if (!T::consumeValue(arg, &value))
             return false;
-        has_value_ = true;
+        value_ = Some(value);
         return true;
     }
     void reset() override {
-        IOption::reset();
-        if (default_value_)
-            value_ = *default_value_;
+        value_ = {};
     }
 
   private:
     Maybe<ValueType> default_value_;
-    ValueType value_;
+    Maybe<ValueType> value_;
+};
+
+// This is an option that returns true if specified. If prefixed with "--no-",
+// it returns false.
+class EnableOption : public IOption
+{
+  public:
+    EnableOption(Parser& parser, const char* short_form, const char* long_form, bool default_value,
+                 const char* help)
+      : IOption(short_form, long_form, nullptr, help),
+        default_value_(default_value)
+    {
+        parser.add(this);
+    }
+
+    EnableOption(const char* short_form, const char* long_form, bool default_value,
+                 const char* help)
+      : IOption(short_form, long_form, nullptr, help),
+        default_value_(default_value)
+    {
+        Parser::add_static_option(this);
+    }
+
+    bool value() const {
+        return value_.isValid() ? value_.get() : default_value_;
+    }
+    bool consumeValue(const char* arg) override {
+        value_ = Some(strcmp(arg, "true") == 0);
+        return true;
+    }
+    void reset() override {
+        value_ = {};
+    }
+    bool willRepeat() const override {
+        return !value_.isValid();
+    }
+
+  protected:
+    bool mustOmitValue() const override {
+        return true;
+    }
+    bool canPrefixWithNo() const override {
+        return true;
+    }
+
+  private:
+    bool default_value_;
+    Maybe<bool> value_;
 };
 
 // This is an option that flips a boolean (the default value, if none is given
 // in the constructor, will be false -> true).
 class ToggleOption : public IOption
 {
+    friend class Parser;
+
   public:
     ToggleOption(Parser& parser, const char* short_form, const char* long_form,
                  const Maybe<bool>& default_value, const char* help)
-     : IOption(short_form, long_form, nullptr, help)
+      : IOption(short_form, long_form, nullptr, help)
     {
-        if (default_value)
-            default_value_ = *default_value;
-        else
-            default_value_ = false;
+        if (default_value.isValid())
+            default_value_ = default_value.get();
         parser.add(this);
     }
 
     ToggleOption(const char* short_form, const char* long_form,
                  const Maybe<bool>& default_value, const char* help)
-     : IOption(short_form, long_form, nullptr, help)
+      : IOption(short_form, long_form, nullptr, help)
     {
-        if (default_value)
-            default_value_ = *default_value;
-        else
-            default_value_ = false;
+        if (default_value.isValid())
+            default_value_ = default_value.get();
         Parser::add_static_option(this);
     }
 
     bool value() const {
-        if (has_value_)
-            return value_;
-        return default_value_;
+        return value_.isValid() ? value_.get() : default_value_;
     }
-    bool hasValue() const {
-        return true;
-    }
-    bool hasUserValue() const {
-        return has_value_;
+    bool willRepeat() const override {
+        return !value_.isValid();
     }
 
   protected:
     virtual bool canOmitValue() const override {
         return true;
     }
-    bool isToggle() const override {
+    bool mustOmitValue() const override {
         return true;
     }
     bool consumeValue(const char* arg) override {
         if (arg)
             return false;
-        value_ = !default_value_;
-        has_value_ = true;
+        value_ = Some(!default_value_);
         return true;
+    }
+    void reset() override {
+        value_ = {};
     }
 
   private:
-    bool default_value_;
-    bool value_;
+    bool default_value_ = false;
+    Maybe<bool> value_;
 };
 
 // This is a ToggleOption that will stop argument processing and force
@@ -412,23 +445,21 @@ class VectorOption : public IOption
     }
 
   protected:
-    bool repeatable() const override {
-        return true;
-    }
     bool consumeValue(const char* arg) override {
         ValueType value;
         if (!T::consumeValue(arg, &value))
             return false;
-        has_value_ = true;
         values_.append(value);
         return true;
     }
     void reset() override {
-        IOption::reset();
         values_.clear();
     }
+    bool willRepeat() const override {
+        return true;
+    }
 
-  private:
+  protected:
     Vector<ValueType> values_;
 };
 
@@ -507,9 +538,7 @@ inline Parser::Parser(const char* help)
     if (help)
         help_ = help;
 
-    Option<bool>* help_option =
-        new Option<bool>(*this, "h", "help", Nothing(), "Display this help menu.");
-    help_option_ = UniquePtr<IOption>(help_option);
+    help_option_ = MakeUnique<StopOption>(*this, "h", "help", Some(false), "Display this help menu.");
 
     if (sStaticOptions) {
         for (const auto& option : *sStaticOptions)
@@ -607,13 +636,23 @@ Parser::parse_impl(const Vector<const char*>& args)
                 }
             }
 
+            if (!option && strncmp(arg, "--no-", 5) == 0) {
+                option = find_long(&arg[5], len - 5);
+                if (option->canPrefixWithNo())
+                    value_ptr = "false";
+                else
+                    option = nullptr;
+            } else if (option && option->canPrefixWithNo()) {
+                value_ptr = "true";
+            }
+
             if (!option)
                 return unrecognized_option(arg);
-            if (option->has_value() && !option->repeatable())
+            if (!option->willRepeat())
                 return option_already_specified(option);
 
             if (sep) {
-                if (option->isToggle())
+                if (option->mustOmitValue())
                     return option_invalid_value(option, sep + 1);
                 value_ptr = sep + 1;
             }
@@ -637,7 +676,7 @@ Parser::parse_impl(const Vector<const char*>& args)
             if (i == args.length() - 1) {
                 if (!option->canOmitValue())
                     return option_needs_value(option);
-            } else if (!option->isToggle()) {
+            } else if (!option->mustOmitValue()) {
                 value_ptr = args[++i];
                 took_next_arg = true;
             }
@@ -658,7 +697,7 @@ Parser::parse_impl(const Vector<const char*>& args)
         return missing_positional(positionals_[positional]);
 
     // Force the app to display a help message.
-    if (help_option_ && help_option_->has_value())
+    if (help_option_ && help_option_->value())
         return false;
 
     return true;
@@ -819,7 +858,7 @@ Parser::usage(FILE* fp, int argc, char** argv)
         Entry entry(option);
 
         AString value_suffix;
-        if (!option->isToggle() && !option->canOmitValue()) {
+        if (!option->mustOmitValue() && !option->canOmitValue()) {
             const char* name = option->long_form() ? option->long_form() : option->short_form();
             AString decorated = Join(Split(name, "-"), "_").uppercase();
             value_suffix.format("=%s", decorated.chars());
