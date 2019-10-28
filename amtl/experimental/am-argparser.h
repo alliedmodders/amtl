@@ -50,7 +50,8 @@ class Parser
     friend class Option;
 
   public:
-    explicit inline Parser(const char* help = nullptr);
+    inline Parser();
+    explicit inline Parser(const char* help);
 
     inline void add(IOption* option);
     inline bool parse(int argc, char** argv);
@@ -532,6 +533,14 @@ struct ValuePolicy<int> : public BaseValuePolicy {
 typedef Option<bool> BoolOption;
 typedef Option<AString> StringOption;
 typedef Option<int> IntOption;
+
+inline Parser::Parser()
+{
+    if (sStaticOptions) {
+        for (const auto& option : *sStaticOptions)
+            add(option);
+    }
+}
 
 inline Parser::Parser(const char* help)
 {
