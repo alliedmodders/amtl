@@ -19,8 +19,11 @@
 import os
 
 binary = Configure(builder, 'libamtl')
+
+amtl_path = os.path.join(builder.sourcePath, builder.sourceFolder, '..')
+
 binary.compiler.includes += [
-  os.path.join(builder.sourcePath),
+  amtl_path,
 ]
 binary.sources += [
   'experimental/am-argparser.cpp',
