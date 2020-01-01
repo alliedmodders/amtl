@@ -360,6 +360,22 @@ SafeStrcpy(char* dest, size_t maxlength, const char* src)
     return iter - dest;
 }
 
+// Append |src| to |dest|, up to |maxlength-1| characters to ensure a null
+// terminator. The new string size is returned.
+static inline size_t
+SafeStrcat(char* dest, size_t maxlength, const char* src)
+{
+    char* iter = dest;
+    while (*iter)
+        iter++;
+
+    // Note: add 1 to ensure we always have room for the null terminator.
+    while (*src && (size_t(iter - dest) + 1 < maxlength))
+        *iter++ = *src++;
+    *iter = '\0';
+    return iter - dest;
+}
+
 // Same as SafeStrcpy, but only copy up to n chars.
 static inline size_t
 SafeStrcpyN(char* dest, size_t maxlength, const char* src, size_t n)
