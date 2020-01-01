@@ -37,7 +37,7 @@ compiler.includes += [
 
 if compiler.like('msvc'):
   compiler.linkflags.append('/SUBSYSTEM:CONSOLE')
-if builder.target_platform == 'linux':
+if builder.target.platform == 'linux':
   compiler.linkflags.append('-ldl')
 compiler.linkflags.append(libgtest.binary)
 compiler.linkflags.append(KE.libamtl)
