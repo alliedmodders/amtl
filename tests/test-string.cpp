@@ -1,4 +1,4 @@
-// vim: set sts=8 ts=2 sw=2 tw=99 et:
+// vim: set sts=4 ts=8 sw=4 tw=99 et:
 //
 // Copyright (C) 2013, David Anderson and AlliedModders LLC
 // All rights reserved.
@@ -133,4 +133,21 @@ TEST(String, StartsWith) {
     EXPECT_TRUE(str.startsWith("blah"));
     EXPECT_FALSE(str.startsWith("a"));
     EXPECT_FALSE(str.startsWith("blah2"));
+}
+
+TEST(String, SafeStrcat) {
+    char buffer[6] = "hello";
+
+    buffer[1] = '\0';
+    EXPECT_EQ(SafeStrcat(buffer, 0, "blah"), (size_t)1);
+    EXPECT_EQ(SafeStrcat(buffer, 1, "blah"), (size_t)1);
+    EXPECT_EQ(SafeStrcat(buffer, 2, "blah"), (size_t)1);
+    EXPECT_EQ(buffer[1], '\0');
+    EXPECT_EQ(buffer[2], 'l');
+
+    EXPECT_EQ(SafeStrcat(buffer, sizeof(buffer), "b"), (size_t)2);
+    EXPECT_EQ(strcmp(buffer, "hb"), 0);
+
+    EXPECT_EQ(SafeStrcat(buffer, sizeof(buffer), "hamocrab"), (size_t)5);
+    EXPECT_EQ(strcmp(buffer, "hbham"), 0);
 }
