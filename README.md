@@ -7,6 +7,8 @@ AMBuild currently requires C++11 support. The minimum supported compiler version
  - GNU GCC 4.9 or higher.
  - Clang 3.5 or higher.
 
+To build tests, C++14 or higher is required (on macOS, the minimum version is OS X 10.9).
+
 Specifically, it requires `nullptr`, `>>` support in templates, r-value references v2.0,
 (N2844), lambda support, and the override/delete keywords. The older, deprecated `C++98`
 branch of AMTL does not require C++11.
@@ -72,18 +74,6 @@ This provides some common helper functions pretty much lumped together:
 
 AMTL used to emulate C++ r-value semantics. Now it requires native support. It
 provides a replacement for std::move as ke::Move, and std::forward as ke::Forward.
-
-### Thread Utilities (am-thread-utils.h)
-
-Thread utils provides access to common sychronization primitives: mutexes, condition variables,
-and threads. It also provides RAII objects for acquiring and releasing locks. More information is
-available at the top of am-thread-utils.h.
-
-In addition, there is a `ThreadLocal` container available in am-threadlocal.h. By default it acts
-as a per-thread storage container, using operating system primitives. The container can hold a
-single value that is castable to `uintptr_t`. It can also be used in single-threaded systems via
-`KE_SINGLE_THREADED`, at which point there is no TLS overhead. This is useful for systems where
-threading is optional.
 
 ### Reference Counting (am-refcounting.h)
 

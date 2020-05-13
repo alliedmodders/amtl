@@ -30,12 +30,17 @@
 #ifndef _include_amtl_thread_local_h_
 #define _include_amtl_thread_local_h_
 
-#include <amtl/am-thread-utils.h>
 #include <amtl/am-utility.h>
 #include <stddef.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
+
+#ifdef _WIN32
+# include <windows.h>
+#else
+# include <pthread.h>
+#endif
 
 namespace ke {
 

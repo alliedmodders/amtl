@@ -54,6 +54,7 @@ TEST(AutoPtr, Single) {
     intp = new int(2);
     EXPECT_EQ(*intp.get(), 2);
 
+    sBlahCtors = 0;
     {
         AutoPtr<Blah> blah(new Blah());
         EXPECT_EQ(sBlahCtors, (size_t)1);
