@@ -3,6 +3,15 @@
 
 trap "exit" INT
 
+ismac=0
+iswin=0
+
+if [ `uname` = "Darwin" ]; then
+  ismac=1
+elif [ `uname` != "Linux" ] && [ -n "${COMSPEC:+1}" ]; then
+  iswin=1
+fi
+
 checkout ()
 {
   if [ ! -d "$name" ]; then
@@ -32,6 +41,8 @@ if [ $? -eq 1 ]; then
   cd ambuild
   if [ $iswin -eq 1 ]; then
     python setup.py install
+  elif [ $ismac -eq 1 ]; then
+    sudo python setup.py install
   else
     python setup.py build
     echo "Installing AMBuild at the user level. Location can be: ~/.local/bin"

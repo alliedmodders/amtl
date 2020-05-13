@@ -1,6 +1,6 @@
-// vim: set sts=8 ts=2 sw=2 tw=99 et:
+// vim: set sts=8 ts=4 sw=4 tw=99 et:
 //
-// Copyright (C) 2013, David Anderson and AlliedModders LLC
+// Copyright (C) 2020 David Anderson and AlliedModders LLC
 // All rights reserved.
 //
 // Redistribution and use in source and binary forms, with or without
@@ -27,56 +27,37 @@
 // ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 // POSSIBILITY OF SUCH DAMAGE.
 
+#pragma once
+
+#include <assert.h>
+
+#include <mutex>
 #include <thread>
 
-#include <amtl/am-thread.h>
-#include <amtl/am-threadlocal.h>
-#include <gtest/gtest.h>
-#include "runner.h"
+namespace ke {
 
-using namespace ke;
-
-static ThreadLocal<int> sThreadVar;
-static ThreadLocal<void*> sThreadVarPointer;
-
-class VarThread
+// Wrapper for <mutex> that allows asserting who owns it.
+class Mutex : public std::mutex
 {
   public:
-    VarThread()
-     : succeeded_(false)
-    {}
+#ifndef NDEBUG
+    void lock() {
+       std::mutex::lock();
+       owner_ = std::this_thread::get_id();
+    };
 
-    void Run(int value) {
-        ASSERT_EQ(sThreadVar.get(), 0);
-
-        sThreadVar = value;
-        ASSERT_EQ(sThreadVar.get(), 20);
-
-        succeeded_ = true;
+    void unlock() {
+       owner_ = {};
+       std::mutex::unlock();
     }
 
-    bool succeeded() const {
-        return succeeded_;
+    void AssertCurrentThreadOwns() {
+        assert(owner_ == std::this_thread::get_id());
     }
 
   private:
-    bool succeeded_;
+    std::thread::id owner_;
+#endif
 };
 
-TEST(ThreadLocal, Threaded) {
-    sThreadVar = 10;
-
-    VarThread run;
-    auto thread = ke::NewThread("Test Thread", [&run](int value) -> void {
-        run.Run(value);
-    }, 20);
-    thread->join();
-    thread = nullptr;
-
-    ASSERT_TRUE(run.succeeded());
-    EXPECT_EQ(sThreadVar.get(), 10);
-
-    // Check that pointers are allowed in T.
-    sThreadVarPointer = &run;
-    EXPECT_EQ(sThreadVarPointer.get(), &run);
-}
+} // namespace ke

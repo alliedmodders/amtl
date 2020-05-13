@@ -121,13 +121,13 @@ class KEConfig(object):
         cxx.linkflags += ['-lgcc_eh']
     elif builder.target.platform == 'mac':
       cxx.defines += ['OSX', '_OSX', 'POSIX']
-      cxx.cflags += ['-mmacosx-version-min=10.5']
+      cxx.cflags += ['-mmacosx-version-min=10.9']
       cxx.linkflags += [
-        '-mmacosx-version-min=10.5',
+        '-mmacosx-version-min=10.9',
         '-lstdc++',
-        '-stdlib=libstdc++',
+        '-stdlib=libc++',
       ]
-      cxx.cxxflags += ['-stdlib=libstdc++']
+      cxx.cxxflags += ['-stdlib=libc++']
     elif builder.target.platform == 'windows':
       cxx.defines += ['WIN32', '_WINDOWS']
 
