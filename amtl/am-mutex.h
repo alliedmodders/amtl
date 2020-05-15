@@ -40,6 +40,8 @@ namespace ke {
 class Mutex : public std::mutex
 {
   public:
+    void AssertCurrentThreadOwns() {}
+
 #ifndef NDEBUG
     void lock() {
        std::mutex::lock();
