@@ -40,9 +40,9 @@ namespace ke {
 class Mutex : public std::mutex
 {
   public:
+#ifdef NDEBUG
     void AssertCurrentThreadOwns() {}
-
-#ifndef NDEBUG
+#else
     void lock() {
        std::mutex::lock();
        owner_ = std::this_thread::get_id();
