@@ -144,56 +144,28 @@ iterator is abandoned. However, the table must stay alive for as long as the ite
 
 ### Functions and Lambdas (am-function.h)
 
-AMTL provides three replacements for `std::function`. The first, `ke::Lambda`, is roughly identical
+AMTL provides a replacement for `std::function`. `ke::Function` is roughly identical
 to `std::function` in that it represents any callable object of a given signature. It can hold a
 functor, C-style static function, a C++11-lambda, or any other callable object.
 
-Note that this makes `Lambda` polymorphic: its size and implementation are not known until it is
+Note that this makes `Function` polymorphic: its size and implementation are not known until it is
 constructed or assigned. This means it must store a locally owned copy of the given callable value.
-If copy constructed or copy assigned, `Lambda` will deep-copy the object into its local copy. If
-move constructed or move assigned, `Lambda` will still allocate a local copy, but it will be
+If copy constructed or copy assigned, `Function` will deep-copy the object into its local copy. If
+move constructed or move assigned, `Function` will still allocate a local copy, but it will be
 constructed using move semantics. GCC/Clang support moving a C++11 lambda (MSVC versions prior to
 2015 will copy lambdas even if moved).
 
-Having `Lambda` allocate an object with `new` is obviously not desirable for most use cases. AMTL
+Having `Function` allocate an object with `new` is obviously not desirable for most use cases. AMTL
 tries to mitigate this in two ways. First, small callable objects (most lambdas and any C-style
 static function pointer) will be stored in an inline buffer. This buffer is currently three
 machine words (12 bytes on 32-bit systems and 24 bytes on 64-bit systems), and is specified in
 `ke::impl::kMinLambdaInlineBufferSize`. Using callable objects within this size will guarantee
-that `Lambda` does not use `new`.
+that `Function` does not use `new`.
 
-An alternative to `Lambda` is to use `ke::FuncPtr`. `FuncPtr` stores a pointer to a callable
-object rather than storing a local copy. It is more space and time efficient, but users must take
-care to not use the `FuncPtr` beyond the scpoe of the pointer it references. `FuncPtr` is intended
-for use on the stack whereas `Lambda` is intended for use on the heap.
-
-An example of how each is declared:
-
-    // Capturing |&value| would be dangerous here.
-    int value = 10;
-    Lambda<int()> callback1 = [value]() -> int {
-      return value;
-    };
-
-    // Capturing |&value| is "safe" here since we are not supposed to use
-    // FuncPtr beyond the lambda scope. Note that we must assign the C++11
-    // lambda to a variable so we can take its address.
-    auto fn = [&value]() -> int {
-      return value;
-    };
-    FuncPtr<int()> callback2(&fn);
-
-Finally, AMTL provides a third variant, called Function. This version is similar to Lambda except
-that it does not provide any copy constructors. This is useful since, due to implementation reasons,
-Lambda cannot be used with C++14 move captures if the resulting type does not have a non-move copy
-constructor. For example,
-
-    Vector<int> v;
-    Function<void()> fn = [v = Move(v)]() -> void {};
-    Lambda<void()> fn = [v = Move(v)]() -> void {};
-
-The first capture, using `Function`, will succeed. The second, using `Lambda`, will fail, since
-`Lambda` does not support captures with no copy constructor.
+Note that like `std::function`, all captures must be copy-constructable. This means it cannot hold
+functions which capture an `std::unique_ptr` or a `ke::Vector`, for example, even if it is to be
+moved. You can work around this by using pointers (if the scope will allow it), or using
+`std::shared_ptr`.
 
 ### HashMap (am-hashmap.h)
 
