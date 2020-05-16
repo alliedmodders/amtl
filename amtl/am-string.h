@@ -34,12 +34,6 @@
 #if !defined(KE_WINDOWS)
 #    include <inttypes.h>
 #endif
-#include <amtl/am-bits.h>
-#include <amtl/am-cxx.h>
-#include <amtl/am-moveable.h>
-#include <amtl/am-platform.h>
-#include <amtl/am-uniqueptr.h>
-#include <amtl/am-vector.h>
 #include <assert.h>
 #include <ctype.h>
 #include <stdarg.h>
@@ -50,6 +44,14 @@
 #if !defined(_MSC_VER)
 #    include <strings.h>
 #endif
+
+#include <memory>
+
+#include <amtl/am-bits.h>
+#include <amtl/am-cxx.h>
+#include <amtl/am-moveable.h>
+#include <amtl/am-platform.h>
+#include <amtl/am-vector.h>
 
 namespace ke {
 
@@ -85,7 +87,7 @@ class AString
         else
             length_ = 0;
     }
-    AString(UniquePtr<char[]>&& ptr, size_t length)
+    AString(std::unique_ptr<char[]>&& ptr, size_t length)
      : chars_(Move(ptr)),
        length_(length)
     {}
@@ -137,10 +139,10 @@ class AString
     }
 
     // Format a printf-style string and return nullptr on error.
-    static inline UniquePtr<AString> Sprintf(const char* fmt, ...) KE_PRINTF_FUNCTION(1, 2);
+    static inline std::unique_ptr<AString> Sprintf(const char* fmt, ...) KE_PRINTF_FUNCTION(1, 2);
 
     // Format a printf-style string and return nullptr on error.
-    static inline UniquePtr<AString> SprintfArgs(const char* fmt, va_list ap)
+    static inline std::unique_ptr<AString> SprintfArgs(const char* fmt, va_list ap)
         KE_PRINTF_FUNCTION(1, 0);
 
     // Format functions that work in-place.
@@ -164,14 +166,14 @@ class AString
     }
 
     AString uppercase() const {
-        UniquePtr<char[]> buffer = MakeUnique<char[]>(length_ + 1);
+        std::unique_ptr<char[]> buffer = std::make_unique<char[]>(length_ + 1);
         for (size_t i = 0; i < length_; i++)
             buffer[i] = toupper(chars_[i]);
         buffer[length_] = '\0';
         return AString(Move(buffer), length_);
     }
     AString lowercase() const {
-        UniquePtr<char[]> buffer = MakeUnique<char[]>(length_ + 1);
+        std::unique_ptr<char[]> buffer = std::make_unique<char[]>(length_ + 1);
         for (size_t i = 0; i < length_; i++)
             buffer[i] = tolower(chars_[i]);
         buffer[length_] = '\0';
@@ -186,14 +188,14 @@ class AString
     static const size_t kInvalidLength = (size_t)-1;
 
     void set(const char* str, size_t length) {
-        chars_ = MakeUnique<char[]>(length + 1);
+        chars_ = std::make_unique<char[]>(length + 1);
         length_ = length;
         memcpy(chars_.get(), str, length);
         chars_[length] = '\0';
     }
 
   private:
-    UniquePtr<char[]> chars_;
+    std::unique_ptr<char[]> chars_;
     size_t length_;
 };
 
@@ -204,8 +206,8 @@ class AString
 #endif
 
 // Forward declare these functions since GCC will complain otherwise.
-static inline UniquePtr<char[]> SprintfArgs(const char* fmt, va_list ap) KE_PRINTF_FUNCTION(1, 0);
-static inline UniquePtr<char[]> Sprintf(const char* fmt, ...) KE_PRINTF_FUNCTION(1, 2);
+static inline std::unique_ptr<char[]> SprintfArgs(const char* fmt, va_list ap) KE_PRINTF_FUNCTION(1, 0);
+static inline std::unique_ptr<char[]> Sprintf(const char* fmt, ...) KE_PRINTF_FUNCTION(1, 2);
 static inline size_t SafeVsprintf(char* buffer, size_t maxlength, const char* fmt, va_list ap)
     KE_PRINTF_FUNCTION(3, 0);
 static inline size_t SafeSprintf(char* buffer, size_t maxlength, const char* fmt, ...)
@@ -214,10 +216,10 @@ static inline size_t SafeSprintf(char* buffer, size_t maxlength, const char* fmt
 namespace detail {
 
 // Another forward declare thanks to GCC rules.
-static inline UniquePtr<char[]> SprintfArgsImpl(size_t* out_len, const char* fmt, va_list ap)
+static inline std::unique_ptr<char[]> SprintfArgsImpl(size_t* out_len, const char* fmt, va_list ap)
     KE_PRINTF_FUNCTION(2, 0);
 
-static inline UniquePtr<char[]>
+static inline std::unique_ptr<char[]>
 SprintfArgsImpl(size_t* out_len, const char* fmt, va_list ap)
 {
     va_list argv;
@@ -232,19 +234,19 @@ SprintfArgsImpl(size_t* out_len, const char* fmt, va_list ap)
     size_t len = vsnprintf(tmp, sizeof(tmp), fmt, ap);
 #endif
 
-    UniquePtr<char[]> buffer;
+    std::unique_ptr<char[]> buffer;
     if (len == size_t(-1)) {
         va_end(argv);
         return buffer;
     }
     if (len == 0) {
-        buffer = MakeUnique<char[]>(1);
+        buffer = std::make_unique<char[]>(1);
         buffer[0] = '\0';
         va_end(argv);
         return buffer;
     }
 
-    buffer = MakeUnique<char[]>(len + 1);
+    buffer = std::make_unique<char[]>(len + 1);
     if (!buffer) {
         va_end(argv);
         return buffer;
@@ -259,39 +261,39 @@ SprintfArgsImpl(size_t* out_len, const char* fmt, va_list ap)
 
 } // namespace detail
 
-static inline UniquePtr<char[]>
+static inline std::unique_ptr<char[]>
 SprintfArgs(const char* fmt, va_list ap)
 {
     size_t len;
     return detail::SprintfArgsImpl(&len, fmt, ap);
 }
 
-static inline UniquePtr<char[]>
+static inline std::unique_ptr<char[]>
 Sprintf(const char* fmt, ...)
 {
     va_list ap;
     va_start(ap, fmt);
-    UniquePtr<char[]> result = SprintfArgs(fmt, ap);
+    std::unique_ptr<char[]> result = SprintfArgs(fmt, ap);
     va_end(ap);
     return result;
 }
 
-inline UniquePtr<AString>
+inline std::unique_ptr<AString>
 AString::SprintfArgs(const char* fmt, va_list ap)
 {
     size_t len;
-    UniquePtr<char[]> result = detail::SprintfArgsImpl(&len, fmt, ap);
+    std::unique_ptr<char[]> result = detail::SprintfArgsImpl(&len, fmt, ap);
     if (!result)
         return nullptr;
-    return MakeUnique<AString>(Move(result), len);
+    return std::make_unique<AString>(Move(result), len);
 }
 
-inline UniquePtr<AString>
+inline std::unique_ptr<AString>
 AString::Sprintf(const char* fmt, ...)
 {
     va_list ap;
     va_start(ap, fmt);
-    UniquePtr<AString> result = AString::SprintfArgs(fmt, ap);
+    std::unique_ptr<AString> result = AString::SprintfArgs(fmt, ap);
     va_end(ap);
     return result;
 }
@@ -300,7 +302,7 @@ inline bool
 AString::formatArgs(const char* fmt, va_list ap)
 {
     size_t len;
-    UniquePtr<char[]> result = detail::SprintfArgsImpl(&len, fmt, ap);
+    std::unique_ptr<char[]> result = detail::SprintfArgsImpl(&len, fmt, ap);
     if (!result) {
         *this = AString();
         return false;
@@ -446,7 +448,7 @@ Join(const Vector<AString>& pieces, const char* sep)
     if (!pieces.empty())
         buffer_len += sep_len * (pieces.length() - 1);
 
-    UniquePtr<char[]> buffer = MakeUnique<char[]>(buffer_len);
+    std::unique_ptr<char[]> buffer = std::make_unique<char[]>(buffer_len);
 
     char* iter = buffer.get();
     char* end = buffer.get() + buffer_len;

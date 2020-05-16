@@ -63,12 +63,9 @@ All classes and functions reside in a "ke" namespace, and all macros are prefixe
 ### Platform Utilities (am-utilities.h)
 
 This provides some common helper functions pretty much lumped together:
-* AutoPtr<T> and AutoPtr<T[]>, RAII objects for calling delete or delete[] on a pointer.
-* UniquePtr<T> and UniquePtr<T[]>, more restrictive version of AutoPtr, similar to C++11 unique\_ptr.
 * Detectors for add or multiply overflow, useful for computing allocation sizes.
 * Fast Log2/Floor2 functions (also known as bitscan or count zeroes).
 * Integer alignment (useful for allocators or code generators).
-* KE\_DELETE and KE\_OVERRIDE which map to delete and override keywords if C++11 is available.
 
 ### Moveable (am-moveable.h)
 
@@ -212,16 +209,6 @@ called AString (short for ASCII String).
 
 FixedArray&lt;T, AP&gt; is a stripped-down version of Vector that is constructed with a fixed
 length. The length is passed via the constructor; a compile-time length variant is planned.
-
-### AutoPtr and UniquePtr (am-autoptr.h and am-uniqueptr.h)
-
-Both classes are similar to C++11's `unique_ptr`. The only difference is that UniquePtr is
-more restrictive: it does not support assignment from `T` or implicit cast-to-`T`, making it
-harder to dereference incorrectly or accidentally double-delete.
-
-Note that AutoPtr is not similar to the C++03 `auto_ptr` class. It is simply a slightly more
-permissive UniquePtr. It is intended for code that benefits from automatic deletion, but
-not from the verbosity introduced by some of UniquePtr's safety features.
 
 ### Flags (am-flags.h)
 
