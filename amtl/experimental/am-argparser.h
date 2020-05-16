@@ -31,7 +31,6 @@
 
 #include <amtl/am-algorithm.h>
 #include <amtl/am-cxx.h>
-#include <amtl/am-function.h>
 #include <amtl/am-maybe.h>
 #include <amtl/am-string.h>
 #include <amtl/am-vector.h>
