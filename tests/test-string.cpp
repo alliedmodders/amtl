@@ -45,10 +45,10 @@ TEST(String, Allocating) {
     int a = INT_MAX;
     const char* value = "Hello this is a test.";
     const char* expect = "A: 2147483647 B: Hello this is a test.";
-    UniquePtr<char[]> ptr = Sprintf("A: %d B: %s", a, value);
+    std::unique_ptr<char[]> ptr = Sprintf("A: %d B: %s", a, value);
     EXPECT_EQ(strcmp(ptr.get(), expect), 0);
 
-    UniquePtr<AString> str = AString::Sprintf("A: %d B: %s", a, value);
+    std::unique_ptr<AString> str = AString::Sprintf("A: %d B: %s", a, value);
     EXPECT_EQ(str->compare(expect), 0);
 }
 

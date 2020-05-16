@@ -29,14 +29,17 @@
 #ifndef _include_amtl_am_argparser_h_
 #define _include_amtl_am_argparser_h_
 
+#include <assert.h>
+#include <stdio.h>
+
+#include <memory>
+
 #include <amtl/am-algorithm.h>
 #include <amtl/am-cxx.h>
 #include <amtl/am-function.h>
 #include <amtl/am-maybe.h>
 #include <amtl/am-string.h>
 #include <amtl/am-vector.h>
-#include <assert.h>
-#include <stdio.h>
 
 namespace ke {
 namespace args {
@@ -125,9 +128,9 @@ class Parser
     bool inline_values_ = false;
     bool allow_slashes_ = false;
     bool collect_extra_args_ = false;
-    UniquePtr<StopOption> help_option_;
+    std::unique_ptr<StopOption> help_option_;
     Vector<AString> extra_args_;
-    Vector<UniquePtr<IOption>> extra_usage_;
+    Vector<std::unique_ptr<IOption>> extra_usage_;
 };
 
 class IOption
@@ -547,7 +550,7 @@ inline Parser::Parser(const char* help)
     if (help)
         help_ = help;
 
-    help_option_ = MakeUnique<StopOption>(*this, "h", "help", Some(false), "Display this help menu.");
+    help_option_ = std::make_unique<StopOption>(*this, "h", "help", Some(false), "Display this help menu.");
 
     if (sStaticOptions) {
         for (const auto& option : *sStaticOptions)
@@ -842,7 +845,7 @@ Parser::usage(FILE* fp, int argc, char** argv)
     };
 
     static const size_t kIndent = 2;
-    UniquePtr<char[]> indent = MakeUnique<char[]>(kIndent + 1);
+    std::unique_ptr<char[]> indent = std::make_unique<char[]>(kIndent + 1);
     for (size_t i = 0; i < kIndent; i++)
         indent[i] = ' ';
     indent[kIndent] = '\0';
@@ -999,7 +1002,7 @@ Parser::usage_line(char** argv, FILE* out)
 void
 Parser::add_usage_line(const char* option, const char* help)
 {
-    extra_usage_.append(MakeUnique<UsageOnlyOption>(option, help));
+    extra_usage_.append(std::make_unique<UsageOnlyOption>(option, help));
 }
 
 inline void

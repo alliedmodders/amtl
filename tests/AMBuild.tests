@@ -44,23 +44,21 @@ compiler.linkflags.append(KE.libamtl)
 
 binary.sources += [
   'main.cpp',
+  'test-argparser.cpp',
+  'test-bits.cpp',
   'test-callable.cpp',
+  'test-deque.cpp',
+  'test-flags.cpp',
   'test-hashmap.cpp',
   'test-inlinelist.cpp',
   'test-linkedlist.cpp',
-  'test-vector.cpp',
+  'test-priority-queue.cpp',
   'test-refcounting.cpp',
+  'test-string.cpp',
+  'test-system.cpp',
   'test-threadlocal-threaded.cpp',
   'test-threadlocal-unthreaded.cpp',
-  'test-deque.cpp',
-  'test-system.cpp',
-  'test-priority-queue.cpp',
-  'test-string.cpp',
-  'test-autoptr.cpp',
-  'test-uniqueptr.cpp',
-  'test-flags.cpp',
-  'test-argparser.cpp',
-  'test-bits.cpp',
+  'test-vector.cpp',
 ]
 
 builder.Add(binary)
