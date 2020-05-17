@@ -30,11 +30,13 @@
 #ifndef _INCLUDE_KEIMA_TPL_CPP_VECTOR_H_
 #define _INCLUDE_KEIMA_TPL_CPP_VECTOR_H_
 
+#include <stdlib.h>
+
+#include <new>
+#include <utility>
+
 #include <amtl/am-allocator-policies.h>
 #include <amtl/am-bits.h>
-#include <amtl/am-moveable.h>
-#include <stdlib.h>
-#include <new>
 
 namespace ke {
 
@@ -49,7 +51,7 @@ class Vector : private AllocPolicy
     }
 
     Vector(Vector&& other)
-     : AllocPolicy(Move(other)) {
+     : AllocPolicy(std::move(other)) {
         data_ = other.data_;
         nitems_ = other.nitems_;
         maxsize_ = other.maxsize_;
@@ -64,14 +66,14 @@ class Vector : private AllocPolicy
     bool append(U&& item) {
         if (!growIfNeeded(1))
             return false;
-        new (&data_[nitems_]) T(ke::Forward<U>(item));
+        new (&data_[nitems_]) T(std::forward<U>(item));
         nitems_++;
         return true;
     }
     template <typename U>
     void infallibleAppend(U&& item) {
         assert(growIfNeeded(1));
-        new (&data_[nitems_]) T(ke::Forward<U>(item));
+        new (&data_[nitems_]) T(std::forward<U>(item));
         nitems_++;
     }
 
@@ -84,10 +86,10 @@ class Vector : private AllocPolicy
     template <typename U>
     bool insert(size_t at, U&& item) {
         if (at == length())
-            return append(ke::Forward<U>(item));
+            return append(std::forward<U>(item));
         if (!moveUp(at))
             return false;
-        new (&data_[at]) T(ke::Forward<U>(item));
+        new (&data_[at]) T(std::forward<U>(item));
         return true;
     }
 
@@ -102,7 +104,7 @@ class Vector : private AllocPolicy
     // element. This is a linear-time operation.
     void remove(size_t at) {
         for (size_t i = at; i < length() - 1; i++)
-            data_[i] = ke::Move(data_[i + 1]);
+            data_[i] = std::move(data_[i + 1]);
         pop();
     }
 
@@ -177,10 +179,10 @@ class Vector : private AllocPolicy
     template <typename U>
     bool extend(U&& other) {
         if (length() == 0) {
-            *this = Move(other);
+            *this = std::move(other);
         } else {
             for (size_t i = 0; i < other.length(); i++) {
-                if (!append(Move(other[i])))
+                if (!append(std::move(other[i])))
                     return false;
             }
         }
@@ -234,17 +236,17 @@ class Vector : private AllocPolicy
     }
 
     bool moveUp(size_t at) {
-        // Note: we don't use append() here. Passing an element as a Moveable into
+        // Note: we don't use append() here. Passing an element as a std::moveable into
         // insert() or append() can break, since the underlying storage could be
-        // reallocated, invalidating the Moveable reference. Instead, we inline
+        // reallocated, invalidating the std::moveable reference. Instead, we inline
         // the logic to append() to ensure growIfNeeded occurs before any
         // references are taken.
         if (!growIfNeeded(1))
             return false;
-        new (&data_[nitems_]) T(ke::Move(data_[nitems_ - 1]));
+        new (&data_[nitems_]) T(std::move(data_[nitems_ - 1]));
         nitems_++;
         for (size_t i = nitems_ - 2; i > at; i--)
-            data_[i] = ke::Move(data_[i - 1]);
+            data_[i] = std::move(data_[i - 1]);
         return true;
     }
 
@@ -268,7 +270,8 @@ class Vector : private AllocPolicy
         T* newdata = (T*)this->am_malloc(sizeof(T) * new_maxsize);
         if (newdata == nullptr)
             return false;
-        MoveRange<T>(newdata, data_, nitems_);
+        for (size_t i = 0; i < nitems_; i++)
+            newdata[i] = std::move(data_[i]);
         this->am_free(data_);
 
         data_ = newdata;

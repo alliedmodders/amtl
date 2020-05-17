@@ -30,9 +30,11 @@
 #ifndef _include_amtl_am_priority_queue_h_
 #define _include_amtl_am_priority_queue_h_
 
+#include <algorithm>
+#include <utility>
+
 #include <amtl/am-algorithm.h>
 #include <amtl/am-cxx.h>
-#include <amtl/am-moveable.h>
 #include <amtl/am-vector.h>
 
 namespace ke {
@@ -51,13 +53,13 @@ class PriorityQueue final
     {}
 
     PriorityQueue(PriorityQueue&& other)
-     : impl_(Move(other.impl_)),
-       is_higher_priority_(Move(other.is_higher_priority_))
+     : impl_(std::move(other.impl_)),
+       is_higher_priority_(std::move(other.is_higher_priority_))
     {}
 
     template <typename U>
     bool add(U&& item) {
-        if (!impl_.append(ke::Forward<U>(item)))
+        if (!impl_.append(std::forward<U>(item)))
             return false;
         if (impl_.length() > 1)
             propagateUp(impl_.length() - 1);
@@ -79,8 +81,8 @@ class PriorityQueue final
         if (impl_.length() == 1)
             return impl_.popCopy();
 
-        T top = Move(impl_[0]);
-        impl_[0] = Move(impl_.back());
+        T top = std::move(impl_[0]);
+        impl_[0] = std::move(impl_.back());
         impl_.pop();
         propagateDown(0);
         return top;
@@ -89,17 +91,17 @@ class PriorityQueue final
   private:
     void propagateUp(size_t at) {
         size_t cursor = at;
-        T key(ke::Move(impl_[cursor]));
+        T key(std::move(impl_[cursor]));
         while (cursor != 0) {
             size_t parent = parentOf(cursor);
             if (!is_higher_priority_(key, impl_[parent]))
                 break;
 
-            impl_[cursor] = ke::Move(impl_[parent]);
+            impl_[cursor] = std::move(impl_[parent]);
             cursor = parent;
         }
 
-        impl_[cursor] = ke::Move(key);
+        impl_[cursor] = std::move(key);
     }
 
     void propagateDown(size_t at) {
@@ -119,7 +121,7 @@ class PriorityQueue final
                 break;
 
             // Otherwise, swap and move on.
-            ke::Swap(impl_[bestChild], impl_[cursor]);
+            std::swap(impl_[bestChild], impl_[cursor]);
             cursor = bestChild;
         }
     }

@@ -30,6 +30,8 @@
 #ifndef _include_amtl_hashmap_h_
 #define _include_amtl_hashmap_h_
 
+#include <utility>
+
 #include <amtl/am-hashtable.h>
 
 namespace ke {
@@ -60,14 +62,14 @@ class HashMap : private AllocPolicy
            value(other.value)
         {}
         Entry(Entry&& other)
-         : key(ke::Move(other.key)),
-           value(ke::Move(other.value))
+         : key(std::move(other.key)),
+           value(std::move(other.value))
         {}
 
         template <typename UK, typename UV>
         Entry(UK&& aKey, UV&& aValue)
-         : key(ke::Forward<UK>(aKey)),
-           value(ke::Forward<UV>(aValue))
+         : key(std::forward<UK>(aKey)),
+           value(std::forward<UV>(aValue))
         {}
     };
 
@@ -93,7 +95,7 @@ class HashMap : private AllocPolicy
     {}
 
     HashMap(HashMap&& other)
-     : table_(ke::Move(other.table_))
+     : table_(std::move(other.table_))
     {}
 
     // capacity must be a power of two.
@@ -128,13 +130,13 @@ class HashMap : private AllocPolicy
     // The Insert object is still valid after add() returns, however.
     template <typename UK, typename UV>
     bool add(Insert& i, UK&& key, UV&& value) {
-        Entry entry(ke::Forward<UK>(key), ke::Forward<UV>(value));
-        return table_.add(i, ke::Move(entry));
+        Entry entry(std::forward<UK>(key), std::forward<UV>(value));
+        return table_.add(i, std::move(entry));
     }
     template <typename UK>
     bool add(Insert& i, UK&& key) {
-        Entry entry(ke::Forward<UK>(key), V());
-        return table_.add(i, ke::Move(entry));
+        Entry entry(std::forward<UK>(key), V());
+        return table_.add(i, std::move(entry));
     }
 
     // This can be used to avoid compiler constructed temporaries, since AMTL

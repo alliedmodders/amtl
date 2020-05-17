@@ -32,7 +32,6 @@
 #include <stdint.h>
 
 #include <amtl/am-cxx.h>
-#include <amtl/am-moveable.h>
 
 namespace ke {
 
@@ -48,15 +47,6 @@ static inline T
 Max(const T& t1, const T& t2)
 {
     return t1 > t2 ? t1 : t2;
-}
-
-template <typename T>
-static inline void
-Swap(T& left, T& right)
-{
-    T tmp(Move(left));
-    left = Move(right);
-    right = Move(tmp);
 }
 
 template <typename T>

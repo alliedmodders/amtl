@@ -29,10 +29,12 @@
 #ifndef _include_amtl_function_h_
 #define _include_amtl_function_h_
 
-#include <amtl/am-moveable.h>
-#include <amtl/am-type-traits.h>
 #include <assert.h>
+
 #include <new>
+#include <utility>
+
+#include <amtl/am-type-traits.h>
 
 namespace ke {
 
@@ -57,18 +59,18 @@ class FunctionHolder : public FunctionHolderBase<ReturnType, ArgTypes...>
      : obj_(other.obj_)
     {}
     FunctionHolder(FunctionHolder&& other)
-     : obj_(ke::Move(other.obj_))
+     : obj_(std::move(other.obj_))
     {}
     FunctionHolder(const T& obj)
      : obj_(obj)
     {}
     FunctionHolder(T&& obj)
-     : obj_(ke::Move(obj))
+     : obj_(std::move(obj))
     {}
 
     virtual ~FunctionHolder() {}
     virtual ReturnType invoke(ArgTypes&&... argv) const override {
-        return obj_(ke::Forward<ArgTypes>(argv)...);
+        return obj_(std::forward<ArgTypes>(argv)...);
     }
     virtual BaseType* clone(void* mem) const override {
         if (!mem)
@@ -77,7 +79,7 @@ class FunctionHolder : public FunctionHolderBase<ReturnType, ArgTypes...>
         return (BaseType*)mem;
     }
     virtual BaseType* move(void* mem) override {
-        new (mem) FunctionHolder(ke::Move(*this));
+        new (mem) FunctionHolder(std::move(*this));
         return (BaseType*)mem;
     }
 
@@ -107,12 +109,12 @@ class Function<ReturnType(ArgTypes...)>
         assign(other);
     }
     Function(Function&& other) {
-        move(ke::Forward<Function>(other));
+        move(std::forward<Function>(other));
     }
 
     template <typename T>
     Function(T&& obj) {
-        assign(ke::Forward<T>(obj));
+        assign(std::forward<T>(obj));
     }
 
     ~Function() {
@@ -131,7 +133,7 @@ class Function<ReturnType(ArgTypes...)>
     }
     Function& operator =(Function&& other) {
         destroy();
-        move(ke::Move(other));
+        move(std::move(other));
         return *this;
     }
 
@@ -148,7 +150,7 @@ class Function<ReturnType(ArgTypes...)>
 
     ReturnType operator ()(ArgTypes... argv) const {
         assert(impl_);
-        return impl_->invoke(ke::Forward<ArgTypes>(argv)...);
+        return impl_->invoke(std::forward<ArgTypes>(argv)...);
     }
 
     bool usingInlineStorage() const {
@@ -202,9 +204,9 @@ class Function<ReturnType(ArgTypes...)>
 
         if (sizeof(ImplType) <= sizeof(buffer_)) {
             impl_ = reinterpret_cast<ImplType*>(inline_buffer());
-            new (inline_buffer()) ImplType(ke::Forward<T>(obj));
+            new (inline_buffer()) ImplType(std::forward<T>(obj));
         } else {
-            impl_ = new ImplType(ke::Forward<T>(obj));
+            impl_ = new ImplType(std::forward<T>(obj));
         }
     }
 

@@ -30,11 +30,13 @@
 #ifndef _include_amtl_linkedlist_h_
 #define _include_amtl_linkedlist_h_
 
-#include <amtl/am-allocator-policies.h>
-#include <amtl/am-moveable.h>
-#include <amtl/am-storagebuffer.h>
 #include <stdlib.h>
+
 #include <new>
+#include <utility>
+
+#include <amtl/am-allocator-policies.h>
+#include <amtl/am-storagebuffer.h>
 
 namespace ke {
 
@@ -71,12 +73,12 @@ class LinkedList : private AllocPolicy
 
     template <typename U>
     bool append(U&& obj) {
-        return insertBefore(end(), ke::Forward<U>(obj)) != end();
+        return insertBefore(end(), std::forward<U>(obj)) != end();
     }
 
     template <typename U>
     bool prepend(U&& obj) {
-        return insertBefore(begin(), ke::Forward<U>(obj)) != begin();
+        return insertBefore(begin(), std::forward<U>(obj)) != begin();
     }
 
     size_t length() const {
@@ -131,7 +133,7 @@ class LinkedList : private AllocPolicy
         Node* node = (Node*)this->am_malloc(sizeof(Node));
         if (!node)
             return nullptr;
-        new (&node->obj) T(ke::Forward<U>(obj));
+        new (&node->obj) T(std::forward<U>(obj));
         return node;
     }
 
@@ -253,7 +255,7 @@ class LinkedList : private AllocPolicy
     }
     template <typename U>
     iterator insertBefore(iterator where, U&& obj) {
-        return insert(where, allocNode(ke::Forward<U>(obj)));
+        return insert(where, allocNode(std::forward<U>(obj)));
     }
 
   public:

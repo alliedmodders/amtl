@@ -30,11 +30,11 @@
 #ifndef _include_amtl_refcounting_h_
 #define _include_amtl_refcounting_h_
 
-#include <amtl/am-moveable.h>
-#include <amtl/am-raii.h>
 #include <assert.h>
 #include <stddef.h>
 #include <stdint.h>
+
+#include <amtl/am-raii.h>
 
 namespace ke {
 

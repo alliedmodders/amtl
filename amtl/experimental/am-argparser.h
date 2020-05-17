@@ -829,15 +829,22 @@ Parser::usage(FILE* fp, int argc, char** argv)
 
     struct Entry {
         explicit Entry(IOption* option)
-         : col_width(0),
-           option(option)
+          : col_width(0),
+            option(option)
         {}
         Entry(Entry&& other)
-         : opt_lines(Move(other.opt_lines)),
-           help_lines(Move(other.help_lines)),
-           col_width(other.col_width),
-           option(other.option)
+          : opt_lines(std::move(other.opt_lines)),
+            help_lines(std::move(other.help_lines)),
+            col_width(other.col_width),
+            option(other.option)
         {}
+        Entry& operator =(Entry&& other) {
+            opt_lines = std::move(other.opt_lines);
+            help_lines = std::move(other.help_lines);
+            col_width = other.col_width;
+            option = other.option;
+            return *this;
+        }
         Vector<AString> opt_lines;
         Vector<AString> help_lines;
         size_t col_width;
@@ -857,8 +864,8 @@ Parser::usage(FILE* fp, int argc, char** argv)
 
         AString name;
         name.format("%s%s", indent.get(), option->name());
-        entry.opt_lines.append(Move(name));
-        entries.append(Move(entry));
+        entry.opt_lines.append(std::move(name));
+        entries.append(std::move(entry));
     }
 
     static const size_t kMaxLineLength = 80;
@@ -883,8 +890,8 @@ Parser::usage(FILE* fp, int argc, char** argv)
 
             // Try to fit both options in one cell.
             if (joined.length() <= kMaxLeftColLength) {
-                entry.opt_lines.append(Move(joined));
-                entries.append(Move(entry));
+                entry.opt_lines.append(std::move(joined));
+                entries.append(std::move(entry));
                 continue;
             }
         }
@@ -893,14 +900,14 @@ Parser::usage(FILE* fp, int argc, char** argv)
         if (option->short_form()) {
             AString short_form;
             short_form.format("%s-%s ", indent.get(), option->short_form());
-            entry.opt_lines.append(Move(short_form));
+            entry.opt_lines.append(std::move(short_form));
         }
         if (option->long_form()) {
             AString long_form;
             long_form.format("%s--%s%s ", indent.get(), option->long_form(), value_suffix.chars());
-            entry.opt_lines.append(Move(long_form));
+            entry.opt_lines.append(std::move(long_form));
         }
-        entries.append(Move(entry));
+        entries.append(std::move(entry));
     }
 
     // Add extra usage lines.
@@ -909,8 +916,8 @@ Parser::usage(FILE* fp, int argc, char** argv)
 
         AString name;
         name.format("%s%s", indent.get(), option->name());
-        entry.opt_lines.append(Move(name));
-        entries.append(Move(entry));
+        entry.opt_lines.append(std::move(name));
+        entries.append(std::move(entry));
     }
 
     // If we don't have any arguments to display, stop here.
@@ -936,7 +943,7 @@ Parser::usage(FILE* fp, int argc, char** argv)
                 line_length = 0;
             }
             line_length += word.length() + 1;
-            line.append(Move(word));
+            line.append(std::move(word));
         }
         if (!line.empty())
             entry.help_lines.append(Join(line, " "));

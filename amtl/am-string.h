@@ -46,10 +46,10 @@
 #endif
 
 #include <memory>
+#include <utility>
 
 #include <amtl/am-bits.h>
 #include <amtl/am-cxx.h>
-#include <amtl/am-moveable.h>
 #include <amtl/am-platform.h>
 #include <amtl/am-vector.h>
 
@@ -88,11 +88,11 @@ class AString
             length_ = 0;
     }
     AString(std::unique_ptr<char[]>&& ptr, size_t length)
-     : chars_(Move(ptr)),
+     : chars_(std::move(ptr)),
        length_(length)
     {}
     AString(AString&& other)
-     : chars_(Move(other.chars_)),
+     : chars_(std::move(other.chars_)),
        length_(other.length_)
     {
         other.length_ = 0;
@@ -117,7 +117,7 @@ class AString
         return *this;
     }
     AString& operator =(AString&& other) {
-        chars_ = Move(other.chars_);
+        chars_ = std::move(other.chars_);
         length_ = other.length_;
         other.length_ = 0;
         return *this;
@@ -170,14 +170,14 @@ class AString
         for (size_t i = 0; i < length_; i++)
             buffer[i] = toupper(chars_[i]);
         buffer[length_] = '\0';
-        return AString(Move(buffer), length_);
+        return AString(std::move(buffer), length_);
     }
     AString lowercase() const {
         std::unique_ptr<char[]> buffer = std::make_unique<char[]>(length_ + 1);
         for (size_t i = 0; i < length_; i++)
             buffer[i] = tolower(chars_[i]);
         buffer[length_] = '\0';
-        return AString(Move(buffer), length_);
+        return AString(std::move(buffer), length_);
     }
 
     bool empty() const {
@@ -285,7 +285,7 @@ AString::SprintfArgs(const char* fmt, va_list ap)
     std::unique_ptr<char[]> result = detail::SprintfArgsImpl(&len, fmt, ap);
     if (!result)
         return nullptr;
-    return std::make_unique<AString>(Move(result), len);
+    return std::make_unique<AString>(std::move(result), len);
 }
 
 inline std::unique_ptr<AString>
@@ -307,7 +307,7 @@ AString::formatArgs(const char* fmt, va_list ap)
         *this = AString();
         return false;
     }
-    *this = AString(Move(result), len);
+    *this = AString(std::move(result), len);
     return true;
 }
 
@@ -464,7 +464,7 @@ Join(const Vector<AString>& pieces, const char* sep)
     *iter++ = '\0';
     assert(iter == end);
 
-    return AString(Move(buffer), buffer_len - 1);
+    return AString(std::move(buffer), buffer_len - 1);
 }
 
 inline Vector<AString>

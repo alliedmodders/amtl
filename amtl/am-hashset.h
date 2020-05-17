@@ -30,6 +30,8 @@
 #ifndef _include_amtl_hashset_h_
 #define _include_amtl_hashset_h_
 
+#include <utility>
+
 #include <amtl/am-hashtable.h>
 
 namespace ke {
@@ -67,7 +69,7 @@ class HashSet : private AllocPolicy
     {}
 
     HashSet(HashSet&& other)
-     : table_(ke::Move(other.table_))
+     : table_(std::move(other.table_))
     {}
 
     // capacity must be a power of two.
@@ -102,7 +104,7 @@ class HashSet : private AllocPolicy
     // The Insert object is still valid after add() returns, however.
     template <typename UK>
     bool add(Insert& i, UK&& key) {
-        return table_.add(i, ke::Forward<UK>(key));
+        return table_.add(i, std::forward<UK>(key));
     }
 
     // This can be used to avoid compiler constructed temporaries, since AMTL
@@ -140,7 +142,7 @@ class HashSet : private AllocPolicy
     void add(UK&& key) {
         Insert p = table_.findForAdd(key);
         if (!p.found())
-            table_.add(p, ke::Forward<UK>(key));
+            table_.add(p, std::forward<UK>(key));
     }
 
     AllocPolicy& allocPolicy() {
