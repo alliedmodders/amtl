@@ -29,9 +29,9 @@
 #ifndef _include_amtl_fixedarray_h_
 #define _include_amtl_fixedarray_h_
 
-#include <amtl/am-allocator-policies.h>
-#include <amtl/am-moveable.h>
 #include <assert.h>
+
+#include <amtl/am-allocator-policies.h>
 
 namespace ke {
 

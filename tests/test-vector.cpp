@@ -185,9 +185,9 @@ TEST(Vector, Moving) {
     {
         Vector<MovingThing> vector;
         MovingThing a, b, c;
-        vector.append(ke::Move(a));
-        vector.append(ke::Move(b));
-        vector.append(ke::Move(c));
+        vector.append(std::move(a));
+        vector.append(std::move(b));
+        vector.append(std::move(c));
     }
 
     EXPECT_EQ(sCtors, 3);
@@ -202,7 +202,7 @@ TEST(Vector, Moving) {
 
     Vector<int> v1;
     v1.append(10);
-    Vector<int> v2(Move(v1));
+    Vector<int> v2(std::move(v1));
     EXPECT_EQ(v2.length(), (size_t)1);
     EXPECT_EQ(v1.length(), (size_t)0);
 }
@@ -220,11 +220,11 @@ TEST(Vector, MoveDuringInsert) {
     Vector<MovingThing> vector;
     for (size_t i = 1; i <= 8; i++) {
         MovingThing x;
-        vector.append(Move(x));
+        vector.append(std::move(x));
     }
     {
         MovingThing x;
-        vector.insert(0, Move(x));
+        vector.insert(0, std::move(x));
     }
     for (size_t i = 0; i < vector.length(); i++) {
         EXPECT_FALSE(vector[i].moved());
@@ -274,10 +274,10 @@ TEST(Vector, Remove) {
          : thing(thing)
         {}
         WrappedThing(WrappedThing&& other)
-         : thing(ke::Move(other.thing))
+         : thing(std::move(other.thing))
         {}
         WrappedThing& operator =(WrappedThing&& other) {
-            thing = ke::Move(other.thing);
+            thing = std::move(other.thing);
             return *this;
         }
 

@@ -186,9 +186,9 @@ TEST(LinkedList, Moving) {
     {
         LinkedList<MovingThing> list;
         MovingThing a, b, c;
-        list.append(ke::Move(a));
-        list.append(ke::Move(b));
-        list.append(ke::Move(c));
+        list.append(std::move(a));
+        list.append(std::move(b));
+        list.append(std::move(c));
     }
 
     EXPECT_EQ(sCtors, 3);

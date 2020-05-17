@@ -88,12 +88,12 @@ TEST(Callable, BasicFunction) {
     EXPECT_EQ(ptr(66), 100);
 
     Function<unsigned(MoveObj && obj)> ptr2 = [](MoveObj&& obj) -> unsigned {
-        MoveObj other(ke::Move(obj));
+        MoveObj other(std::move(obj));
         return other.count();
     };
 
     MoveObj moveObj;
-    EXPECT_EQ(ptr2(ke::Move(moveObj)), (unsigned)1);
+    EXPECT_EQ(ptr2(std::move(moveObj)), (unsigned)1);
 }
 
 TEST(Callable, InlineStorage) {
@@ -161,7 +161,7 @@ TEST(Callable, Move) {
 
     copyctors = 0;
 
-    Function<void()> ptr3 = ke::Move(ptr2);
+    Function<void()> ptr3 = std::move(ptr2);
     EXPECT_EQ(ctors, (size_t)0);
     EXPECT_EQ(copyctors, (size_t)0);
     EXPECT_EQ(movectors, (size_t)0);
@@ -170,7 +170,7 @@ TEST(Callable, Move) {
     copyctors = 0;
 
     auto fn = [test_dtor] {};
-    Function<void()> ptr4 = ke::Move(fn);
+    Function<void()> ptr4 = std::move(fn);
     EXPECT_EQ(ctors, (size_t)0);
     EXPECT_EQ(copyctors, (size_t)1);
     EXPECT_EQ(movectors, (size_t)1);

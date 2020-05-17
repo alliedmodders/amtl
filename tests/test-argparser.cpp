@@ -152,7 +152,7 @@ TEST(ArgParser, RepeatArg) {
 
     ASSERT_TRUE(parser.parsev("-i", "blah", "-i", "crab", "--include-path=yam", nullptr));
 
-    Vector<AString> values = Move(inc.values());
+    Vector<AString> values = std::move(inc.values());
     ASSERT_EQ(values.length(), (size_t)3);
     EXPECT_EQ(values[0].compare("blah"), 0);
     EXPECT_EQ(values[1].compare("crab"), 0);

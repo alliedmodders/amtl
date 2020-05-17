@@ -32,10 +32,11 @@
 
 #include <limits.h>
 #include <stdlib.h>
+
 #include <new>
+
 #include "amtl/am-allocator-policies.h"
 #include "amtl/am-bits.h"
-#include "amtl/am-moveable.h"
 
 namespace ke {
 
@@ -59,7 +60,7 @@ class HashTableEntry
     }
     template <typename U>
     void construct(U&& u) {
-        new (&t_) T(ke::Forward<U>(u));
+        new (&t_) T(std::forward<U>(u));
     }
     uint32_t hash() const {
         return hash_;
@@ -269,7 +270,7 @@ class HashTable : private AllocPolicy
             if (oldEntry.isLive()) {
                 Insert p = insertUnique(oldEntry.hash());
                 p.entry().setHash(p.hash());
-                p.entry().construct(ke::Move(oldEntry.payload()));
+                p.entry().construct(std::move(oldEntry.payload()));
             }
             oldEntry.destruct();
         }
@@ -384,7 +385,7 @@ class HashTable : private AllocPolicy
     {}
 
     HashTable(HashTable&& other)
-     : AllocPolicy(ke::Move(other)),
+     : AllocPolicy(std::move(other)),
        capacity_(other.capacity_),
        nelements_(other.nelements_),
        ndeleted_(other.ndeleted_),
@@ -455,7 +456,7 @@ class HashTable : private AllocPolicy
     bool add(Insert& i, U&& payload) {
         if (!internalAdd(i))
             return false;
-        i.entry().construct(ke::Forward<U>(payload));
+        i.entry().construct(std::forward<U>(payload));
         return true;
     }
     bool add(Insert& i) {

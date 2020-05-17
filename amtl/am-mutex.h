@@ -58,7 +58,7 @@ class Mutex : public std::mutex
     }
 
   private:
-    std::thread::id owner_;
+    std::thread::id owner_ = {};
 #endif
 };
 
