@@ -112,7 +112,7 @@ TEST(Deque, Move) {
     ASSERT_TRUE(dq1.append(10));
 
     {
-        Deque<int> dq2 = ke::Move(dq1);
+        Deque<int> dq2 = std::move(dq1);
         ASSERT_EQ(dq2.length(), (size_t)1);
         ASSERT_EQ(dq2.popFrontCopy(), 10);
     }

@@ -67,11 +67,6 @@ This provides some common helper functions pretty much lumped together:
 * Fast Log2/Floor2 functions (also known as bitscan or count zeroes).
 * Integer alignment (useful for allocators or code generators).
 
-### Moveable (am-moveable.h)
-
-AMTL used to emulate C++ r-value semantics. Now it requires native support. It
-provides a replacement for std::move as ke::Move, and std::forward as ke::Forward.
-
 ### Reference Counting (am-refcounting.h)
 
 Two classes are available to help other classes implement reference counting. They are Refcounted

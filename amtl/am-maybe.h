@@ -29,10 +29,12 @@
 #ifndef _include_amtl_maybe_h_
 #define _include_amtl_maybe_h_
 
-#include <amtl/am-moveable.h>
+#include <assert.h>
+
+#include <utility>
+
 #include <amtl/am-storagebuffer.h>
 #include <amtl/am-type-traits.h>
-#include <assert.h>
 
 namespace ke {
 
@@ -53,7 +55,7 @@ class Maybe
     Maybe(Maybe&& other)
      : initialized_(false)
     {
-        moveFrom(ke::Move(other));
+        moveFrom(std::move(other));
     }
     Maybe(Nothing)
      : initialized_(false)
@@ -69,7 +71,7 @@ class Maybe
         if (isValid())
             t_.address()->~T();
 
-        new (t_.address()) T(Forward<ArgTypes>(argv)...);
+        new (t_.address()) T(std::forward<ArgTypes>(argv)...);
         initialized_ = true;
     }
 
@@ -113,7 +115,7 @@ class Maybe
     }
     Maybe& operator =(Maybe&& other) {
         initialized_ = false;
-        moveFrom(ke::Move(other));
+        moveFrom(std::move(other));
         return *this;
     }
 
@@ -125,7 +127,7 @@ class Maybe
     }
     void moveFrom(Maybe&& other) {
         if (other.initialized_) {
-            init(ke::Move(*other.t_.address()));
+            init(std::move(*other.t_.address()));
             other.initialized_ = false;
         }
     }
@@ -140,7 +142,7 @@ static inline Maybe<U>
 Some(T&& value)
 {
     Maybe<U> m;
-    m.init(ke::Forward<T>(value));
+    m.init(std::forward<T>(value));
     return m;
 }
 

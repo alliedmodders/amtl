@@ -29,13 +29,15 @@
 #ifndef _INCLUDE_KEIMA_TPL_CPP_DEQUE_H_
 #define _INCLUDE_KEIMA_TPL_CPP_DEQUE_H_
 
+#include <assert.h>
+#include <stdlib.h>
+
+#include <new>
+#include <utility>
+
 #include <amtl/am-allocator-policies.h>
 #include <amtl/am-bits.h>
 #include <amtl/am-cxx.h>
-#include <amtl/am-moveable.h>
-#include <assert.h>
-#include <stdlib.h>
-#include <new>
 
 namespace ke {
 
@@ -52,7 +54,7 @@ class Deque : private AllocPolicy
        last_(0)
     {}
     Deque(Deque&& other)
-     : AllocPolicy(Move(other)),
+     : AllocPolicy(std::move(other)),
        buffer_(other.buffer_),
        maxlength_(other.maxlength_),
        first_(other.first_),
@@ -83,7 +85,7 @@ class Deque : private AllocPolicy
         size_t next = ensureCanAppend();
         if (next == kInvalidIndex)
             return false;
-        new (&buffer_[last_]) T(ke::Forward<U>(other));
+        new (&buffer_[last_]) T(std::forward<U>(other));
         last_ = next;
         return true;
     }
@@ -94,7 +96,7 @@ class Deque : private AllocPolicy
         if (prev == kInvalidIndex)
             return false;
         first_ = prev;
-        new (&buffer_[first_]) T(ke::Forward<U>(other));
+        new (&buffer_[first_]) T(std::forward<U>(other));
         return true;
     }
 
@@ -204,15 +206,18 @@ class Deque : private AllocPolicy
         if (!new_buffer)
             return false;
 
-        // Move everything to the bottom of the new buffer, and reset our indices
+        // std::move everything to the bottom of the new buffer, and reset our indices
         // so that first is at 0.
         if (first_ < last_) {
-            MoveRange(new_buffer, buffer_ + first_, last_ - first_);
+            for (size_t i = 0; i < last_ - first_; i++)
+                new_buffer[i] = std::move(buffer_[first_ + i]);
             last_ = last_ - first_;
             first_ = 0;
         } else {
-            MoveRange(new_buffer, buffer_ + first_, maxlength_ - first_);
-            MoveRange(new_buffer + (maxlength_ - first_), buffer_, last_);
+            for (size_t i = 0; i < maxlength_ - first_; i++)
+                new_buffer[i] = std::move(buffer_[first_ + i]);
+            for (size_t i = 0; i < last_; i++)
+                new_buffer[maxlength_ - first_ + i] = std::move(buffer_[i]);
             last_ = last_ + (maxlength_ - first_);
             first_ = 0;
         }

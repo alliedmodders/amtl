@@ -31,13 +31,13 @@
 #define _include_amtl_utility_h_
 
 #define __STDC_FORMAT_MACROS
-#include <amtl/am-algorithm.h>
-#include <amtl/am-cxx.h>
-#include <amtl/am-moveable.h>
 #include <assert.h>
 #include <stddef.h>
 #include <stdint.h>
 #include <stdlib.h>
+
+#include <amtl/am-algorithm.h>
+#include <amtl/am-cxx.h>
 
 #if defined(_MSC_VER)
 // Mac file format warning.
