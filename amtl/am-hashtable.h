@@ -34,6 +34,7 @@
 #include <stdlib.h>
 
 #include <new>
+#include <utility>
 
 #include "amtl/am-allocator-policies.h"
 #include "amtl/am-bits.h"
