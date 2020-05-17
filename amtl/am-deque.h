@@ -210,14 +210,14 @@ class Deque : private AllocPolicy
         // so that first is at 0.
         if (first_ < last_) {
             for (size_t i = 0; i < last_ - first_; i++)
-                new_buffer[i] = std::move(buffer_[first_ + i]);
+                new (&new_buffer[i]) T(std::move(buffer_[first_ + i]));
             last_ = last_ - first_;
             first_ = 0;
         } else {
             for (size_t i = 0; i < maxlength_ - first_; i++)
-                new_buffer[i] = std::move(buffer_[first_ + i]);
+                new (&new_buffer[i]) T(std::move(buffer_[first_ + i]));
             for (size_t i = 0; i < last_; i++)
-                new_buffer[maxlength_ - first_ + i] = std::move(buffer_[i]);
+                new (&new_buffer[maxlength_ - first_ + i]) T(std::move(buffer_[i]));
             last_ = last_ + (maxlength_ - first_);
             first_ = 0;
         }

@@ -271,7 +271,7 @@ class Vector : private AllocPolicy
         if (newdata == nullptr)
             return false;
         for (size_t i = 0; i < nitems_; i++)
-            newdata[i] = std::move(data_[i]);
+            new (&newdata[i]) T(std::move(data_[i]));
         this->am_free(data_);
 
         data_ = newdata;
