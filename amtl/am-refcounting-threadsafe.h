@@ -1,4 +1,4 @@
-// vim: set sts=8 ts=2 sw=2 tw=99 et:
+// vim: set sts=8 ts=4 sw=4 tw=99 et:
 //
 // Copyright (C) 2013, David Anderson and AlliedModders LLC
 // All rights reserved.
@@ -30,7 +30,9 @@
 #ifndef _include_amtl_ts_refcounting_h_
 #define _include_amtl_ts_refcounting_h_
 
-#include <amtl/am-atomics.h>
+#include <atomic>
+#include <thread>
+
 #include <amtl/am-bits.h>
 #include <amtl/am-refcounting.h>
 
@@ -48,10 +50,11 @@ class RefcountedThreadsafe
     {}
 
     void AddRef() {
-        refcount_.increment();
+        refcount_ += 1;
     }
     bool Release() {
-        if (!refcount_.decrement()) {
+        if (refcount_.fetch_sub(1) == 1) {
+            assert(refcount_.load() == 0);
             delete static_cast<T*>(this);
             return false;
         }
@@ -62,7 +65,7 @@ class RefcountedThreadsafe
     ~RefcountedThreadsafe() {}
 
   private:
-    AtomicRefcount refcount_;
+    std::atomic<size_t> refcount_;
 };
 
 // Use this to forward to ke::Refcounted<X>, when implementing IRefcounted.
@@ -89,10 +92,11 @@ class VirtualRefcountedThreadsafe : public IRefcounted
     virtual ~VirtualRefcountedThreadsafe() {}
     void AddRef() override {
         assert(!destroying_);
-        refcount_.increment();
+        refcount_ += 1;
     }
     void Release() override {
-        if (!refcount_.decrement()) {
+        if (refcount_.fetch_sub(1) == 0) {
+            assert(refcount_.load() == 0);
 #if !defined(NDEBUG)
             destroying_ = true;
 #endif
@@ -101,7 +105,7 @@ class VirtualRefcountedThreadsafe : public IRefcounted
     }
 
   private:
-    AtomicRefcount refcount_;
+    std::atomic<size_t> refcount_;
 #if !defined(NDEBUG)
     bool destroying_;
 #endif
@@ -132,9 +136,10 @@ class AtomicRef
             thing->AddRef();
     }
     ~AtomicRef() {
+        // Should not be locked.
         assert(thing_ == untagged(thing_));
         if (thing_)
-            reinterpret_cast<T*>(thing_)->Release();
+            reinterpret_cast<T*>(thing_.load())->Release();
     }
 
     // Atomically retrieve and add a reference to the contained value.
@@ -171,9 +176,15 @@ class AtomicRef
 
     T* lock() {
         // Spin until we can replace an untagged ptr with the tagged version.
+        // Note that we cannot use compare_and_swap_weak. If |thing_| becomes
+        // locked but spuriously fails (as can happen on ARM), we'll loop
+        // indefinitely waiting for it to become unlocked. So we must have a
+        // strong guarantee on failure.
         void* oldval = untagged(thing_);
-        while (CompareAndSwapPtr(&thing_, tagged(oldval), oldval) != oldval) {
-            YieldProcessor();
+        while (!thing_.compare_exchange_strong(oldval, tagged(oldval), std::memory_order_release,
+                                               std::memory_order_relaxed))
+        {
+            std::this_thread::yield();
             oldval = untagged(thing_);
         }
         return reinterpret_cast<T*>(oldval);
@@ -187,7 +198,7 @@ class AtomicRef
     }
 
   private:
-    void* volatile thing_;
+    std::atomic<void*> thing_;
 };
 
 } // namespace ke
