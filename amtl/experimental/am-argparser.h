@@ -33,6 +33,7 @@
 #include <stdio.h>
 
 #include <memory>
+#include <string>
 
 #include <amtl/am-algorithm.h>
 #include <amtl/am-cxx.h>
@@ -59,7 +60,7 @@ class Parser
     inline void add(IOption* option);
     inline bool parse(int argc, char** argv);
     inline bool parse(const Vector<const char*>& args);
-    inline bool parse(const Vector<AString>& args);
+    inline bool parse(const Vector<std::string>& args);
     inline bool parsev(const char* arg1, ...);
 
     inline void usage(FILE* fp, int argc, char** argv);
@@ -89,7 +90,7 @@ class Parser
         collect_extra_args_ = true;
     }
 
-    const Vector<AString>& extra_args() const {
+    const Vector<std::string>& extra_args() const {
         return extra_args_;
     }
 
@@ -122,14 +123,14 @@ class Parser
   private:
     Vector<IOption*> options_;
     Vector<IOption*> positionals_;
-    ke::AString help_;
-    ke::AString error_;
-    ke::AString usage_line_;
+    std::string help_;
+    std::string error_;
+    std::string usage_line_;
     bool inline_values_ = false;
     bool allow_slashes_ = false;
     bool collect_extra_args_ = false;
     std::unique_ptr<StopOption> help_option_;
-    Vector<AString> extra_args_;
+    Vector<std::string> extra_args_;
     Vector<std::unique_ptr<IOption>> extra_usage_;
 };
 
@@ -513,8 +514,8 @@ struct ValuePolicy<bool> {
 };
 
 template <>
-struct ValuePolicy<AString> : public BaseValuePolicy {
-    static bool consumeValue(const char* arg, ke::AString* out) {
+struct ValuePolicy<std::string> : public BaseValuePolicy {
+    static bool consumeValue(const char* arg, std::string* out) {
         if (strlen(arg) == 0)
             return false;
         *out = arg;
@@ -534,7 +535,7 @@ struct ValuePolicy<int> : public BaseValuePolicy {
 };
 
 typedef Option<bool> BoolOption;
-typedef Option<AString> StringOption;
+typedef Option<std::string> StringOption;
 typedef Option<int> IntOption;
 
 inline Parser::Parser()
@@ -583,11 +584,11 @@ Parser::parse(const Vector<const char*>& args)
 }
 
 inline bool
-Parser::parse(const Vector<AString>& args)
+Parser::parse(const Vector<std::string>& args)
 {
     Vector<const char*> ptr_args;
     for (size_t i = 0; i < args.length(); i++)
-        ptr_args.append(args[i].chars());
+        ptr_args.append(args[i].c_str());
     return parse_impl(ptr_args);
 }
 
@@ -758,7 +759,7 @@ Parser::find_long(const char* long_form, size_t len)
 inline bool
 Parser::unrecognized_option(const char* arg)
 {
-    error_.format("Unrecognized option: %s", arg);
+    error_ = StringPrintf("Unrecognized option: %s", arg);
     return false;
 }
 
@@ -772,28 +773,28 @@ Parser::unrecognized_extra()
 inline bool
 Parser::option_needs_value(IOption* option)
 {
-    error_.format("Option '%s' needs a value.", option->pretty_name());
+    error_ = StringPrintf("Option '%s' needs a value.", option->pretty_name());
     return false;
 }
 
 inline bool
 Parser::option_invalid_value(IOption* option, const char* value)
 {
-    error_.format("Argument '%s' did not recognize value: %s", option->pretty_name(), value);
+    error_ = StringPrintf("Argument '%s' did not recognize value: %s", option->pretty_name(), value);
     return false;
 }
 
 inline bool
 Parser::missing_positional(IOption* option)
 {
-    error_.format("Missing value for '%s'.", option->pretty_name());
+    error_ = StringPrintf("Missing value for '%s'.", option->pretty_name());
     return false;
 }
 
 inline bool
 Parser::option_already_specified(IOption* option)
 {
-    error_.format("Option '%s' was specified more than once.", option->pretty_name());
+    error_ = StringPrintf("Option '%s' was specified more than once.", option->pretty_name());
     return false;
 }
 
@@ -813,7 +814,7 @@ Parser::usage(FILE* fp, int argc, char** argv)
 
         if (!help_option_ || !display_full_help) {
             usage_line(argv, fp);
-            fprintf(fp, "error: %s\n", error_.chars());
+            fprintf(fp, "error: %s\n", error_.c_str());
             return;
         }
 
@@ -821,7 +822,7 @@ Parser::usage(FILE* fp, int argc, char** argv)
     }
 
     if (!help_.empty()) {
-        fprintf(fp, "%s\n", help_.chars());
+        fprintf(fp, "%s\n", help_.c_str());
         fprintf(fp, "\n");
     }
 
@@ -845,8 +846,8 @@ Parser::usage(FILE* fp, int argc, char** argv)
             option = other.option;
             return *this;
         }
-        Vector<AString> opt_lines;
-        Vector<AString> help_lines;
+        Vector<std::string> opt_lines;
+        Vector<std::string> help_lines;
         size_t col_width;
         IOption* option;
     };
@@ -862,8 +863,7 @@ Parser::usage(FILE* fp, int argc, char** argv)
     for (IOption* option : positionals_) {
         Entry entry(option);
 
-        AString name;
-        name.format("%s%s", indent.get(), option->name());
+        std::string name = StringPrintf("%s%s", indent.get(), option->name());
         entry.opt_lines.append(std::move(name));
         entries.append(std::move(entry));
     }
@@ -876,17 +876,16 @@ Parser::usage(FILE* fp, int argc, char** argv)
     for (IOption* option : options_) {
         Entry entry(option);
 
-        AString value_suffix;
+        std::string value_suffix;
         if (!option->mustOmitValue() && !option->canOmitValue()) {
             const char* name = option->long_form() ? option->long_form() : option->short_form();
-            AString decorated = Join(Split(name, "-"), "_").uppercase();
-            value_suffix.format("=%s", decorated.chars());
+            std::string decorated = Uppercase(Join(Split(name, "-"), "_").c_str());
+            value_suffix = StringPrintf("=%s", decorated.c_str());
         }
 
         if (option->short_form() && option->long_form()) {
-            AString joined;
-            joined.format("%s-%s, --%s%s ", indent.get(), option->short_form(), option->long_form(),
-                          value_suffix.chars());
+            std::string joined = StringPrintf("%s-%s, --%s%s ", indent.get(), option->short_form(),
+                                              option->long_form(), value_suffix.c_str());
 
             // Try to fit both options in one cell.
             if (joined.length() <= kMaxLeftColLength) {
@@ -898,13 +897,11 @@ Parser::usage(FILE* fp, int argc, char** argv)
 
         // We need to put each form on a separate line.
         if (option->short_form()) {
-            AString short_form;
-            short_form.format("%s-%s ", indent.get(), option->short_form());
+            std::string short_form = StringPrintf("%s-%s ", indent.get(), option->short_form());
             entry.opt_lines.append(std::move(short_form));
         }
         if (option->long_form()) {
-            AString long_form;
-            long_form.format("%s--%s%s ", indent.get(), option->long_form(), value_suffix.chars());
+            std::string long_form = StringPrintf("%s--%s%s ", indent.get(), option->long_form(), value_suffix.c_str());
             entry.opt_lines.append(std::move(long_form));
         }
         entries.append(std::move(entry));
@@ -914,8 +911,7 @@ Parser::usage(FILE* fp, int argc, char** argv)
     for (const auto& option : extra_usage_) {
         Entry entry(option.get());
 
-        AString name;
-        name.format("%s%s", indent.get(), option->name());
+        std::string name = StringPrintf("%s%s", indent.get(), option->name());
         entry.opt_lines.append(std::move(name));
         entries.append(std::move(entry));
     }
@@ -927,16 +923,16 @@ Parser::usage(FILE* fp, int argc, char** argv)
     // Precompute some information about each option.
     for (Entry& entry : entries) {
         // Compute the maximum size of each left hand cell.
-        for (const AString& line : entry.opt_lines)
+        for (const std::string& line : entry.opt_lines)
             entry.col_width = ke::Max(entry.col_width, line.length());
 
         // Break help text into words, and fit some words on each line. Each line
         // gets at least one word even if the word is too long.
-        Vector<AString> words = Split(entry.option->help(), " ");
+        Vector<std::string> words = Split(entry.option->help(), " ");
 
-        Vector<AString> line;
+        Vector<std::string> line;
         size_t line_length = 0;
-        for (AString& word : words) {
+        for (std::string& word : words) {
             if (line_length + word.length() + 1 >= kMaxRightColLength && !line.empty()) {
                 entry.help_lines.append(Join(line, " "));
                 line.clear();
@@ -971,26 +967,26 @@ Parser::usage(FILE* fp, int argc, char** argv)
 
         size_t help_line_cursor = 0;
         if (entry.col_width >= kMaxLeftColLength) {
-            for (const AString& line : entry.opt_lines)
-                fprintf(fp, "%s\n", line.chars());
+            for (const std::string& line : entry.opt_lines)
+                fprintf(fp, "%s\n", line.c_str());
         } else {
-            for (const AString& line : entry.opt_lines) {
+            for (const std::string& line : entry.opt_lines) {
                 const char* right_col = (help_line_cursor < entry.help_lines.length())
-                                            ? entry.help_lines[help_line_cursor++].chars()
+                                            ? entry.help_lines[help_line_cursor++].c_str()
                                             : "";
-                fprintf(fp, "%-28s%s\n", line.chars(), right_col);
+                fprintf(fp, "%-28s%s\n", line.c_str(), right_col);
             }
         }
 
         for (size_t i = help_line_cursor; i < entry.help_lines.length(); i++)
-            fprintf(fp, "%s%s\n", spaces, entry.help_lines[i].chars());
+            fprintf(fp, "%s%s\n", spaces, entry.help_lines[i].c_str());
     }
 }
 
 void
 Parser::usage_line(char** argv, FILE* out)
 {
-    Vector<AString> words;
+    Vector<std::string> words;
 
     words.append("Usage:");
     words.append(argv ? argv[0] : " ");
@@ -1002,8 +998,8 @@ Parser::usage_line(char** argv, FILE* out)
         words.append(usage_line_);
     }
 
-    AString text = Join(words, " ");
-    fprintf(out, "%s\n", text.chars());
+    std::string text = Join(words, " ");
+    fprintf(out, "%s\n", text.c_str());
 }
 
 void

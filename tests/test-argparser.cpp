@@ -114,7 +114,7 @@ TEST(ArgParser, StringArg) {
     Parser parser("help");
 
     StringOption s(parser, "s", "string", Nothing(), "help");
-    StringOption t(parser, "t", "ttt", Some(AString("whatever")), "help");
+    StringOption t(parser, "t", "ttt", Some(std::string("whatever")), "help");
     StringOption mode(parser, "mode", "help");
 
     parser.reset();
@@ -148,11 +148,11 @@ TEST(ArgParser, IntArg) {
 TEST(ArgParser, RepeatArg) {
     Parser parser("help");
 
-    RepeatOption<AString> inc(parser, "-i", "--include-path", "Include path.");
+    RepeatOption<std::string> inc(parser, "-i", "--include-path", "Include path.");
 
     ASSERT_TRUE(parser.parsev("-i", "blah", "-i", "crab", "--include-path=yam", nullptr));
 
-    Vector<AString> values = std::move(inc.values());
+    Vector<std::string> values = std::move(inc.values());
     ASSERT_EQ(values.length(), (size_t)3);
     EXPECT_EQ(values[0].compare("blah"), 0);
     EXPECT_EQ(values[1].compare("crab"), 0);

@@ -4,8 +4,8 @@ systems code. It is the spiritual succesor to the SourceHook template library.
 
 AMBuild currently requires C++11 support. The minimum supported compiler versions are:
  - Microsoft Visual Studio 2015 or higher.
- - GNU GCC 4.9 or higher.
  - Clang 3.5 or higher.
+ - GNU GCC 4.9 or higher.
 
 To build tests, C++14 or higher is required (on macOS, the minimum version is OS X 10.9).
 
@@ -195,11 +195,6 @@ backward compatibility, and it should be avoided in general, except in situation
 absolutely necessary and allocation performance is not a factor. Otherwise, use InlineList or
 Vector.
 
-### Strings (am-string.h)
-
-The String API is still rather in flux. Currently, a simple std::string-like class is provided
-called AString (short for ASCII String).
-
 ### FixedArray (am-fixedarray.h)
 
 FixedArray&lt;T, AP&gt; is a stripped-down version of Vector that is constructed with a fixed
@@ -232,10 +227,7 @@ pretty similar. Any missing methods could be added quite easily.
 
 ### String (sh\_string.h)
 
-String can be replaced with ke::AString, however some methods like trim() are not available yet.
-One notable difference is that AString caches the length of the string, whereas SH::String does
-not. That means AString is a larger data structure (by 4 bytes, on 32-bit), but is not prone to
-O(n^2) operations like String. This more closely matches the functionality of std::string.
+String can be replaced with std::string.
 
 ### List (sh\_list.h)
 

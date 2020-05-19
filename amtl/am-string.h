@@ -46,6 +46,7 @@
 #endif
 
 #include <memory>
+#include <string>
 #include <utility>
 
 #include <amtl/am-bits.h>
@@ -62,143 +63,6 @@ namespace ke {
 #    define KE_PRINTF_FUNCTION(string_index, first_to_check)
 #endif
 
-// ASCII string.
-class AString
-{
-  public:
-    AString()
-     : length_(0)
-    {}
-
-    explicit AString(const char* str) {
-        if (str && str[0]) {
-            set(str, strlen(str));
-        } else {
-            chars_ = nullptr;
-            length_ = 0;
-        }
-    }
-    AString(const char* str, size_t length) {
-        set(str, length);
-    }
-    AString(const AString& other) {
-        if (other.length_)
-            set(other.chars_.get(), other.length_);
-        else
-            length_ = 0;
-    }
-    AString(std::unique_ptr<char[]>&& ptr, size_t length)
-     : chars_(std::move(ptr)),
-       length_(length)
-    {}
-    AString(AString&& other)
-     : chars_(std::move(other.chars_)),
-       length_(other.length_)
-    {
-        other.length_ = 0;
-    }
-
-    AString& operator =(const char* str) {
-        if (str && str[0]) {
-            set(str, strlen(str));
-        } else {
-            chars_ = nullptr;
-            length_ = 0;
-        }
-        return *this;
-    }
-    AString& operator =(const AString& other) {
-        if (other.length_) {
-            set(other.chars_.get(), other.length_);
-        } else {
-            chars_ = nullptr;
-            length_ = 0;
-        }
-        return *this;
-    }
-    AString& operator =(AString&& other) {
-        chars_ = std::move(other.chars_);
-        length_ = other.length_;
-        other.length_ = 0;
-        return *this;
-    }
-
-    int compare(const char* str) const {
-        return strcmp(chars(), str);
-    }
-    int compare(const AString& other) const {
-        return strcmp(chars(), other.chars());
-    }
-    bool operator ==(const AString& other) const {
-        return other.length() == length() && memcmp(other.chars(), chars(), length()) == 0;
-    }
-
-    char operator [](size_t index) const {
-        assert(index < length());
-        return chars()[index];
-    }
-
-    // Format a printf-style string and return nullptr on error.
-    static inline std::unique_ptr<AString> Sprintf(const char* fmt, ...) KE_PRINTF_FUNCTION(1, 2);
-
-    // Format a printf-style string and return nullptr on error.
-    static inline std::unique_ptr<AString> SprintfArgs(const char* fmt, va_list ap)
-        KE_PRINTF_FUNCTION(1, 0);
-
-    // Format functions that work in-place.
-    inline bool format(const char* fmt, ...) KE_PRINTF_FUNCTION(2, 3);
-    inline bool formatArgs(const char* fmt, va_list ap) KE_PRINTF_FUNCTION(2, 0);
-
-    // Split the string. The split argument must be a non-empty string.
-    inline Vector<AString> split(const char* sep) const;
-
-    size_t length() const {
-        return length_;
-    }
-    const char* chars() const {
-        if (!chars_)
-            return "";
-        return chars_.get();
-    }
-
-    bool startsWith(const char* other) const {
-      return strncmp(chars(), other, strlen(other)) == 0;
-    }
-
-    AString uppercase() const {
-        std::unique_ptr<char[]> buffer = std::make_unique<char[]>(length_ + 1);
-        for (size_t i = 0; i < length_; i++)
-            buffer[i] = toupper(chars_[i]);
-        buffer[length_] = '\0';
-        return AString(std::move(buffer), length_);
-    }
-    AString lowercase() const {
-        std::unique_ptr<char[]> buffer = std::make_unique<char[]>(length_ + 1);
-        for (size_t i = 0; i < length_; i++)
-            buffer[i] = tolower(chars_[i]);
-        buffer[length_] = '\0';
-        return AString(std::move(buffer), length_);
-    }
-
-    bool empty() const {
-        return length_ == 0;
-    }
-
-  private:
-    static const size_t kInvalidLength = (size_t)-1;
-
-    void set(const char* str, size_t length) {
-        chars_ = std::make_unique<char[]>(length + 1);
-        length_ = length;
-        memcpy(chars_.get(), str, length);
-        chars_[length] = '\0';
-    }
-
-  private:
-    std::unique_ptr<char[]> chars_;
-    size_t length_;
-};
-
 #if defined(_MSC_VER)
 #    define KE_VSNPRINTF _vsnprintf
 #else
@@ -212,6 +76,8 @@ static inline size_t SafeVsprintf(char* buffer, size_t maxlength, const char* fm
     KE_PRINTF_FUNCTION(3, 0);
 static inline size_t SafeSprintf(char* buffer, size_t maxlength, const char* fmt, ...)
     KE_PRINTF_FUNCTION(3, 4);
+static inline std::string StringPrintf(const char* fmt, ...) KE_PRINTF_FUNCTION(1, 2);
+static inline std::string StringPrintfVa(const char* fmt, va_list ap) KE_PRINTF_FUNCTION(1, 0);
 
 namespace detail {
 
@@ -228,32 +94,37 @@ SprintfArgsImpl(size_t* out_len, const char* fmt, va_list ap)
     *out_len = 0;
 
 #if defined(_MSC_VER)
-    size_t len = _vscprintf(fmt, ap);
+    int len = _vscprintf(fmt, ap);
 #else
     char tmp[2];
-    size_t len = vsnprintf(tmp, sizeof(tmp), fmt, ap);
+    // Note: GCC incorrectly errors on this code, so suppress the warning.
+    int len = vsnprintf(tmp, sizeof(tmp), fmt, ap);
 #endif
 
-    std::unique_ptr<char[]> buffer;
-    if (len == size_t(-1)) {
+    if (len < 0) {
         va_end(argv);
-        return buffer;
+        return std::unique_ptr<char[]>();
     }
+
     if (len == 0) {
-        buffer = std::make_unique<char[]>(1);
+        auto buffer = std::make_unique<char[]>(1);
         buffer[0] = '\0';
         va_end(argv);
         return buffer;
     }
 
-    buffer = std::make_unique<char[]>(len + 1);
+    auto buffer = std::make_unique<char[]>(len + 1);
     if (!buffer) {
         va_end(argv);
         return buffer;
     }
 
-    *out_len = KE_VSNPRINTF(buffer.get(), len + 1, fmt, argv);
-    assert(*out_len == len);
+    int new_len = KE_VSNPRINTF(buffer.get(), len + 1, fmt, argv);
+    if (new_len < 0)
+        return std::unique_ptr<char[]>();
+    assert(len == new_len);
+
+    *out_len = new_len;
 
     va_end(argv);
     return buffer;
@@ -276,49 +147,6 @@ Sprintf(const char* fmt, ...)
     std::unique_ptr<char[]> result = SprintfArgs(fmt, ap);
     va_end(ap);
     return result;
-}
-
-inline std::unique_ptr<AString>
-AString::SprintfArgs(const char* fmt, va_list ap)
-{
-    size_t len;
-    std::unique_ptr<char[]> result = detail::SprintfArgsImpl(&len, fmt, ap);
-    if (!result)
-        return nullptr;
-    return std::make_unique<AString>(std::move(result), len);
-}
-
-inline std::unique_ptr<AString>
-AString::Sprintf(const char* fmt, ...)
-{
-    va_list ap;
-    va_start(ap, fmt);
-    std::unique_ptr<AString> result = AString::SprintfArgs(fmt, ap);
-    va_end(ap);
-    return result;
-}
-
-inline bool
-AString::formatArgs(const char* fmt, va_list ap)
-{
-    size_t len;
-    std::unique_ptr<char[]> result = detail::SprintfArgsImpl(&len, fmt, ap);
-    if (!result) {
-        *this = AString();
-        return false;
-    }
-    *this = AString(std::move(result), len);
-    return true;
-}
-
-inline bool
-AString::format(const char* fmt, ...)
-{
-    va_list ap;
-    va_start(ap, fmt);
-    bool ok = AString::formatArgs(fmt, ap);
-    va_end(ap);
-    return ok;
 }
 
 static inline size_t
@@ -345,6 +173,26 @@ SafeSprintf(char* buffer, size_t maxlength, const char* fmt, ...)
     size_t len = SafeVsprintf(buffer, maxlength, fmt, ap);
     va_end(ap);
     return len;
+}
+
+static inline std::string
+StringPrintfVa(const char* fmt, va_list ap)
+{
+    size_t len;
+    std::unique_ptr<char[]> result = detail::SprintfArgsImpl(&len, fmt, ap);
+    if (!result)
+        return nullptr;
+    return std::string(result.get(), len);
+}
+
+static inline std::string
+StringPrintf(const char* fmt, ...)
+{
+    va_list ap;
+    va_start(ap, fmt);
+    std::string result = StringPrintfVa(fmt, ap);
+    va_end(ap);
+    return result;
 }
 
 static inline size_t
@@ -409,13 +257,13 @@ StrCaseCmp(const char* a, const char* b)
 //
 //   Join(Split(str, sep), sep) == str
 //
-static inline ke::Vector<AString>
+static inline ke::Vector<std::string>
 Split(const char* str, const char* split)
 {
     size_t split_len = strlen(split);
     assert(split_len > 0);
 
-    Vector<AString> out;
+    Vector<std::string> out;
 
     const char* cursor = str;
     const char* match = nullptr;
@@ -424,36 +272,42 @@ Split(const char* str, const char* split)
         if (!match)
             break;
 
-        out.append(AString(cursor, match - cursor));
+        out.append(std::string(cursor, match - cursor));
         cursor = match + split_len;
     }
 
     if (*cursor != '\0' || match)
-        out.append(AString(cursor));
+        out.append(std::string(cursor));
     return out;
+}
+
+static inline ke::Vector<std::string>
+Split(const std::string& str, const char* split)
+{
+    return ke::Split(str.c_str(), split);
 }
 
 // Given a list of strings, return a string combining them all with |sep|
 // appended in between.
 //
 // Unlike Split(), |sep| can be an empty string.
-static inline AString
-Join(const Vector<AString>& pieces, const char* sep)
+static inline std::string
+Join(const Vector<std::string>& pieces, const char* sep)
 {
     size_t sep_len = strlen(sep);
-    size_t buffer_len = 1;
+    size_t buffer_len = 0;
 
-    for (const AString& piece : pieces)
-        buffer_len += piece.length();
+    for (const std::string& piece : pieces)
+        buffer_len += piece.size();
     if (!pieces.empty())
         buffer_len += sep_len * (pieces.length() - 1);
 
-    std::unique_ptr<char[]> buffer = std::make_unique<char[]>(buffer_len);
+    std::string buffer(buffer_len, '\0');
 
-    char* iter = buffer.get();
-    char* end = buffer.get() + buffer_len;
+    char* iter = &buffer[0];
+    char* end = iter + buffer_len;
     for (size_t i = 0; i < pieces.length(); i++) {
-        SafeStrcpy(iter, end - iter, pieces[i].chars());
+        memcpy(iter, pieces[i].c_str(), pieces[i].size());
         iter += pieces[i].length();
 
         if (i != pieces.length() - 1) {
@@ -461,16 +315,30 @@ Join(const Vector<AString>& pieces, const char* sep)
             iter += sep_len;
         }
     }
-    *iter++ = '\0';
     assert(iter == end);
-
-    return AString(std::move(buffer), buffer_len - 1);
+    return buffer;
 }
 
-inline Vector<AString>
-AString::split(const char* sep) const
-{
-    return Split(chars(), sep);
+static inline std::string Uppercase(const char* str) {
+    std::string result(str);
+    for (size_t i = 0; i < result.size(); i++)
+        result[i] = toupper(result[i]);
+    return result;
+}
+
+static inline std::string Lowercase(const char* str) {
+    std::string result(str);
+    for (size_t i = 0; i < result.size(); i++)
+        result[i] = tolower(result[i]);
+    return result;
+}
+
+static inline bool StartsWith(const std::string& first, const char* other) {
+    return strncmp(first.c_str(), other, strlen(other)) == 0;
+}
+
+static inline bool StartsWith(const char* first, const char* other) {
+    return strncmp(first, other, strlen(other)) == 0;
 }
 
 #if defined(KE_WINDOWS)

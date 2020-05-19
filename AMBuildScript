@@ -9,13 +9,6 @@ class KEConfig(object):
   def configure(self):
     cxx = builder.DetectCxx()
 
-    # if cxx.version < 'clang-3.0' or cxx.version < 'apple-clang-3.0':
-    #   raise Exception('AMTL requires clang 3.0 or higher.')
-    # if cxx.version < 'gcc-4.5':
-    #   raise Exception('AMTL requires GCC 4.5 or higher.')
-    # if cxx.version < 'msvc-1600':
-    #   raise Exception('AMTL requires Visual Studio 2010 (CL 16.00) or higher.')
-
     if cxx.like('gcc'):
       if builder.target.platform != 'windows':
         cxx.cxxflags += ['-std=c++14']
@@ -47,6 +40,8 @@ class KEConfig(object):
       cxx.cxxflags += ['-Wno-unused-function']
       if cxx.like('clang'):
         cxx.cxxflags += ['-Wno-implicit-exception-spec-mismatch']
+      elif cxx.like('gcc'):
+        cxx.cxxflags += ['-Wformat-truncation=0']
 
       cxx.cxxflags += [
         '-fno-exceptions',
@@ -121,9 +116,9 @@ class KEConfig(object):
         cxx.linkflags += ['-lgcc_eh']
     elif builder.target.platform == 'mac':
       cxx.defines += ['OSX', '_OSX', 'POSIX']
-      cxx.cflags += ['-mmacosx-version-min=10.9']
+      cxx.cflags += ['-mmacosx-version-min=10.7']
       cxx.linkflags += [
-        '-mmacosx-version-min=10.9',
+        '-mmacosx-version-min=10.7',
         '-lstdc++',
         '-stdlib=libc++',
       ]

@@ -39,13 +39,13 @@ struct StringPolicy {
     static inline uint32_t hash(const char* key) {
         return FastHashCharSequence(key, strlen(key));
     }
-    static inline bool matches(const char* find, const AString& key) {
+    static inline bool matches(const char* find, const std::string& key) {
         return key.compare(find) == 0;
     }
 };
 
 TEST(HashMap, Basic) {
-    typedef HashMap<AString, int, StringPolicy> Map;
+    typedef HashMap<std::string, int, StringPolicy> Map;
     Map map;
 
     ASSERT_TRUE(map.init());
@@ -55,7 +55,7 @@ TEST(HashMap, Basic) {
 
     Map::Insert i = map.findForAdd("cat");
     ASSERT_FALSE(i.found());
-    ASSERT_TRUE(map.add(i, AString("cat"), 5));
+    ASSERT_TRUE(map.add(i, std::string("cat"), 5));
     EXPECT_EQ(r->value, 5);
 
     Map::iterator iter = map.iter();
@@ -80,7 +80,7 @@ TEST(HashMap, Basic) {
 }
 
 TEST(HashMap, Bug6527) {
-    typedef HashMap<AString, int, StringPolicy> Map;
+    typedef HashMap<std::string, int, StringPolicy> Map;
     Map map;
 
     ASSERT_TRUE(map.init(16));
