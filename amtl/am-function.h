@@ -30,11 +30,10 @@
 #define _include_amtl_function_h_
 
 #include <assert.h>
+#include <stddef.h>
 
 #include <new>
 #include <utility>
-
-#include <amtl/am-type-traits.h>
 
 namespace ke {
 
@@ -199,7 +198,7 @@ class Function<ReturnType(ArgTypes...)>
 
     template <typename T>
     void assign(T&& obj) {
-        typedef typename ke::decay<T>::type CallableType;
+        typedef typename std::decay<T>::type CallableType;
         typedef impl::FunctionHolder<CallableType, ReturnType, ArgTypes...> ImplType;
 
         if (sizeof(ImplType) <= sizeof(buffer_)) {
