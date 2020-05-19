@@ -270,8 +270,10 @@ class Vector : private AllocPolicy
         T* newdata = (T*)this->am_malloc(sizeof(T) * new_maxsize);
         if (newdata == nullptr)
             return false;
-        for (size_t i = 0; i < nitems_; i++)
+        for (size_t i = 0; i < nitems_; i++) {
             new (&newdata[i]) T(std::move(data_[i]));
+            data_[i].~T();
+        }
         this->am_free(data_);
 
         data_ = newdata;

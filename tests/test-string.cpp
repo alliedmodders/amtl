@@ -48,15 +48,15 @@ TEST(String, Allocating) {
     std::unique_ptr<char[]> ptr = Sprintf("A: %d B: %s", a, value);
     EXPECT_EQ(strcmp(ptr.get(), expect), 0);
 
-    std::unique_ptr<AString> str = AString::Sprintf("A: %d B: %s", a, value);
-    EXPECT_EQ(str->compare(expect), 0);
+    auto str = StringPrintf("A: %d B: %s", a, value);
+    EXPECT_EQ(str, expect);
 }
 
 TEST(String, Split) {
-    Vector<AString> out = Split("     ", " ");
+    auto out = Split("     ", " ");
     EXPECT_EQ(out.length(), (size_t)6);
     for (size_t i = 0; i < out.length(); i++) {
-        EXPECT_EQ(out[i].length(), (size_t)0);
+        EXPECT_EQ(out[i].size(), (size_t)0);
     }
 
     out = Split("egg", " ");
@@ -79,35 +79,30 @@ TEST(String, Split) {
 }
 
 TEST(String, Join) {
-    Vector<AString> in;
+    Vector<std::string> in;
 
-    AString result = Join(in, "x");
-    EXPECT_EQ(result.compare(""), 0);
+    auto result = Join(in, "x");
+    EXPECT_EQ(result, "");
 
     in.append("abc");
     result = Join(in, "x");
-    EXPECT_EQ(result.compare("abc"), 0);
+    EXPECT_EQ(result, "abc");
 
     in.append("xyz");
     result = Join(in, "T");
-    EXPECT_EQ(result.compare("abcTxyz"), 0);
+    EXPECT_EQ(result, "abcTxyz");
 
     in.append("def");
     result = Join(in, "");
-    EXPECT_EQ(result.compare("abcxyzdef"), 0);
+    EXPECT_EQ(result, "abcxyzdef");
 }
 
 TEST(String, Case) {
-    AString str("samPle1.com");
-    str = str.uppercase();
-    EXPECT_EQ(str.compare("SAMPLE1.COM"), 0);
+    const char* str = "samPle1.com";
+    EXPECT_EQ(Uppercase(str), "SAMPLE1.COM");
+    EXPECT_EQ(Lowercase(str), "sample1.com");
 
-    str = str.lowercase();
-    EXPECT_EQ(str.compare("sample1.com"), 0);
-
-    str = AString();
-    str = str.lowercase();
-    EXPECT_EQ(str.compare(""), 0);
+    EXPECT_EQ(Lowercase(""), "");
 }
 
 TEST(String, StrCpy) {
@@ -127,12 +122,12 @@ TEST(String, StrCpy) {
 }
 
 TEST(String, StartsWith) {
-    AString str("blah");
+    std::string str("blah");
 
-    EXPECT_TRUE(str.startsWith("b"));
-    EXPECT_TRUE(str.startsWith("blah"));
-    EXPECT_FALSE(str.startsWith("a"));
-    EXPECT_FALSE(str.startsWith("blah2"));
+    EXPECT_TRUE(StartsWith(str, "b"));
+    EXPECT_TRUE(StartsWith(str, "blah"));
+    EXPECT_FALSE(StartsWith(str, "a"));
+    EXPECT_FALSE(StartsWith(str, "blah2"));
 }
 
 TEST(String, SafeStrcat) {
