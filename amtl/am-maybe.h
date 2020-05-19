@@ -31,10 +31,10 @@
 
 #include <assert.h>
 
+#include <type_traits>
 #include <utility>
 
 #include <amtl/am-storagebuffer.h>
-#include <amtl/am-type-traits.h>
 
 namespace ke {
 
@@ -137,7 +137,7 @@ class Maybe
     StorageBuffer<T> t_;
 };
 
-template <typename T, typename U = typename remove_cv<typename remove_reference<T>::type>::type>
+template <typename T, typename U = typename std::remove_cv<typename std::remove_reference<T>::type>::type>
 static inline Maybe<U>
 Some(T&& value)
 {
