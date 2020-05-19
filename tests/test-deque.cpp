@@ -34,91 +34,88 @@
 using namespace ke;
 
 TEST(Deque, Basic) {
-    Deque<int> dq;
+    std::deque<int> dq;
 
     for (int i = 0; i < 4; i++) {
-        ASSERT_TRUE(dq.append(i));
-        ASSERT_EQ(dq.length(), size_t(i + 1));
+        dq.push_back(i);
+        ASSERT_EQ(dq.size(), size_t(i + 1));
     }
     for (int i = 0; i < 4; i++) {
-        ASSERT_TRUE(dq.prepend(i + 4));
-        ASSERT_EQ(dq.length(), size_t(i + 5));
+        dq.push_front(i + 4);
+        ASSERT_EQ(dq.size(), size_t(i + 5));
     }
 
     EXPECT_EQ(dq.back(), 3);
     EXPECT_EQ(dq.front(), 7);
-    dq.popBack();
-    dq.popFront();
-    EXPECT_EQ(dq.popFrontCopy(), 6);
-    EXPECT_EQ(dq.popBackCopy(), 2);
+    dq.pop_back();
+    dq.pop_front();
+    EXPECT_EQ(PopFront(&dq), 6);
+    EXPECT_EQ(PopBack(&dq), 2);
 
-    EXPECT_EQ(dq.length(), (size_t)4);
+    EXPECT_EQ(dq.size(), (size_t)4);
 
     while (!dq.empty())
-        dq.popBack();
-    EXPECT_EQ(dq.length(), (size_t)0);
+        dq.pop_back();
+    EXPECT_EQ(dq.size(), (size_t)0);
 }
 
 TEST(Deque, PrependEmpty) {
-    Deque<int> dq;
+    std::deque<int> dq;
 
     for (int i = 0; i < 8; i++) {
-        if (i % 2 == 0) {
-            ASSERT_TRUE(dq.prepend(i));
-        } else {
-            ASSERT_TRUE(dq.append(i));
-        }
-        EXPECT_EQ(dq.length(), size_t(i + 1));
+        if (i % 2 == 0)
+            dq.push_front(i);
+        else
+            dq.push_back(i);
+        EXPECT_EQ(dq.size(), size_t(i + 1));
     }
 
     while (!dq.empty())
-        dq.popFront();
-    EXPECT_EQ(dq.length(), (size_t)0);
+        dq.pop_front();
+    EXPECT_EQ(dq.size(), (size_t)0);
 }
 
 TEST(Deque, Resize) {
-    Deque<int> dq;
-    for (int i = 0; i < 387; i++) {
-        ASSERT_TRUE(dq.prepend(i));
-    }
-    for (int i = 0; i < 293; i++) {
-        ASSERT_TRUE(dq.append(i));
-    }
+    std::deque<int> dq;
+    for (int i = 0; i < 387; i++)
+        dq.push_front(i);
+    for (int i = 0; i < 293; i++)
+        dq.push_back(i);
 
-    ASSERT_EQ(dq.length(), size_t(293 + 387));
+    ASSERT_EQ(dq.size(), size_t(293 + 387));
 
     for (int i = 292; i >= 0; i--) {
-        EXPECT_EQ(dq.popBackCopy(), i);
+        EXPECT_EQ(PopBack(&dq), i);
     }
     for (int i = 386; i >= 0; i--) {
-        EXPECT_EQ(dq.popFrontCopy(), i);
+        EXPECT_EQ(PopFront(&dq), i);
     }
 
     // Check that we can still add.
-    ASSERT_TRUE(dq.append(5));
-    ASSERT_EQ(dq.popFrontCopy(), 5);
-    ASSERT_TRUE(dq.append(6));
-    ASSERT_EQ(dq.popBackCopy(), 6);
+    dq.push_back(5);
+    ASSERT_EQ(PopFront(&dq), 5);
+    dq.push_back(6);
+    ASSERT_EQ(PopBack(&dq), 6);
 
-    ASSERT_TRUE(dq.prepend(7));
-    ASSERT_EQ(dq.popBackCopy(), 7);
-    ASSERT_TRUE(dq.prepend(8));
-    ASSERT_EQ(dq.popFrontCopy(), 8);
+    dq.push_front(7);
+    ASSERT_EQ(PopBack(&dq), 7);
+    dq.push_front(8);
+    ASSERT_EQ(PopFront(&dq), 8);
 }
 
 TEST(Deque, Move) {
-    Deque<int> dq1;
+    std::deque<int> dq1;
 
-    ASSERT_TRUE(dq1.append(10));
+    dq1.push_back(10);
 
     {
-        Deque<int> dq2 = std::move(dq1);
-        ASSERT_EQ(dq2.length(), (size_t)1);
-        ASSERT_EQ(dq2.popFrontCopy(), 10);
+        std::deque<int> dq2 = std::move(dq1);
+        ASSERT_EQ(dq2.size(), (size_t)1);
+        ASSERT_EQ(PopFront(&dq2), 10);
     }
 
-    ASSERT_EQ(dq1.length(), (size_t)0);
+    ASSERT_EQ(dq1.size(), (size_t)0);
 
     // Append so we can make sure that it's not holding a deleted pointer.
-    ASSERT_TRUE(dq1.append(11));
+    dq1.push_back(11);
 }
