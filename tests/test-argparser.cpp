@@ -152,8 +152,8 @@ TEST(ArgParser, RepeatArg) {
 
     ASSERT_TRUE(parser.parsev("-i", "blah", "-i", "crab", "--include-path=yam", nullptr));
 
-    Vector<std::string> values = std::move(inc.values());
-    ASSERT_EQ(values.length(), (size_t)3);
+    std::vector<std::string> values = std::move(inc.values());
+    ASSERT_EQ(values.size(), (size_t)3);
     EXPECT_EQ(values[0].compare("blah"), 0);
     EXPECT_EQ(values[1].compare("crab"), 0);
     EXPECT_EQ(values[2].compare("yam"), 0);
@@ -218,7 +218,7 @@ TEST(ArgParser, CollectExtra) {
     parser.collect_extra_args();
 
     ASSERT_TRUE(parser.parsev("a", "b", "c", nullptr));
-    ASSERT_EQ(parser.extra_args().length(), (unsigned)3);
+    ASSERT_EQ(parser.extra_args().size(), (unsigned)3);
     EXPECT_EQ(parser.extra_args()[0].compare("a"), 0);
     EXPECT_EQ(parser.extra_args()[1].compare("b"), 0);
     EXPECT_EQ(parser.extra_args()[2].compare("c"), 0);

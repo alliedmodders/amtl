@@ -59,8 +59,8 @@ class Parser
 
     inline void add(IOption* option);
     inline bool parse(int argc, char** argv);
-    inline bool parse(const Vector<const char*>& args);
-    inline bool parse(const Vector<std::string>& args);
+    inline bool parse(const std::vector<const char*>& args);
+    inline bool parse(const std::vector<std::string>& args);
     inline bool parsev(const char* arg1, ...);
 
     inline void usage(FILE* fp, int argc, char** argv);
@@ -90,7 +90,7 @@ class Parser
         collect_extra_args_ = true;
     }
 
-    const Vector<std::string>& extra_args() const {
+    const std::vector<std::string>& extra_args() const {
         return extra_args_;
     }
 
@@ -100,12 +100,12 @@ class Parser
 
     static void add_static_option(IOption* option) {
         if (!sStaticOptions)
-            sStaticOptions = new Vector<IOption*>();
-        sStaticOptions->append(option);
+            sStaticOptions = new std::vector<IOption*>();
+        sStaticOptions->emplace_back(option);
     }
 
   private:
-    inline bool parse_impl(const Vector<const char*>& args);
+    inline bool parse_impl(const std::vector<const char*>& args);
 
     inline IOption* find_short(const char* short_form, size_t len);
     inline IOption* find_long(const char* long_form, size_t len);
@@ -118,11 +118,11 @@ class Parser
     inline bool missing_positional(IOption* option);
     inline bool option_already_specified(IOption* option);
 
-    static Vector<IOption*>* sStaticOptions;
+    static std::vector<IOption*>* sStaticOptions;
 
   private:
-    Vector<IOption*> options_;
-    Vector<IOption*> positionals_;
+    std::vector<IOption*> options_;
+    std::vector<IOption*> positionals_;
     std::string help_;
     std::string error_;
     std::string usage_line_;
@@ -130,8 +130,8 @@ class Parser
     bool allow_slashes_ = false;
     bool collect_extra_args_ = false;
     std::unique_ptr<StopOption> help_option_;
-    Vector<std::string> extra_args_;
-    Vector<std::unique_ptr<IOption>> extra_usage_;
+    std::vector<std::string> extra_args_;
+    std::vector<std::unique_ptr<IOption>> extra_usage_;
 };
 
 class IOption
@@ -442,10 +442,10 @@ class VectorOption : public IOption
         Parser::add_static_option(this);
     }
 
-    Vector<ValueType>& values() {
+    std::vector<ValueType>& values() {
         return values_;
     }
-    const Vector<ValueType>& values() const {
+    const std::vector<ValueType>& values() const {
         return values_;
     }
 
@@ -454,7 +454,7 @@ class VectorOption : public IOption
         ValueType value;
         if (!T::consumeValue(arg, &value))
             return false;
-        values_.append(value);
+        values_.emplace_back(value);
         return true;
     }
     void reset() override {
@@ -465,7 +465,7 @@ class VectorOption : public IOption
     }
 
   protected:
-    Vector<ValueType> values_;
+    std::vector<ValueType> values_;
 };
 
 // This is for an option can be repeated multiple times.
@@ -563,32 +563,32 @@ inline void
 Parser::add(IOption* option)
 {
     if (option->short_form() || option->long_form())
-        options_.append(option);
+        options_.emplace_back(option);
     else
-        positionals_.append(option);
+        positionals_.emplace_back(option);
 }
 
 inline bool
 Parser::parse(int argc, char** argv)
 {
-    Vector<const char*> args;
+    std::vector<const char*> args;
     for (int i = 1; i < argc; i++)
-        args.append(argv[i]);
+        args.emplace_back(argv[i]);
     return parse_impl(args);
 }
 
 inline bool
-Parser::parse(const Vector<const char*>& args)
+Parser::parse(const std::vector<const char*>& args)
 {
     return parse_impl(args);
 }
 
 inline bool
-Parser::parse(const Vector<std::string>& args)
+Parser::parse(const std::vector<std::string>& args)
 {
-    Vector<const char*> ptr_args;
-    for (size_t i = 0; i < args.length(); i++)
-        ptr_args.append(args[i].c_str());
+    std::vector<const char*> ptr_args;
+    for (size_t i = 0; i < args.size(); i++)
+        ptr_args.emplace_back(args[i].c_str());
     return parse_impl(ptr_args);
 }
 
@@ -598,10 +598,10 @@ Parser::parsev(const char* arg1, ...)
     va_list ap;
     va_start(ap, arg1);
 
-    Vector<const char*> argv;
+    std::vector<const char*> argv;
     const char* arg = arg1;
     while (arg) {
-        argv.append(arg);
+        argv.emplace_back(arg);
         arg = va_arg(ap, const char*);
     }
 
@@ -609,11 +609,11 @@ Parser::parsev(const char* arg1, ...)
 }
 
 inline bool
-Parser::parse_impl(const Vector<const char*>& args)
+Parser::parse_impl(const std::vector<const char*>& args)
 {
     size_t positional = 0;
 
-    for (size_t i = 0; i < args.length(); i++) {
+    for (size_t i = 0; i < args.size(); i++) {
         const char* arg = args[i];
         IOption* option = nullptr;
 
@@ -672,11 +672,11 @@ Parser::parse_impl(const Vector<const char*>& args)
         } else {
             // Positional arguments have an implicit key - the next argument in
             // position.
-            if (positional >= positionals_.length()) {
+            if (positional >= positionals_.size()) {
                 if (!collect_extra_args_)
                     return unrecognized_extra();
 
-                extra_args_.append(arg);
+                extra_args_.emplace_back(arg);
                 continue;
             }
 
@@ -686,7 +686,7 @@ Parser::parse_impl(const Vector<const char*>& args)
 
         bool took_next_arg = false;
         if (!value_ptr) {
-            if (i == args.length() - 1) {
+            if (i == args.size() - 1) {
                 if (!option->canOmitValue())
                     return option_needs_value(option);
             } else if (!option->mustOmitValue()) {
@@ -706,7 +706,7 @@ Parser::parse_impl(const Vector<const char*>& args)
             return true;
     }
 
-    if (positional < positionals_.length())
+    if (positional < positionals_.size())
         return missing_positional(positionals_[positional]);
 
     // Force the app to display a help message.
@@ -803,7 +803,7 @@ Parser::usage(FILE* fp, int argc, char** argv)
 {
     bool display_full_help = false;
 
-    if (error_.length()) {
+    if (error_.size()) {
         // Scan to see if we got a help request.
         for (int i = 1; i < argc; i++) {
             if (strcmp(argv[i], "-h") == 0 || strcmp(argv[i], "--help") == 0) {
@@ -846,8 +846,8 @@ Parser::usage(FILE* fp, int argc, char** argv)
             option = other.option;
             return *this;
         }
-        Vector<std::string> opt_lines;
-        Vector<std::string> help_lines;
+        std::vector<std::string> opt_lines;
+        std::vector<std::string> help_lines;
         size_t col_width;
         IOption* option;
     };
@@ -859,13 +859,13 @@ Parser::usage(FILE* fp, int argc, char** argv)
     indent[kIndent] = '\0';
 
     // Add positional arguments first.
-    Vector<Entry> entries;
+    std::vector<Entry> entries;
     for (IOption* option : positionals_) {
         Entry entry(option);
 
         std::string name = StringPrintf("%s%s", indent.get(), option->name());
-        entry.opt_lines.append(std::move(name));
-        entries.append(std::move(entry));
+        entry.opt_lines.emplace_back(std::move(name));
+        entries.emplace_back(std::move(entry));
     }
 
     static const size_t kMaxLineLength = 80;
@@ -888,9 +888,9 @@ Parser::usage(FILE* fp, int argc, char** argv)
                                               option->long_form(), value_suffix.c_str());
 
             // Try to fit both options in one cell.
-            if (joined.length() <= kMaxLeftColLength) {
-                entry.opt_lines.append(std::move(joined));
-                entries.append(std::move(entry));
+            if (joined.size() <= kMaxLeftColLength) {
+                entry.opt_lines.emplace_back(std::move(joined));
+                entries.emplace_back(std::move(entry));
                 continue;
             }
         }
@@ -898,13 +898,13 @@ Parser::usage(FILE* fp, int argc, char** argv)
         // We need to put each form on a separate line.
         if (option->short_form()) {
             std::string short_form = StringPrintf("%s-%s ", indent.get(), option->short_form());
-            entry.opt_lines.append(std::move(short_form));
+            entry.opt_lines.emplace_back(std::move(short_form));
         }
         if (option->long_form()) {
             std::string long_form = StringPrintf("%s--%s%s ", indent.get(), option->long_form(), value_suffix.c_str());
-            entry.opt_lines.append(std::move(long_form));
+            entry.opt_lines.emplace_back(std::move(long_form));
         }
-        entries.append(std::move(entry));
+        entries.emplace_back(std::move(entry));
     }
 
     // Add extra usage lines.
@@ -912,8 +912,8 @@ Parser::usage(FILE* fp, int argc, char** argv)
         Entry entry(option.get());
 
         std::string name = StringPrintf("%s%s", indent.get(), option->name());
-        entry.opt_lines.append(std::move(name));
-        entries.append(std::move(entry));
+        entry.opt_lines.emplace_back(std::move(name));
+        entries.emplace_back(std::move(entry));
     }
 
     // If we don't have any arguments to display, stop here.
@@ -924,25 +924,25 @@ Parser::usage(FILE* fp, int argc, char** argv)
     for (Entry& entry : entries) {
         // Compute the maximum size of each left hand cell.
         for (const std::string& line : entry.opt_lines)
-            entry.col_width = ke::Max(entry.col_width, line.length());
+            entry.col_width = ke::Max(entry.col_width, line.size());
 
         // Break help text into words, and fit some words on each line. Each line
         // gets at least one word even if the word is too long.
-        Vector<std::string> words = Split(entry.option->help(), " ");
+        std::vector<std::string> words = Split(entry.option->help(), " ");
 
-        Vector<std::string> line;
-        size_t line_length = 0;
+        std::vector<std::string> line;
+        size_t line_size = 0;
         for (std::string& word : words) {
-            if (line_length + word.length() + 1 >= kMaxRightColLength && !line.empty()) {
-                entry.help_lines.append(Join(line, " "));
+            if (line_size + word.size() + 1 >= kMaxRightColLength && !line.empty()) {
+                entry.help_lines.emplace_back(Join(line, " "));
                 line.clear();
-                line_length = 0;
+                line_size = 0;
             }
-            line_length += word.length() + 1;
-            line.append(std::move(word));
+            line_size += word.size() + 1;
+            line.emplace_back(std::move(word));
         }
         if (!line.empty())
-            entry.help_lines.append(Join(line, " "));
+            entry.help_lines.emplace_back(Join(line, " "));
     }
 
     // Finally, print detailed usage. When possible we put both the option and
@@ -971,14 +971,14 @@ Parser::usage(FILE* fp, int argc, char** argv)
                 fprintf(fp, "%s\n", line.c_str());
         } else {
             for (const std::string& line : entry.opt_lines) {
-                const char* right_col = (help_line_cursor < entry.help_lines.length())
+                const char* right_col = (help_line_cursor < entry.help_lines.size())
                                             ? entry.help_lines[help_line_cursor++].c_str()
                                             : "";
                 fprintf(fp, "%-28s%s\n", line.c_str(), right_col);
             }
         }
 
-        for (size_t i = help_line_cursor; i < entry.help_lines.length(); i++)
+        for (size_t i = help_line_cursor; i < entry.help_lines.size(); i++)
             fprintf(fp, "%s%s\n", spaces, entry.help_lines[i].c_str());
     }
 }
@@ -986,16 +986,16 @@ Parser::usage(FILE* fp, int argc, char** argv)
 void
 Parser::usage_line(char** argv, FILE* out)
 {
-    Vector<std::string> words;
+    std::vector<std::string> words;
 
-    words.append("Usage:");
-    words.append(argv ? argv[0] : " ");
+    words.emplace_back("Usage:");
+    words.emplace_back(argv ? argv[0] : " ");
     if (usage_line_.empty()) {
-        words.append("[-h]");
+        words.emplace_back("[-h]");
         for (IOption* option : positionals_)
-            words.append(option->name());
+            words.emplace_back(option->name());
     } else {
-        words.append(usage_line_);
+        words.emplace_back(usage_line_);
     }
 
     std::string text = Join(words, " ");
@@ -1005,7 +1005,7 @@ Parser::usage_line(char** argv, FILE* out)
 void
 Parser::add_usage_line(const char* option, const char* help)
 {
-    extra_usage_.append(std::make_unique<UsageOnlyOption>(option, help));
+    extra_usage_.emplace_back(std::make_unique<UsageOnlyOption>(option, help));
 }
 
 inline void

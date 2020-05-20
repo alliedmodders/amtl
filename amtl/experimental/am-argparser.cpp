@@ -32,7 +32,7 @@
 namespace ke {
 namespace args {
 
-Vector<IOption*> *Parser::sStaticOptions = nullptr;
+std::vector<IOption*> *Parser::sStaticOptions = nullptr;
 
 } // namespace args
 } // namespace ke

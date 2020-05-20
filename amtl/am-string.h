@@ -257,13 +257,13 @@ StrCaseCmp(const char* a, const char* b)
 //
 //   Join(Split(str, sep), sep) == str
 //
-static inline ke::Vector<std::string>
+static inline std::vector<std::string>
 Split(const char* str, const char* split)
 {
     size_t split_len = strlen(split);
     assert(split_len > 0);
 
-    Vector<std::string> out;
+    std::vector<std::string> out;
 
     const char* cursor = str;
     const char* match = nullptr;
@@ -272,16 +272,16 @@ Split(const char* str, const char* split)
         if (!match)
             break;
 
-        out.append(std::string(cursor, match - cursor));
+        out.emplace_back(cursor, match - cursor);
         cursor = match + split_len;
     }
 
     if (*cursor != '\0' || match)
-        out.append(std::string(cursor));
+        out.emplace_back(cursor);
     return out;
 }
 
-static inline ke::Vector<std::string>
+static inline std::vector<std::string>
 Split(const std::string& str, const char* split)
 {
     return ke::Split(str.c_str(), split);
@@ -292,7 +292,7 @@ Split(const std::string& str, const char* split)
 //
 // Unlike Split(), |sep| can be an empty string.
 static inline std::string
-Join(const Vector<std::string>& pieces, const char* sep)
+Join(const std::vector<std::string>& pieces, const char* sep)
 {
     size_t sep_len = strlen(sep);
     size_t buffer_len = 0;
@@ -300,17 +300,17 @@ Join(const Vector<std::string>& pieces, const char* sep)
     for (const std::string& piece : pieces)
         buffer_len += piece.size();
     if (!pieces.empty())
-        buffer_len += sep_len * (pieces.length() - 1);
+        buffer_len += sep_len * (pieces.size() - 1);
 
     std::string buffer(buffer_len, '\0');
 
     char* iter = &buffer[0];
     char* end = iter + buffer_len;
-    for (size_t i = 0; i < pieces.length(); i++) {
+    for (size_t i = 0; i < pieces.size(); i++) {
         memcpy(iter, pieces[i].c_str(), pieces[i].size());
-        iter += pieces[i].length();
+        iter += pieces[i].size();
 
-        if (i != pieces.length() - 1) {
+        if (i != pieces.size() - 1) {
             SafeStrcpy(iter, end - iter, sep);
             iter += sep_len;
         }

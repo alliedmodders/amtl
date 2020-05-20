@@ -105,54 +105,52 @@ class MovingThing
 } // anonymous namespace
 
 TEST(Vector, Ints) {
-    Vector<int> vector;
+    std::vector<int> vector;
 
     EXPECT_TRUE(vector.empty());
-    EXPECT_EQ(vector.length(), (size_t)0);
+    EXPECT_EQ(vector.size(), (size_t)0);
 
-    vector.append(1);
-    vector.append(2);
-    vector.append(3);
-    vector.append(4);
-    vector.append(5);
+    vector.emplace_back(1);
+    vector.emplace_back(2);
+    vector.emplace_back(3);
+    vector.emplace_back(4);
+    vector.emplace_back(5);
     for (int i = 0; i < 5; i++) {
         EXPECT_EQ(vector[i], i + 1);
     }
-    EXPECT_EQ(vector.length(), (size_t)5);
+    EXPECT_EQ(vector.size(), (size_t)5);
     EXPECT_FALSE(vector.empty());
 
-    EXPECT_EQ(vector.popCopy(), 5);
-    EXPECT_EQ(vector.popCopy(), 4);
-    EXPECT_EQ(vector.length(), (size_t)3);
+    EXPECT_EQ(PopBack(&vector), 5);
+    EXPECT_EQ(PopBack(&vector), 4);
+    EXPECT_EQ(vector.size(), (size_t)3);
 
-    vector.insert(0, 88);
-    vector.insert(0, 99);
-    vector.insert(4, 111);
+    vector.insert(vector.begin() + 0, 88);
+    vector.insert(vector.begin() + 0, 99);
+    vector.insert(vector.begin() + 4, 111);
     EXPECT_EQ(vector[0], 99);
     EXPECT_EQ(vector[1], 88);
     EXPECT_EQ(vector[2], 1);
     EXPECT_EQ(vector[3], 2);
     EXPECT_EQ(vector[4], 111);
     EXPECT_EQ(vector[5], 3);
-    EXPECT_EQ(vector.length(), (size_t)6);
+    EXPECT_EQ(vector.size(), (size_t)6);
 
-    vector.remove(5);
+    vector.erase(vector.begin() + 5);
     EXPECT_EQ(vector[4], 111);
-    vector.remove(0);
+    vector.erase(vector.begin());
     EXPECT_EQ(vector[0], 88);
     EXPECT_EQ(vector[3], 111);
-    EXPECT_EQ(vector.length(), (size_t)4);
+    EXPECT_EQ(vector.size(), (size_t)4);
 
     while (!vector.empty())
-        vector.pop();
+        vector.pop_back();
 
-    EXPECT_TRUE(vector.empty());
-    EXPECT_TRUE(vector.ensure(128));
     EXPECT_TRUE(vector.empty());
 
     for (int i = 0; i < 128; i++)
-        vector.append(i);
-    EXPECT_EQ(vector.length(), (size_t)128);
+        vector.emplace_back(i);
+    EXPECT_EQ(vector.size(), (size_t)128);
 
     vector.clear();
     EXPECT_TRUE(vector.empty());
@@ -162,10 +160,10 @@ TEST(Vector, Destructors) {
     ResetGlobals();
 
     {
-        Vector<BasicThing> vector;
-        vector.append(BasicThing());
-        vector.append(BasicThing());
-        vector.append(BasicThing());
+        std::vector<BasicThing> vector;
+        vector.emplace_back();
+        vector.emplace_back();
+        vector.emplace_back();
     }
     EXPECT_EQ(sCtors, 3);
     EXPECT_EQ(sCopyCtors, 3);
@@ -173,8 +171,8 @@ TEST(Vector, Destructors) {
 
     sDtors = 0;
     {
-        Vector<BasicThing> vector;
-        vector.append(BasicThing());
+        std::vector<BasicThing> vector;
+        vector.emplace_back(BasicThing());
         vector.clear();
     }
     EXPECT_EQ(sDtors, 2);
@@ -183,65 +181,56 @@ TEST(Vector, Destructors) {
 TEST(Vector, Moving) {
     ResetGlobals();
     {
-        Vector<MovingThing> vector;
+        std::vector<MovingThing> vector;
         MovingThing a, b, c;
-        vector.append(std::move(a));
-        vector.append(std::move(b));
-        vector.append(std::move(c));
+        vector.emplace_back(std::move(a));
+        vector.emplace_back(std::move(b));
+        vector.emplace_back(std::move(c));
     }
 
     EXPECT_EQ(sCtors, 3);
-    EXPECT_EQ(sMovingCtors, 3);
-    EXPECT_EQ(sMovedDtors, 3);
-    EXPECT_EQ(sDtors, 6);
+    EXPECT_GE(sMovingCtors, 3);
+    EXPECT_EQ(sMovedDtors, sMovingCtors);
+    EXPECT_GT(sDtors, sMovingCtors);
 
     sCtors = 0;
     sMovingCtors = 0;
     sMovedDtors = 0;
     sDtors = 0;
 
-    Vector<int> v1;
-    v1.append(10);
-    Vector<int> v2(std::move(v1));
-    EXPECT_EQ(v2.length(), (size_t)1);
-    EXPECT_EQ(v1.length(), (size_t)0);
-}
-
-TEST(Vector, FallibleMalloc) {
-    Vector<int, FallibleMalloc> vector;
-    vector.allocPolicy().setOutOfMemory(true);
-    EXPECT_FALSE(vector.append(7));
-    vector.allocPolicy().setOutOfMemory(false);
-    EXPECT_TRUE(vector.append(8));
-    EXPECT_EQ(vector.allocPolicy().ooms(), (size_t)1);
+    std::vector<int> v1;
+    v1.emplace_back(10);
+    std::vector<int> v2(std::move(v1));
+    EXPECT_EQ(v2.size(), (size_t)1);
+    EXPECT_EQ(v1.size(), (size_t)0);
 }
 
 TEST(Vector, MoveDuringInsert) {
-    Vector<MovingThing> vector;
+    std::vector<MovingThing> vector;
     for (size_t i = 1; i <= 8; i++) {
         MovingThing x;
-        vector.append(std::move(x));
+        vector.emplace_back(std::move(x));
     }
     {
         MovingThing x;
-        vector.insert(0, std::move(x));
+        vector.insert(vector.begin(), std::move(x));
     }
-    for (size_t i = 0; i < vector.length(); i++) {
+    for (size_t i = 0; i < vector.size(); i++) {
         EXPECT_FALSE(vector[i].moved());
     }
 }
 
 TEST(Vector, Resize) {
-    Vector<bool> vector;
-    vector.append(true);
+    std::vector<bool> vector;
+    vector.emplace_back(true);
     vector.resize(100);
-    EXPECT_EQ(vector.length(), (size_t)100);
+    EXPECT_EQ(vector.size(), (size_t)100);
     EXPECT_TRUE(vector[0]);
     for (size_t i = 1; i < 100; i++) {
         EXPECT_FALSE(vector[i]);
     }
     vector.resize(1);
-    ASSERT_EQ(vector.length(), (size_t)1);
+    ASSERT_EQ(vector.size(), (size_t)1);
     for (size_t i = 0; i < 1; i++) {
         EXPECT_TRUE(vector[i]);
     }
@@ -291,19 +280,19 @@ TEST(Vector, Remove) {
     ke::RefPtr<HeldThing> thing1(new HeldThing);
     ke::RefPtr<HeldThing> thing2(new HeldThing);
 
-    Vector<WrappedThing> things;
-    things.append(WrappedThing(thing1));
-    things.append(WrappedThing(thing2));
+    std::vector<WrappedThing> things;
+    things.emplace_back(WrappedThing(thing1));
+    things.emplace_back(WrappedThing(thing2));
 
     EXPECT_EQ(thing1->refcount, (size_t)2);
     EXPECT_EQ(thing2->refcount, (size_t)2);
 
-    things.remove(0);
+    things.erase(things.begin());
 
     EXPECT_EQ(thing1->refcount, (size_t)1);
     EXPECT_EQ(thing2->refcount, (size_t)2);
 
-    things.remove(0);
+    things.erase(things.begin());
 
     EXPECT_EQ(thing1->refcount, (size_t)1);
     EXPECT_EQ(thing2->refcount, (size_t)1);
