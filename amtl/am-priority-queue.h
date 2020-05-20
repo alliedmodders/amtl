@@ -30,26 +30,29 @@
 #ifndef _include_amtl_am_priority_queue_h_
 #define _include_amtl_am_priority_queue_h_
 
+#include <assert.h>
+
 #include <algorithm>
+#include <functional>
 #include <utility>
+#include <vector>
 
 #include <amtl/am-algorithm.h>
 #include <amtl/am-cxx.h>
-#include <amtl/am-vector.h>
 
 namespace ke {
 
-// Basic priority queue implemented using a binary heap on top of Vector. The
+// Basic priority queue implemented using a binary heap on top of vector. The
 // "IsHigherPriority" callable must take a left and right value of type T, and
 // return whether the left value should be dequeued before the right.
-template <typename T, typename IsHigherPriority = LessThan<T>,
-          typename AllocPolicy = SystemAllocatorPolicy>
+//
+// This allows move-and-pop which the STL container does not.
+template <typename T, typename IsHigherPriority = std::less<T>>
 class PriorityQueue final
 {
   public:
-    explicit PriorityQueue(IsHigherPriority hp = IsHigherPriority(), AllocPolicy ap = AllocPolicy())
-     : impl_(ap),
-       is_higher_priority_(hp)
+    explicit PriorityQueue(IsHigherPriority hp = IsHigherPriority())
+       : is_higher_priority_(hp)
     {}
 
     PriorityQueue(PriorityQueue&& other)
@@ -58,12 +61,17 @@ class PriorityQueue final
     {}
 
     template <typename U>
-    bool add(U&& item) {
-        if (!impl_.append(std::forward<U>(item)))
-            return false;
-        if (impl_.length() > 1)
-            propagateUp(impl_.length() - 1);
-        return true;
+    void add(U&& item) {
+        impl_.push_back(std::forward<U>(item));
+        if (impl_.size() > 1)
+            propagateUp(impl_.size() - 1);
+    }
+
+    template <typename... Args>
+    void emplace(Args&&... args) {
+        impl_.emplace_back(std::forward<Args>(args)...);
+        if (impl_.size() > 1)
+            propagateUp(impl_.size() - 1);
     }
 
     bool empty() const {
@@ -75,16 +83,17 @@ class PriorityQueue final
         return impl_[0];
     }
 
-    T popCopy() {
+    T pop() {
         assert(!empty());
 
-        if (impl_.length() == 1)
-            return impl_.popCopy();
-
         T top = std::move(impl_[0]);
-        impl_[0] = std::move(impl_.back());
-        impl_.pop();
-        propagateDown(0);
+        if (impl_.size() == 1) {
+            impl_.pop_back();
+        } else {
+            impl_[0] = std::move(impl_.back());
+            impl_.pop_back();
+            propagateDown(0);
+        }
         return top;
     }
 
@@ -140,10 +149,10 @@ class PriorityQueue final
     }
 
     bool hasLeftChild(size_t at) const {
-        return leftChildOf(at) < impl_.length();
+        return leftChildOf(at) < impl_.size();
     }
     bool hasRightChild(size_t at) const {
-        return rightChildOf(at) < impl_.length();
+        return rightChildOf(at) < impl_.size();
     }
 
   private:
@@ -151,7 +160,7 @@ class PriorityQueue final
     void operator =(const PriorityQueue& other) = delete;
 
   private:
-    Vector<T, AllocPolicy> impl_;
+    std::vector<T> impl_;
     IsHigherPriority is_higher_priority_;
 };
 
