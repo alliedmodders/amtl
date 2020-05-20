@@ -43,11 +43,11 @@ TEST(PriorityQueue, Basic) {
     pq.add(77);
     pq.add(3);
 
-    EXPECT_EQ(pq.popCopy(), 3);
-    EXPECT_EQ(pq.popCopy(), 9);
-    EXPECT_EQ(pq.popCopy(), 16);
-    EXPECT_EQ(pq.popCopy(), 16);
-    EXPECT_EQ(pq.popCopy(), 16);
-    EXPECT_EQ(pq.popCopy(), 77);
+    EXPECT_EQ(pq.pop(), 3);
+    EXPECT_EQ(pq.pop(), 9);
+    EXPECT_EQ(pq.pop(), 16);
+    EXPECT_EQ(pq.pop(), 16);
+    EXPECT_EQ(pq.pop(), 16);
+    EXPECT_EQ(pq.pop(), 77);
     EXPECT_TRUE(pq.empty());
 }
