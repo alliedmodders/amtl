@@ -51,7 +51,6 @@ binary.sources += [
   'test-flags.cpp',
   'test-hashmap.cpp',
   'test-inlinelist.cpp',
-  'test-linkedlist.cpp',
   'test-priority-queue.cpp',
   'test-refcounting.cpp',
   'test-string.cpp',
