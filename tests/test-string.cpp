@@ -54,45 +54,45 @@ TEST(String, Allocating) {
 
 TEST(String, Split) {
     auto out = Split("     ", " ");
-    EXPECT_EQ(out.length(), (size_t)6);
-    for (size_t i = 0; i < out.length(); i++) {
+    EXPECT_EQ(out.size(), (size_t)6);
+    for (size_t i = 0; i < out.size(); i++) {
         EXPECT_EQ(out[i].size(), (size_t)0);
     }
 
     out = Split("egg", " ");
-    EXPECT_EQ(out.length(), (size_t)1);
+    EXPECT_EQ(out.size(), (size_t)1);
     EXPECT_EQ(out[0].compare("egg"), 0);
 
     out = Split("", "egg");
-    EXPECT_EQ(out.length(), (size_t)0);
+    EXPECT_EQ(out.size(), (size_t)0);
 
     out = Split("xaba", "a");
-    EXPECT_EQ(out.length(), (size_t)3);
+    EXPECT_EQ(out.size(), (size_t)3);
     EXPECT_EQ(out[0].compare("x"), 0);
     EXPECT_EQ(out[1].compare("b"), 0);
     EXPECT_EQ(out[2].compare(""), 0);
 
     out = Split("egg ham", " ");
-    EXPECT_EQ(out.length(), (size_t)2);
+    EXPECT_EQ(out.size(), (size_t)2);
     EXPECT_EQ(out[0].compare("egg"), 0);
     EXPECT_EQ(out[1].compare("ham"), 0);
 }
 
 TEST(String, Join) {
-    Vector<std::string> in;
+    std::vector<std::string> in;
 
     auto result = Join(in, "x");
     EXPECT_EQ(result, "");
 
-    in.append("abc");
+    in.emplace_back("abc");
     result = Join(in, "x");
     EXPECT_EQ(result, "abc");
 
-    in.append("xyz");
+    in.emplace_back("xyz");
     result = Join(in, "T");
     EXPECT_EQ(result, "abcTxyz");
 
-    in.append("def");
+    in.emplace_back("def");
     result = Join(in, "");
     EXPECT_EQ(result, "abcxyzdef");
 }
