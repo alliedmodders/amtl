@@ -54,12 +54,12 @@ namespace impl {
 
 #if defined(KE_WINDOWS)
 static void SetThreadName(HANDLE thread, const char* name) {
-#if WDK_NTDDI_VERSION >= NTDDI_WIN10_RS1
     auto module = LoadLibraryA("kernel32.dll");
     if (!module)
         return;
-	
-    auto fn = (decltype(&SetThreadDescription))GetProcAddress(module, "SetThreadDescription");
+
+    typedef HRESULT (*SetThreadDescriptionFn)(HANDLE, PCWSTR);
+    auto fn = (SetThreadDescriptionFn)GetProcAddress(module, "SetThreadDescription");
     if (!fn)
         return;
 
@@ -68,10 +68,6 @@ static void SetThreadName(HANDLE thread, const char* name) {
     fn(thread, utf16.c_str());
 	
     FreeLibrary(module);
-#else
-    (void)thread;
-    (void)name;
-#endif
 }
 #endif
 
