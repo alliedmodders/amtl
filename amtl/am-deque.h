@@ -30,7 +30,7 @@
 
 #include <deque>
 
-namespace {
+namespace ke {
 
 template <typename T>
 static inline T PopBack(std::deque<T>* deque) {
