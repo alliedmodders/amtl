@@ -236,6 +236,13 @@ TEST(Vector, Resize) {
     }
 }
 
+TEST(Vector, InsertAtEnd) {
+    std::vector<int> vector;
+    ke::InsertAt(&vector, 0, 555);
+    ASSERT_EQ(vector.size(), (size_t)1);
+    EXPECT_EQ(vector[0], 555);
+}
+
 TEST(Vector, Remove) {
     class HeldThing
     {
