@@ -125,9 +125,9 @@ TEST(Vector, Ints) {
     EXPECT_EQ(PopBack(&vector), 4);
     EXPECT_EQ(vector.size(), (size_t)3);
 
-    vector.insert(vector.begin() + 0, 88);
-    vector.insert(vector.begin() + 0, 99);
-    vector.insert(vector.begin() + 4, 111);
+    ke::InsertAt(&vector, 0, 88);
+    ke::InsertAt(&vector, 0, 99);
+    ke::InsertAt(&vector, 4, 111);
     EXPECT_EQ(vector[0], 99);
     EXPECT_EQ(vector[1], 88);
     EXPECT_EQ(vector[2], 1);
@@ -136,9 +136,9 @@ TEST(Vector, Ints) {
     EXPECT_EQ(vector[5], 3);
     EXPECT_EQ(vector.size(), (size_t)6);
 
-    vector.erase(vector.begin() + 5);
+    ke::RemoveAt(&vector, 5);
     EXPECT_EQ(vector[4], 111);
-    vector.erase(vector.begin());
+    ke::RemoveAt(&vector, 0);
     EXPECT_EQ(vector[0], 88);
     EXPECT_EQ(vector[3], 111);
     EXPECT_EQ(vector.size(), (size_t)4);
@@ -213,7 +213,7 @@ TEST(Vector, MoveDuringInsert) {
     }
     {
         MovingThing x;
-        vector.insert(vector.begin(), std::move(x));
+        ke::InsertAt(&vector, 0, std::move(x));
     }
     for (size_t i = 0; i < vector.size(); i++) {
         EXPECT_FALSE(vector[i].moved());
@@ -287,12 +287,12 @@ TEST(Vector, Remove) {
     EXPECT_EQ(thing1->refcount, (size_t)2);
     EXPECT_EQ(thing2->refcount, (size_t)2);
 
-    things.erase(things.begin());
+    ke::RemoveAt(&things, 0);
 
     EXPECT_EQ(thing1->refcount, (size_t)1);
     EXPECT_EQ(thing2->refcount, (size_t)2);
 
-    things.erase(things.begin());
+    ke::RemoveAt(&things, 0);
 
     EXPECT_EQ(thing1->refcount, (size_t)1);
     EXPECT_EQ(thing2->refcount, (size_t)1);
