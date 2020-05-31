@@ -39,7 +39,7 @@ static inline void MoveExtend(std::vector<T>* dest, std::vector<T>* src) {
         *dest = std::move(*src);
     } else {
         for (size_t i = 0; i < src->size(); i++)
-            *dest->emplace_back(std::move(src->at(i)));
+            dest->emplace_back(std::move(src->at(i)));
         src->clear();
     }
 }
