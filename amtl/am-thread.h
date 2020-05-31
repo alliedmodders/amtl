@@ -58,7 +58,7 @@ static void SetThreadName(HANDLE thread, const char* name) {
     if (!module)
         return;
 
-    typedef HRESULT (*SetThreadDescriptionFn)(HANDLE, PCWSTR);
+    typedef HRESULT (WINAPI * SetThreadDescriptionFn)(HANDLE, PCWSTR);
     auto fn = (SetThreadDescriptionFn)GetProcAddress(module, "SetThreadDescription");
     if (!fn)
         return;
