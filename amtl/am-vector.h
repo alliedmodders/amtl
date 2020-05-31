@@ -53,4 +53,24 @@ static inline T PopBack(std::vector<T>* src) {
     return t;
 }
 
+template <typename T>
+static inline void RemoveAt(std::vector<T>* vec, size_t at) {
+    vec->erase(vec->begin() + at);
+}
+
+template <typename T>
+static inline void InsertAt(std::vector<T>* vec, size_t at, const T& item) {
+    vec->insert(vec->begin() + at, item);
+}
+
+template <typename T>
+static inline void InsertAt(std::vector<T>* vec, size_t at, T&& item) {
+    vec->insert(vec->begin() + at, std::forward<T>(item));
+}
+
+template <typename T, typename... Args>
+static inline void EmplaceAt(std::vector<T>* vec, size_t at, Args&&... item) {
+    vec->emplace(vec->begin() + at, std::forward<Args>(item)...);
+}
+
 } // namespace ke
