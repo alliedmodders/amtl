@@ -47,9 +47,11 @@ namespace ke {
 
 #if defined(__STDCPP_DEFAULT_NEW_ALIGNMENT__)
 static const size_t kMallocAlignment = __STDCPP_DEFAULT_NEW_ALIGNMENT__;
-#else
+#elif !defined(max_align_t)
 static const size_t kMallocAlignment = std::max(static_cast<size_t>(alignof(std::max_align_t)),
                                                 static_cast<size_t>(16));
+#else
+static const size_t kMallocAlignment = 16;
 #endif
 
 static const size_t kKB = 1024;
