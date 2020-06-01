@@ -34,14 +34,23 @@
 #include <stddef.h>
 #include <stdint.h>
 #if defined(_MSC_VER)
-#    include <intrin.h>
+# include <intrin.h>
 #endif
+
+#include <algorithm>
+#include <cstddef>
+
 #include <amtl/am-cxx.h>
 #include <amtl/am-platform.h>
 
 namespace ke {
 
-static const size_t kMallocAlignment = sizeof(void*) * 2;
+#if defined(__STDCPP_DEFAULT_NEW_ALIGNMENT__)
+static const size_t kMallocAlignment = __STDCPP_DEFAULT_NEW_ALIGNMENT__;
+#else
+static const size_t kMallocAlignment = std::max(static_cast<size_t>(alignof(std::max_align_t)),
+                                                static_cast<size_t>(16));
+#endif
 
 static const size_t kKB = 1024;
 static const size_t kMB = 1024 * kKB;

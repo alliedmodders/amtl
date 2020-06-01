@@ -37,3 +37,7 @@ TEST(Bits, Multiply) {
     EXPECT_TRUE(IsUintMultiplySafe<uint32_t>(0x80000000, 1));
     EXPECT_FALSE(IsUintMultiplySafe<uint32_t>(0x80000000, 2));
 }
+
+TEST(Bits, MallocAlignment) {
+    EXPECT_GE(kMallocAlignment, (size_t)16);
+}
