@@ -36,7 +36,6 @@
 #include <stdint.h>
 #include <stdlib.h>
 
-#include <amtl/am-algorithm.h>
 #include <amtl/am-cxx.h>
 
 #if defined(_MSC_VER)

@@ -29,7 +29,7 @@
 #ifndef _include_amtl_bits_h_
 #define _include_amtl_bits_h_
 
-#include <amtl/am-algorithm.h>
+#include <algorithm>
 
 namespace ke {
 
@@ -47,7 +47,7 @@ TryUint64Multiply(uint64_t left, uint64_t right, uint64_t* out)
 static inline bool
 TryUint32Add(uint32_t left, uint32_t right, uint32_t* out)
 {
-    if (left + right < Max(left, right))
+    if (left + right < std::max(left, right))
         return false;
     *out = left + right;
     return true;
@@ -56,7 +56,7 @@ TryUint32Add(uint32_t left, uint32_t right, uint32_t* out)
 static inline bool
 TryUint64Add(uint64_t left, uint64_t right, uint64_t* out)
 {
-    if (left + right < Max(left, right))
+    if (left + right < std::max(left, right))
         return false;
     *out = left + right;
     return true;
