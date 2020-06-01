@@ -32,10 +32,10 @@
 #include <assert.h>
 #include <stdio.h>
 
+#include <algorithm>
 #include <memory>
 #include <string>
 
-#include <amtl/am-algorithm.h>
 #include <amtl/am-cxx.h>
 #include <amtl/am-function.h>
 #include <amtl/am-maybe.h>
@@ -924,7 +924,7 @@ Parser::usage(FILE* fp, int argc, char** argv)
     for (Entry& entry : entries) {
         // Compute the maximum size of each left hand cell.
         for (const std::string& line : entry.opt_lines)
-            entry.col_width = ke::Max(entry.col_width, line.size());
+            entry.col_width = std::max(entry.col_width, line.size());
 
         // Break help text into words, and fit some words on each line. Each line
         // gets at least one word even if the word is too long.

@@ -37,7 +37,6 @@
 #include <utility>
 #include <vector>
 
-#include <amtl/am-algorithm.h>
 #include <amtl/am-cxx.h>
 
 namespace ke {
