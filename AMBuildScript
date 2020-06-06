@@ -11,7 +11,10 @@ class KEConfig(object):
 
     if cxx.like('gcc'):
       if builder.target.platform != 'windows':
-        cxx.cxxflags += ['-std=c++14']
+        if cxx.version >= 'gcc-8.0' or cxx.version >= 'clang-5.0':
+            cxx.cxxflags += ['-std=c++17']
+        else:
+            cxx.cxxflags += ['-std=c++14']
 
         cxx.defines += [
           'stricmp=strcasecmp',
