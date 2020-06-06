@@ -57,6 +57,7 @@ binary.sources += [
   'test-system.cpp',
   'test-threadlocal-threaded.cpp',
   'test-threadlocal-unthreaded.cpp',
+  'test-time.cpp',
   'test-vector.cpp',
 ]
 
