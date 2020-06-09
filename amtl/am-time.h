@@ -70,6 +70,13 @@ static inline std::string FormatTime(const struct tm& tm, const std::string& str
     return FormatTime(tm, str.c_str());
 }
 
+template <typename TimePointType, typename T>
+static inline constexpr TimePointType EpochValueToTimePoint(T t)
+{
+    auto duration = typename TimePointType::duration{t};
+    return TimePointType(duration);
+}
+
 } // namespace ke
 
 #endif
