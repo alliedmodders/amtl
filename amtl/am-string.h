@@ -341,6 +341,11 @@ static inline bool StartsWith(const char* first, const char* other) {
     return strncmp(first, other, strlen(other)) == 0;
 }
 
+static inline bool EndsWith(const std::string& first, const std::string& second) {
+    return first.size() >= second.size() &&
+           first.substr(first.size() - second.size(), second.size()) == second;
+}
+
 #if defined(KE_WINDOWS)
 #    define KE_FMT_SIZET "Iu"
 #    define KE_FMT_I64 "I64d"

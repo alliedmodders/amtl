@@ -130,6 +130,15 @@ TEST(String, StartsWith) {
     EXPECT_FALSE(StartsWith(str, "blah2"));
 }
 
+TEST(String, EndsWith) {
+    std::string str("blah");
+
+    EXPECT_TRUE(EndsWith(str, "h"));
+    EXPECT_TRUE(EndsWith(str, "blah"));
+    EXPECT_FALSE(EndsWith(str, "a"));
+    EXPECT_FALSE(EndsWith(str, "blah2"));
+}
+
 TEST(String, SafeStrcat) {
     char buffer[6] = "hello";
 
