@@ -305,13 +305,15 @@ Join(const std::vector<std::string>& pieces, const char* sep)
     std::string buffer(buffer_len, '\0');
 
     char* iter = &buffer[0];
+#if !defined(NDEBUG)
     char* end = iter + buffer_len;
+#endif
     for (size_t i = 0; i < pieces.size(); i++) {
         memcpy(iter, pieces[i].c_str(), pieces[i].size());
         iter += pieces[i].size();
 
         if (i != pieces.size() - 1) {
-            SafeStrcpy(iter, end - iter, sep);
+            memcpy(iter, sep, sep_len);
             iter += sep_len;
         }
     }
