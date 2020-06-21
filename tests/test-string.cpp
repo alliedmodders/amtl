@@ -95,6 +95,14 @@ TEST(String, Join) {
     in.emplace_back("def");
     result = Join(in, "");
     EXPECT_EQ(result, "abcxyzdef");
+
+    in = {"a", "b", "", "d" };
+    result = Join(in, ",");
+    EXPECT_EQ(result, "a,b,,d");
+
+    in = {"a", "b", "c", "" };
+    result = Join(in, ",");
+    EXPECT_EQ(result, "a,b,c,");
 }
 
 TEST(String, Case) {
