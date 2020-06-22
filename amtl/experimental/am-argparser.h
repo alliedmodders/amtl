@@ -703,7 +703,7 @@ Parser::parse_impl(const std::vector<const char*>& args)
         }
 
         if (option->haltOnValue())
-            return true;
+            break;
     }
 
     if (positional < positionals_.size())
