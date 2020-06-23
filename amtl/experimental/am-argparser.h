@@ -534,7 +534,6 @@ struct ValuePolicy<int> : public BaseValuePolicy {
     }
 };
 
-typedef Option<bool> BoolOption;
 typedef Option<std::string> StringOption;
 typedef Option<int> IntOption;
 
