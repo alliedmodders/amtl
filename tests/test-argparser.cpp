@@ -43,46 +43,6 @@ TEST(ArgParser, Basic) {
     EXPECT_FALSE(parser.parsev("--asdf", nullptr));
 }
 
-TEST(ArgParser, BoolArg) {
-    Parser parser("help");
-
-    BoolOption no_default(parser, "b", "bool", Nothing(), "help");
-    BoolOption default_true(parser, "t", "default-true", Some(true), "help");
-    BoolOption default_false(parser, "f", "default-false", Some(false), "help");
-
-    EXPECT_TRUE(parser.parsev(nullptr));
-    EXPECT_FALSE(no_default.hasValue());
-    EXPECT_TRUE(default_true.hasValue());
-    EXPECT_TRUE(default_true.value());
-    EXPECT_TRUE(default_false.hasValue());
-    EXPECT_FALSE(default_false.value());
-
-    parser.reset();
-    EXPECT_TRUE(parser.parsev("-b", nullptr));
-    EXPECT_TRUE(no_default.hasValue());
-    EXPECT_TRUE(no_default.value());
-
-    parser.reset();
-    EXPECT_TRUE(parser.parsev("--bool=false", nullptr));
-    EXPECT_FALSE(no_default.value());
-
-    parser.reset();
-    EXPECT_TRUE(parser.parsev("--bool", "false", nullptr));
-    EXPECT_FALSE(no_default.value());
-
-    parser.reset();
-    EXPECT_TRUE(parser.parsev("-b", "true", nullptr));
-    EXPECT_TRUE(no_default.value());
-
-    parser.reset();
-    EXPECT_TRUE(parser.parsev("-f", nullptr));
-    EXPECT_TRUE(default_false.value());
-
-    parser.reset();
-    EXPECT_TRUE(parser.parsev("--default-true=false", nullptr));
-    EXPECT_FALSE(default_true.value());
-}
-
 TEST(ArgParser, ToggleArg) {
     Parser parser("help");
 
@@ -173,8 +133,6 @@ TEST(ArgParser, StopArg1) {
 TEST(ArgParser, StopArg2) {
     Parser parser("help");
 
-    BoolOption disable_watchdog(parser, "w", "disable-watchdog", Some(false),
-                                "Disable the watchdog timer.");
     StopOption show_version(parser, "-v", "--version", Some(false), "Show the version and exit.");
     StringOption filename(parser, "file", "SMX file to execute.");
 
