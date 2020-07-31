@@ -53,9 +53,9 @@ if [ $? -eq 1 ]; then
     get_pip_url="https://bootstrap.pypa.io/get-pip.py"
 
     if [ `command -v wget` ]; then
-      wget $get_pip_url -O $get_pip
+      wget $get_pip_url -O $get_pip --no-check-certificate 
     elif [ `command -v curl` ]; then
-      curl -o $get_pip $get_pip_url
+      curl -o $get_pip $get_pip_url --insecure 
     else
       echo "Failed to locate wget or curl. Install one of these programs to download 'get-pip.py'."
       exit 1
