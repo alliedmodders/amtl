@@ -73,10 +73,10 @@ script:
   - mkdir build-opt && cd build-opt
   - python ../configure.py --enable-optimize
   - ambuild
-  - ./tests/testrunner/testrunner
+  - ./dist/testrunner
   - cd ..
 
   - mkdir build-debug && cd build-debug
   - python ../configure.py --enable-debug
   - ambuild
-  - ./tests/testrunner/testrunner
+  - ./dist/testrunner

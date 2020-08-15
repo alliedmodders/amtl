@@ -9,8 +9,11 @@ class KEConfig(object):
   def configure(self):
     cxx = builder.DetectCxx()
 
+    builder.cxx = cxx
+    builder.dist_folder = builder.AddFolder('dist')
+
     if cxx.like('gcc'):
-      if builder.target.platform != 'windows':
+      if cxx.target.platform != 'windows':
         if cxx.version >= 'gcc-8.0' or cxx.version >= 'clang-5.0':
             cxx.cxxflags += ['-std=c++17']
         else:
@@ -23,7 +26,7 @@ class KEConfig(object):
           '_vsnprintf=vsnprintf',
         ]
         cxx.linkflags += ['-lpthread']
-        if builder.target.platform != 'mac':
+        if cxx.target.platform != 'mac':
           cxx.linkflags += ['-lrt']
       else:
         cxx.cxxflags += [
@@ -111,13 +114,13 @@ class KEConfig(object):
       cxx.cflags += ['/Oy-']
 
     # Platform-specifics
-    if builder.target.platform == 'linux':
+    if cxx.target.platform == 'linux':
       cxx.defines += ['_LINUX', 'POSIX']
       if cxx.like('gcc'):
         cxx.linkflags += ['-static-libgcc']
       elif cxx.like('clang'):
         cxx.linkflags += ['-lgcc_eh']
-    elif builder.target.platform == 'mac':
+    elif cxx.target.platform == 'mac':
       cxx.defines += ['OSX', '_OSX', 'POSIX']
       cxx.cflags += ['-mmacosx-version-min=10.7']
       cxx.linkflags += [
@@ -126,7 +129,7 @@ class KEConfig(object):
         '-stdlib=libc++',
       ]
       cxx.cxxflags += ['-stdlib=libc++']
-    elif builder.target.platform == 'windows':
+    elif cxx.target.platform == 'windows':
       cxx.defines += ['WIN32', '_WINDOWS']
 
   def Program(self, context, name):
