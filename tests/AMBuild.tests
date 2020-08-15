@@ -37,7 +37,7 @@ compiler.includes += [
 
 if compiler.like('msvc'):
   compiler.linkflags.append('/SUBSYSTEM:CONSOLE')
-if builder.target.platform == 'linux':
+if builder.cxx.target.platform == 'linux':
   compiler.linkflags.append('-ldl')
 compiler.linkflags.append(libgtest.binary)
 compiler.linkflags.append(KE.libamtl)
@@ -61,4 +61,5 @@ binary.sources += [
   'test-vector.cpp',
 ]
 
-builder.Add(binary)
+node = builder.Add(binary)
+builder.AddCopy(node.binary, builder.dist_folder)

@@ -4,4 +4,4 @@ mkdir opt32 && cd opt32
 C:\python27\python.exe ..\configure.py --enable-optimize
 ambuild
 cd ..
-opt32\tests\testrunner\testrunner.exe
+opt32\dist\testrunner.exe
