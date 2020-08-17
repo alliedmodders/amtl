@@ -70,6 +70,10 @@ namespace ke {
 #elif defined(__i686) || defined(__i686__) || defined(__i386) || defined(__i386__) || \
     defined(i386) || (defined(_MSC_VER) && defined(_M_IX86))
 #    define KE_ARCH_X86
+#elif defined(__aarch64__) || defined(_M_ARM64)
+#    define KE_ARCH_ARM64
+#elif defined(__arm__) || defined(_M_ARM)
+#    define KE_ARCH_ARM
 #else
 #    define KE_ARCH_UNKNOWN
 #endif
