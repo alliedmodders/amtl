@@ -611,6 +611,7 @@ inline bool
 Parser::parse_impl(const std::vector<const char*>& args)
 {
     size_t positional = 0;
+    bool halted_on_value = false;
 
     for (size_t i = 0; i < args.size(); i++) {
         const char* arg = args[i];
@@ -701,11 +702,13 @@ Parser::parse_impl(const std::vector<const char*>& args)
                 i--;
         }
 
-        if (option->haltOnValue())
+        if (option->haltOnValue()) {
+            halted_on_value = true;
             break;
+        }
     }
 
-    if (positional < positionals_.size())
+    if (!halted_on_value && positional < positionals_.size())
         return missing_positional(positionals_[positional]);
 
     // Force the app to display a help message.
