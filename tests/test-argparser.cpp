@@ -126,7 +126,7 @@ TEST(ArgParser, StopArg1) {
     StringOption required(parser, "something_required", "This is a required positional argument.");
 
     EXPECT_FALSE(parser.parsev(nullptr));
-    EXPECT_FALSE(parser.parsev("-v", nullptr));
+    EXPECT_TRUE(parser.parsev("-v", nullptr));
     EXPECT_TRUE(show_version.value());
 }
 
@@ -136,7 +136,7 @@ TEST(ArgParser, StopArg2) {
     StopOption show_version(parser, "-v", "--version", Some(false), "Show the version and exit.");
     StringOption filename(parser, "file", "SMX file to execute.");
 
-    EXPECT_FALSE(parser.parsev("-v", "-w", nullptr));
+    EXPECT_TRUE(parser.parsev("-v", "-w", nullptr));
     EXPECT_TRUE(show_version.value());
 }
 
