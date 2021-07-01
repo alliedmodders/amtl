@@ -352,10 +352,12 @@ static inline bool EndsWith(const std::string& first, const std::string& second)
 #    define KE_FMT_SIZET "Iu"
 #    define KE_FMT_I64 "I64d"
 #    define KE_FMT_U64 "I64u"
+#    define KE_FMT_X64 "I64x"
 #elif defined(KE_POSIX)
 #    define KE_FMT_SIZET "zu"
 #    define KE_FMT_I64 PRId64
 #    define KE_FMT_U64 PRIu64
+#    define KE_FMT_X64 PRIx64
 #else
 #    error "Implement format specifier string"
 #endif
