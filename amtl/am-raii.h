@@ -1,4 +1,4 @@
-// vim: set sts=8 ts=2 sw=2 tw=99 et:
+// vim: set sts=4 ts=8 sw=4 tw=99 et:
 //
 // Copyright (C) 2013-2014, David Anderson and AlliedModders LLC
 // All rights reserved.
@@ -29,6 +29,8 @@
 
 #ifndef _include_amtl_am_raii_h_
 #define _include_amtl_am_raii_h_
+
+#include <utility>
 
 namespace ke {
 
@@ -70,6 +72,48 @@ class StackLinked
     T** prevp_;
     T* prev_;
 };
+
+template <typename T>
+class ScopeGuard
+{
+  public:
+    ScopeGuard(T&& callback) noexcept
+      : callback_(std::forward<T>(callback)),
+        cancelled_(false)
+    {}
+    ScopeGuard(ScopeGuard&& other) noexcept
+      : callback_(std::move(other.callback_)),
+        cancelled_(other.cancelled_)
+    {
+        other.cancel();
+    }
+
+    ~ScopeGuard() {
+        if (!cancelled_)
+            callback_();
+    }
+
+    void cancel() {
+        cancelled_ = true;
+    }
+
+  private:
+    ScopeGuard() = delete;
+    ScopeGuard(const ScopeGuard&) = delete;
+
+    void operator=(const ScopeGuard&) = delete;
+    void operator=(ScopeGuard&&) = delete;
+
+  private:
+    T callback_;
+    bool cancelled_;
+};
+
+template <typename T>
+ScopeGuard<T> MakeScopeGuard(T&& callback)
+{
+    return ScopeGuard<T>(std::forward<T>(callback));
+}
 
 template <typename T>
 T
