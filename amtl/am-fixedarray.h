@@ -1,4 +1,4 @@
-// vim: set sts=8 ts=2 sw=2 tw=99 et:
+// vim: set sts=8 ts=4 sw=4 tw=99 et:
 //
 // Copyright (C) 2013-2014, David Anderson and AlliedModders LLC
 // All rights reserved.
@@ -31,6 +31,8 @@
 
 #include <assert.h>
 
+#include <vector>
+
 #include <amtl/am-allocator-policies.h>
 
 namespace ke {
@@ -39,28 +41,55 @@ template <typename T, typename AllocPolicy = SystemAllocatorPolicy>
 class FixedArray : private AllocPolicy
 {
   public:
-    FixedArray(size_t length, AllocPolicy = AllocPolicy()) {
-        length_ = length;
-        data_ = (T*)this->am_malloc(sizeof(T) * length_);
-        if (!data_)
+    FixedArray() : size_(0), data_(nullptr)
+    {}
+    FixedArray(size_t size, AllocPolicy = AllocPolicy()) {
+        if (!allocate(size))
             return;
-
-        for (size_t i = 0; i < length_; i++)
+        for (size_t i = 0; i < size_; i++)
             new (&data_[i]) T();
     }
+    FixedArray(const FixedArray& other) {
+        if (!allocate(other.size()))
+            return;
+        for (size_t i = 0; i < size_; i++)
+            new (&data_[i]) T(other[i]);
+    }
+
+    FixedArray(FixedArray&& other) {
+        size_ = other.size_;
+        data_ = other.data_;
+        other.size_ = 0;
+        other.data_ = nullptr;
+    }
+
+    explicit FixedArray(const std::vector<T>& other) {
+        if (!allocate(other.size()))
+            return;
+
+        for (size_t i = 0; i < size_; i++)
+            new (&data_[i]) T(other[i]);
+    }
+    explicit FixedArray(std::vector<T>&& other) {
+        if (!allocate(other.size()))
+            return;
+
+        for (size_t i = 0; i < size_; i++)
+            new (&data_[i]) T(std::move(other[i]));
+    }
+
     ~FixedArray() {
-        for (size_t i = 0; i < length_; i++)
-            data_[i].~T();
-        this->am_free(data_);
+        destruct();
+        deallocate();
     }
 
     // This call may be skipped if the allocator policy is infallible.
     bool initialize() {
-        return length_ == 0 || !!data_;
+        return size_ == 0 || !!data_;
     }
 
-    size_t length() const {
-        return length_;
+    size_t size() const {
+        return size_;
     }
     T& operator [](size_t index) {
         return at(index);
@@ -69,32 +98,63 @@ class FixedArray : private AllocPolicy
         return at(index);
     }
     T& at(size_t index) {
-        assert(index < length());
+        assert(index < size());
         return data_[index];
     }
     const T& at(size_t index) const {
-        assert(index < length());
+        assert(index < size());
         return data_[index];
     }
     T& back() {
-        assert(length() > 0);
-        return data_[length() - 1];
+        assert(size() > 0);
+        return data_[size() - 1];
     }
     const T& back() const {
-        assert(length() > 0);
-        return data_[length() - 1];
+        assert(size() > 0);
+        return data_[size() - 1];
     }
+    T* begin() { return data_; }
+    T* end() { return data_ + size_; }
+    const T* begin() const { return data_; }
+    const T* end() const { return data_ + size_; }
+    bool empty() const { return size_ == 0; }
+    T* buffer() const { return data_; }
 
-    T* buffer() const {
-        return data_;
+    FixedArray& operator =(const FixedArray& other) {
+        destruct();
+        if (size_ != other.size()) {
+            deallocate();
+            if (!allocate(other.size()))
+                return *this;
+        }
+        for (size_t i = 0; i < size_; i++)
+            new (&data_[i]) T(other[i]);
+        return *this;
+    }
+    FixedArray& operator =(FixedArray&& other) {
+        size_ = other.size_;
+        data_ = other.data_;
+        other.size_ = 0;
+        other.data_ = nullptr;
+        return *this;
     }
 
   private:
-    FixedArray(const FixedArray& other) = delete;
-    FixedArray& operator =(const FixedArray& other) = delete;
+    bool allocate(size_t size) {
+        size_ = size;
+        data_ = (T*)this->am_malloc(sizeof(T) * size_);
+        return !!data_;
+    }
+    void destruct() {
+        for (size_t i = 0; i < size_; i++)
+            data_[i].~T();
+    }
+    void deallocate() {
+        this->am_free(data_);
+    }
 
   private:
-    size_t length_;
+    size_t size_;
     T* data_;
 };
 
