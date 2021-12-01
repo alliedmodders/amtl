@@ -35,8 +35,8 @@
 
 namespace ke {
 
-template <typename T>
-static inline void MoveExtend(std::vector<T>* dest, std::vector<T>* src) {
+template <typename T, typename A>
+static inline void MoveExtend(std::vector<T, A>* dest, std::vector<T, A>* src) {
     if (dest->empty()) {
         *dest = std::move(*src);
     } else {
@@ -46,25 +46,25 @@ static inline void MoveExtend(std::vector<T>* dest, std::vector<T>* src) {
     }
 }
 
-template <typename T>
-static inline T PopBack(std::vector<T>* src) {
+template <typename T, typename A>
+static inline T PopBack(std::vector<T, A>* src) {
     T t = std::move(src->back());
     src->pop_back();
     return t;
 }
 
-template <typename T>
-static inline void RemoveAt(std::vector<T>* vec, size_t at) {
+template <typename T, typename A>
+static inline void RemoveAt(std::vector<T, A>* vec, size_t at) {
     vec->erase(vec->begin() + at);
 }
 
-template <typename T>
-static inline void InsertAt(std::vector<T>* vec, size_t at, const T& item) {
+template <typename T, typename A>
+static inline void InsertAt(std::vector<T, A>* vec, size_t at, const T& item) {
     vec->insert(vec->begin() + at, item);
 }
 
-template <typename T>
-static inline void InsertAt(std::vector<T>* vec, size_t at, T&& item) {
+template <typename T, typename A>
+static inline void InsertAt(std::vector<T, A>* vec, size_t at, T&& item) {
     vec->insert(vec->begin() + at, std::forward<T>(item));
 }
 
