@@ -63,14 +63,17 @@ class FixedArray : private AllocPolicy
         other.data_ = nullptr;
     }
 
-    explicit FixedArray(const std::vector<T>& other) {
+    template <typename U = std::allocator<T>>
+    explicit FixedArray(const std::vector<T, U>& other) {
         if (!allocate(other.size()))
             return;
 
         for (size_t i = 0; i < size_; i++)
             new (&data_[i]) T(other[i]);
     }
-    explicit FixedArray(std::vector<T>&& other) {
+
+    template <typename U = std::allocator<T>>
+    explicit FixedArray(std::vector<T, U>&& other) {
         if (!allocate(other.size()))
             return;
 
