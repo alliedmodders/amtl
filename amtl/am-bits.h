@@ -106,6 +106,41 @@ Log2(size_t number)
 }
 #endif
 
+static inline uint32_t
+FindLeftmostBit32(uint32_t number)
+{
+    assert(number != 0);
+
+#ifdef _MSC_VER
+    unsigned long rval;
+    _BitScanReverse(&rval, number);
+    return rval;
+#elif __GNUC__
+    return 31 - __builtin_clz(number);
+#endif
+}
+
+static inline uint32_t
+FindLeftmostBit64(uint64_t number)
+{
+    assert(number != 0);
+
+#ifdef _MSC_VER
+# if defined(_M_IX86) || defined(_M_ARM)
+    uint64_t temp = number >> 32;
+    if (temp)
+      return 32 + FindLeftmostBit32(static_cast<uint32_t>(temp));
+    return FindLeftmostBit32(static_cast<uint32_t>(number & 0xffffffff));
+# elif defined(_M_X64) || defined(_M_ARM64)
+    unsigned long rval;
+    _BitScanReverse4(&rval, number);
+    return rval;
+# endif // _M_arch
+#elif __GNUC__
+    return 63 - __builtin_clzl(number);
+# endif
+}
+
 static inline size_t
 FindRightmostBit(size_t number)
 {
@@ -113,18 +148,18 @@ FindRightmostBit(size_t number)
 
 #ifdef _MSC_VER
     unsigned long rval;
-#    ifdef _M_IX86
+# if defined(_M_IX86) || defined(_M_ARM)
     _BitScanForward(&rval, number);
-#    elif _M_X64
+# elif defined(_M_X64) || defined(_M_ARM64)
     _BitScanForward64(&rval, number);
-#    endif
+# endif
     return rval;
 #elif __GNUC__
+# ifdef __LP64__
+    return __builtin_ctzl(number);
+# else
     return __builtin_ctz(number);
-#else
-    size_t bit;
-    asm("bsf %1, %0\n" : "=r"(bit) : "rm"(number));
-    return bit;
+# endif
 #endif
 }
 
