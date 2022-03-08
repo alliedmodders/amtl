@@ -41,3 +41,22 @@ TEST(Bits, Multiply) {
 TEST(Bits, MallocAlignment) {
     EXPECT_GE(kMallocAlignment, (size_t)16);
 }
+
+TEST(Bits, FindLeftmostBit) {
+    EXPECT_EQ(FindLeftmostBit32(0x7f), 6);
+    EXPECT_EQ(FindLeftmostBit64(0x7f), 6);
+
+    EXPECT_EQ(FindLeftmostBit32(0xffffffff), 31);
+    EXPECT_EQ(FindLeftmostBit64(0xffffffffffffffffULL), 63);
+}
+
+TEST(Bits, FindRightmostBit) {
+    EXPECT_EQ(FindRightmostBit(0x7d), 0);
+    EXPECT_EQ(FindRightmostBit(0x7d), 0);
+
+    EXPECT_EQ(FindRightmostBit(0xffffffc0), 6);
+    if (sizeof(size_t) == 8)
+      EXPECT_EQ(FindRightmostBit(0xfffc000000000000ULL), 50);
+    else
+      EXPECT_EQ(FindRightmostBit(0xfffc000000000000ULL), 0);
+}
