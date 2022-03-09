@@ -133,7 +133,7 @@ FindLeftmostBit64(uint64_t number)
     return FindLeftmostBit32(static_cast<uint32_t>(number & 0xffffffff));
 # elif defined(_M_X64) || defined(_M_ARM64)
     unsigned long rval;
-    _BitScanReverse4(&rval, number);
+    _BitScanReverse64(&rval, number);
     return rval;
 # endif // _M_arch
 #elif __GNUC__
