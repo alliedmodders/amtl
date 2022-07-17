@@ -32,15 +32,15 @@
 
 namespace ke {
 
-template <typename T>
-static inline T PopBack(std::deque<T>* deque) {
+template <typename T, typename A>
+static inline T PopBack(std::deque<T, A>* deque) {
   T t = std::move(deque->back());
   deque->pop_back();
   return t;
 }
 
-template <typename T>
-static inline T PopFront(std::deque<T>* deque) {
+template <typename T, typename A>
+static inline T PopFront(std::deque<T, A>* deque) {
   T t = std::move(deque->front());
   deque->pop_front();
   return t;
