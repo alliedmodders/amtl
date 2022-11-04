@@ -198,3 +198,16 @@ TEST(ArgParser, OptionWithNo) {
     ASSERT_FALSE(stuff.value());
     ASSERT_FALSE(other.value());
 }
+
+TEST(ArgParser, PassthroughArgs) {
+    Parser parser("help");
+    parser.allow_passthrough_args();
+
+    EnableOption stuff(parser, nullptr, "--stuff", false, "Stuff or whatever");
+
+    ASSERT_TRUE(parser.parsev("--stuff", "--", "crab", "ham", nullptr));
+    ASSERT_TRUE(stuff.value());
+    ASSERT_EQ(parser.passthrough_args().size(), 2);
+    ASSERT_EQ(parser.passthrough_args()[0], "crab");
+    ASSERT_EQ(parser.passthrough_args()[1], "ham");
+}
