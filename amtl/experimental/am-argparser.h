@@ -90,8 +90,16 @@ class Parser
         collect_extra_args_ = true;
     }
 
+    // Recognize -- and place all additional arguments into passthrough_args().
+    void allow_passthrough_args() {
+        allow_passthrough_args_ = true;
+    }
+
     const std::vector<std::string>& extra_args() const {
         return extra_args_;
+    }
+    std::vector<std::string>& passthrough_args() {
+        return passthrough_args_;
     }
 
     void set_usage_line(const char* usage) {
@@ -129,8 +137,11 @@ class Parser
     bool inline_values_ = false;
     bool allow_slashes_ = false;
     bool collect_extra_args_ = false;
+    bool allow_passthrough_args_ = false;
+    bool has_passthrough_args_ = false;
     std::unique_ptr<StopOption> help_option_;
     std::vector<std::string> extra_args_;
+    std::vector<std::string> passthrough_args_;
     std::vector<std::unique_ptr<IOption>> extra_usage_;
 };
 
@@ -616,6 +627,15 @@ Parser::parse_impl(const std::vector<const char*>& args)
     for (size_t i = 0; i < args.size(); i++) {
         const char* arg = args[i];
         IOption* option = nullptr;
+
+        if (allow_passthrough_args_ && !strcmp(arg, "--")) {
+            has_passthrough_args_ = true;
+            continue;
+        }
+        if (has_passthrough_args_) {
+            passthrough_args_.emplace_back(arg);
+            continue;
+        }
 
         const char* value_ptr = nullptr;
         if (arg[0] == '-' || (allow_slashes_ && arg[0] == '/')) {
