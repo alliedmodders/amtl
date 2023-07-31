@@ -1,6 +1,6 @@
 The AlliedModders Template Library is a small set of C++ headers. It aims to be lightweight,
 supporting a minimalistic set of abstractions and data structures useful for high-performance C++
-systems code. It is the spiritual succesor to the SourceHook template library.
+systems code. It is the spiritual successor to the SourceHook template library.
 
 AMBuild currently requires C++11 support. The minimum supported compiler versions are:
  - Microsoft Visual Studio 2015 or higher.
