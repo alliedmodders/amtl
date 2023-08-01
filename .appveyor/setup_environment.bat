@@ -1,6 +1,7 @@
 @echo on
+SET PYTHON=c:\python33
+SET PATH=%PYTHON%;%PYTHON%\Scripts;%PATH%
 git submodule update --init
 git clone https://github.com/alliedmodders/ambuild ambuild
-cd ambuild
-c:\python27\python.exe setup.py install
+pip install ./ambuild
 chdir /D "%APPVEYOR_BUILD_FOLDER%"
