@@ -57,7 +57,7 @@ template <typename T>
 class StackLinked
 {
   public:
-    StackLinked<T>(T** prevp)
+    StackLinked(T** prevp)
      : prevp_(prevp),
        prev_(*prevp)
     {
