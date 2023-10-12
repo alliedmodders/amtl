@@ -46,12 +46,6 @@ branch of AMTL does not require C++11.
 
   + When using 32-bit Visual C++, try blocks are not zero-cost, as they are implemented using SEH.
 
-* Fallible malloc. In many cases it's not desirable to terminate the program or throw an
-  exception when an allocation fails (for example, resizing a large vector). Thus, functions
-  like ke::Vector::append (analagous to std::vector::push\_back) will usually return bool. Whether
-  or not these functions return (i.e., abort the program or fail safely) can be specified in an
-  allocation policy.
-
 * Room to grow. These templates are intended to be a baseline of features needed for various
   AlliedModders projects. They can and will grow as new features are needed, hopefully keeping the
   above principles in mind.
@@ -96,15 +90,11 @@ SystemAllocatorPolicy is to abort the process on any failure, which can be chang
 a new policy. As HashTable and Vector inherit from the AllocPolicy, it is possible to use custom
 allocators without accessing static variables.
 
-### Vector (am-vector.h)
+### STL Helpers
 
-ke::Vector is roughly analagous to std::vector. A few method names are changed:
-* size() is length()
-* push\_back() is append() and returns boolean.
-* The underlying buffer of a vector can be "taken", which is sometimes useful for transferring
-  ownership of data.
-
-Vector does not have an iterator type. It should be iterated through normal sequential indexing.
+These are in `am-vector.h`, `am-deque.h`, etc. They contain helpers for working with STL data
+structures, for example, by providing alternatives to `pop_back()` that can return the popped
+value.
 
 ### HashTable (am-hashtable.h)
 
@@ -213,6 +203,11 @@ normal C++ enumerations.
 This is currently experimental. It is a command-line argv parser similar to Python's argparse
 library. It is designed to handle a few basic cases and will be expanded as needed. Examples
 of how to use it are in test-argparse.cpp.
+
+### Link Helpers
+
+- `compat/stdcxx.cpp` can be included on Linux builds to work around highly idiosyncratic libstdc++
+  behavior when distributing libstdc++ based binaries.
 
 # Replacing SourceHook Includes
 
