@@ -252,6 +252,21 @@ AlignedBase(void* addr, size_t alignment)
     return reinterpret_cast<void*>(uintptr_t(addr) & ~(alignment - 1));
 }
 
+template <typename T>
+static inline T* SetPointerBits(T* ptr, uintptr_t bits) {
+  return reinterpret_cast<T*>(reinterpret_cast<uintptr_t>(ptr) | bits);
+}
+
+template <uintptr_t NumBits>
+static inline uintptr_t GetPointerBits(void* ptr) {
+  return (reinterpret_cast<uintptr_t>(ptr) & ((1 << NumBits) - 1));
+}
+
+template <uintptr_t NumBits, typename T>
+static inline T* ClearPointerBits(T* ptr) {
+  return reinterpret_cast<T*>(reinterpret_cast<uintptr_t>(ptr) & ~uintptr_t((1 << NumBits) - 1));
+}
+
 } // namespace ke
 
 #endif // _include_amtl_am_bits_h_

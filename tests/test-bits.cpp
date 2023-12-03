@@ -1,4 +1,4 @@
-// vim: set sts=8 ts=2 sw=2 tw=99 et:
+// vim: set sts=8 ts=4 sw=4 tw=99 et:
 //
 // Copyright (C) 2013, David Anderson and AlliedModders LLC
 // All rights reserved.
@@ -59,4 +59,17 @@ TEST(Bits, FindRightmostBit) {
       EXPECT_EQ(FindRightmostBit(0xfffc000000000000ULL), 50);
     else
       EXPECT_EQ(FindRightmostBit(0xfffc000000000000ULL), 0);
+}
+
+TEST(Bits, PointerBits) {
+    int local = 0;
+    void* ptr = &local;
+
+    EXPECT_EQ(GetPointerBits<2>(ptr), 0);
+
+    void* changed = SetPointerBits(ptr, 0x3);
+    void* expected = reinterpret_cast<void*>(reinterpret_cast<uintptr_t>(ptr) | uintptr_t(0x3));
+    EXPECT_EQ(changed, expected);
+
+    EXPECT_EQ(ClearPointerBits<2>(changed), ptr);
 }
