@@ -181,7 +181,7 @@ StringPrintfVa(const char* fmt, va_list ap)
     size_t len;
     std::unique_ptr<char[]> result = detail::SprintfArgsImpl(&len, fmt, ap);
     if (!result)
-        return nullptr;
+        return "";
     return std::string(result.get(), len);
 }
 
