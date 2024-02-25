@@ -142,6 +142,19 @@ class FixedArray : private AllocPolicy
         return *this;
     }
 
+    bool operator ==(const FixedArray& other) const {
+        if (other.size() != size())
+            return false;
+        for (size_t i = 0; i < other.size(); i++) {
+            if (at(i) != other.at(i))
+                return false;
+        }
+        return true;
+    }
+    bool operator !=(const FixedArray& other) const {
+        return !(*this == other);
+    }
+
   private:
     bool allocate(size_t size) {
         size_ = size;
