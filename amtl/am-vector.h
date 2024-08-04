@@ -1,4 +1,4 @@
-// vim: set sts=8 ts=2 sw=2 tw=99 et:
+// vim: set sts=8 ts=4 sw=4 tw=99 et:
 //
 // Copyright (C) 2013, David Anderson and AlliedModders LLC
 // All rights reserved.
@@ -31,6 +31,7 @@
 
 #include <stddef.h>
 
+#include <algorithm>
 #include <vector>
 
 namespace ke {
@@ -71,6 +72,12 @@ static inline void InsertAt(std::vector<T, A>* vec, size_t at, T&& item) {
 template <typename T, typename... Args>
 static inline void EmplaceAt(std::vector<T>* vec, size_t at, Args&&... item) {
     vec->emplace(vec->begin() + at, std::forward<Args>(item)...);
+}
+
+template <typename T, typename A, typename Pred>
+static inline void EraseIf(std::vector<T, A>* vec, Pred pred) {
+    auto it = std::remove_if(vec->begin(), vec->end(), pred);
+    vec->erase(it, vec->end());
 }
 
 } // namespace ke
