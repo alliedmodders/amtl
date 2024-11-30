@@ -304,3 +304,11 @@ TEST(Vector, Remove) {
     EXPECT_EQ(thing1->refcount, (size_t)1);
     EXPECT_EQ(thing2->refcount, (size_t)1);
 }
+
+TEST(Vector, EraseIf) {
+    std::vector<int> vector = {1, 3, 5, 6, 8, 9};
+    ke::EraseIf(&vector, [](int n) { return n % 2 == 1; });
+    ASSERT_EQ(vector.size(), 2);
+    EXPECT_EQ(vector[0], 6);
+    EXPECT_EQ(vector[1], 8);
+}

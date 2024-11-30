@@ -54,7 +54,6 @@ class KEConfig(object):
         '-fno-threadsafe-statics',
       ]
 
-      cxx.cflags += ['-mfpmath=sse']
     elif cxx.like('msvc'):
       if builder.options.debug == '1':
         cxx.cflags += ['/MTd']
