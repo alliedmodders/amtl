@@ -101,12 +101,12 @@ static inline void SetThreadName(std::thread* thread, const char* name) {
 template <class Function, class... Args>
 static inline std::unique_ptr<std::thread> NewThread(const char* name, Function&& f, Args&&... args)
 {
-    auto callback = std::bind(std::forward<Function>(f), std::forward<Args>(args)...);
-    auto fn = [](const std::string& name, decltype(callback)&& callback) -> void {
-        SetThreadName(name.c_str());
-        callback();
-    };
-    return std::make_unique<std::thread>(std::move(fn), std::string(name), std::move(callback));
+    return std::make_unique<std::thread>(
+        [name, fn = std::forward<Function>(f), tup = std::make_tuple(std::forward<Args>(args)...)]() mutable {
+            SetThreadName(name);
+            std::apply(std::move(fn), std::move(tup));
+        }
+    );
 }
 
 } // namespace ke
