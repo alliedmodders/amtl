@@ -98,10 +98,31 @@ static inline void SetThreadName(std::thread* thread, const char* name) {
 
 // Helper to allocate named threads. We can't subclass std::thread for this
 // because the order of construction would be wrong.
+//
+// This version takes no additional args, as a workaround for a bug in recent
+// versions of libstdc++. Its implementation of std::bind uses std::result_of
+// which libstdc++ deprecates, and of course, provides no way to turn off the
+// deprecation warnings.
+//
+// Since perfect forwarding of argument packs to lambdas is a C++20 feature,
+// and we don't really use additional arguments, this is the simplest fix for
+// now.
+template <class Function>
+static inline std::unique_ptr<std::thread> NewThread(const char* name, Function&& f)
+{
+    auto fn = [f = std::forward<Function>(f)](const std::string& name) -> void {
+        SetThreadName(name.c_str());
+	f();
+    };
+    return std::make_unique<std::thread>(std::move(fn), std::string(name));
+}
+
+// Helper to allocate named threads. We can't subclass std::thread for this
+// because the order of construction would be wrong.
 template <class Function, class... Args>
 static inline std::unique_ptr<std::thread> NewThread(const char* name, Function&& f, Args&&... args)
 {
-    auto callback = std::bind(std::forward<Function>(f), std::forward<Args>(args)...);
+    auto callback = std::bind(f, std::forward<Args>(args)...);
     auto fn = [](const std::string& name, decltype(callback)&& callback) -> void {
         SetThreadName(name.c_str());
         callback();
