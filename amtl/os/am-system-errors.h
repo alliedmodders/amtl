@@ -44,7 +44,7 @@ static inline void
 FormatSystemErrorCode(int code, char* error, size_t maxlength) {
 #if defined(KE_WINDOWS)
     if (!FormatMessageA(FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS, nullptr, code,
-                        MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), error, maxlength, nullptr)) {
+                        MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), error, (int)maxlength, nullptr)) {
         SafeSprintf(error, maxlength, "error code %08x", code);
         return;
     }
