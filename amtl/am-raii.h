@@ -38,6 +38,11 @@ template <typename T>
 class SaveAndSet
 {
   public:
+    explicit SaveAndSet(T* location)
+     : location_(location),
+       old_(*location)
+    {
+    }
     SaveAndSet(T* location, const T& value)
      : location_(location),
        old_(*location)
@@ -46,6 +51,52 @@ class SaveAndSet
     }
     ~SaveAndSet() {
         *location_ = old_;
+    }
+
+  private:
+    T* location_;
+    T old_;
+};
+
+// Replacement version of SaveAndSet that provides move semantics and safer
+// construction.
+template <typename T, typename U = T>
+class SaveRestore
+{
+  public:
+    SaveRestore() = delete;
+    SaveRestore(const SaveRestore&) = delete;
+    void operator =(const SaveRestore&) = delete;
+
+    SaveRestore(SaveRestore&& other)
+      : location_(other.location_),
+        old_(std::move(other.old_))
+    {
+        other.location_ = nullptr;
+    }
+
+    explicit SaveRestore(T& location)
+      : location_(&location),
+        old_(location)
+    {}
+
+    SaveRestore(T& location, U&& value)
+      : location_(&location),
+        old_(std::move(*location_))
+    {
+        *location_ = std::move(value);
+    }
+
+    ~SaveRestore() {
+        if (location_)
+            *location_ = std::move(old_);
+    }
+
+    SaveRestore& operator =(SaveRestore&& other) {
+        location_ = other.location_;
+        old_ = std::move(other.old_);
+        other.location_ = nullptr;
+        return *this;
     }
 
   private:
