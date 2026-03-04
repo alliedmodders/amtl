@@ -2,16 +2,11 @@ The AlliedModders Template Library is a small set of C++ headers. It aims to be 
 supporting a minimalistic set of abstractions and data structures useful for high-performance C++
 systems code. It is the spiritual successor to the SourceHook template library.
 
-AMBuild currently requires C++11 support. The minimum supported compiler versions are:
+### Requirements:
+ - C++17
  - Microsoft Visual Studio 2015 or higher.
  - Clang 3.5 or higher.
  - GNU GCC 4.9 or higher.
-
-To build tests, C++14 or higher is required (on macOS, the minimum version is OS X 10.9).
-
-Specifically, it requires `nullptr`, `>>` support in templates, r-value references v2.0,
-(N2844), lambda support, and the override/delete keywords. The older, deprecated `C++98`
-branch of AMTL does not require C++11.
 
 # Goals
 
