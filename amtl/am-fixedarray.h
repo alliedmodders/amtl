@@ -135,6 +135,8 @@ class FixedArray : private AllocPolicy
         return *this;
     }
     FixedArray& operator =(FixedArray&& other) {
+        destruct();
+        deallocate();
         size_ = other.size_;
         data_ = other.data_;
         other.size_ = 0;
