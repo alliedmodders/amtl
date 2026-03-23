@@ -209,11 +209,11 @@ class HashTable : private AllocPolicy
   private:
     class Probulator
     {
-        uint32_t hash_;
+        uintptr_t hash_;
         uint32_t capacity_;
 
       public:
-        Probulator(uint32_t hash, uint32_t capacity)
+        Probulator(uintptr_t hash, uint32_t capacity)
          : hash_(hash),
            capacity_(capacity)
         {
@@ -281,7 +281,7 @@ class HashTable : private AllocPolicy
     }
 
     // For use when the key is known to be unique.
-    Insert insertUnique(uint32_t hash) {
+    Insert insertUnique(uintptr_t hash) {
         Probulator probulator(hash, capacity_);
 
         Entry* e = &table_[probulator.entry()];
@@ -296,7 +296,7 @@ class HashTable : private AllocPolicy
 
     template <typename Key>
     Result lookup(const Key& key) const {
-        uint32_t hash = computeHash(key);
+        uintptr_t hash = computeHash(key);
         Probulator probulator(hash, capacity_);
 
         Entry* e = &table_[probulator.entry()];
@@ -314,7 +314,7 @@ class HashTable : private AllocPolicy
 
     template <typename Key>
     Insert lookupForAdd(const Key& key) {
-        uint32_t hash = computeHash(key);
+        uintptr_t hash = computeHash(key);
         Probulator probulator(hash, capacity_);
 
         Entry* e = &table_[probulator.entry()];
