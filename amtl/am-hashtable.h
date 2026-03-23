@@ -1,4 +1,4 @@
-// vim: set sts=8 ts=2 sw=2 tw=99 et:
+// vim: set sts=8 ts=4 sw=4 tw=99 et:
 //
 // Copyright (C) 2013, David Anderson and AlliedModders LLC
 // All rights reserved.
@@ -45,7 +45,7 @@ namespace detail {
 template <typename T>
 class HashTableEntry
 {
-    uint32_t hash_;
+    uintptr_t hash_;
     T t_;
 
   public:
@@ -53,7 +53,7 @@ class HashTableEntry
     static const uint32_t kRemovedHash = 1;
 
   public:
-    void setHash(uint32_t hash) {
+    void setHash(uintptr_t hash) {
         hash_ = hash;
     }
     void construct() {
@@ -63,7 +63,7 @@ class HashTableEntry
     void construct(U&& u) {
         new (&t_) T(std::forward<U>(u));
     }
-    uint32_t hash() const {
+    uintptr_t hash() const {
         return hash_;
     }
     void setRemoved() {
@@ -98,7 +98,7 @@ class HashTableEntry
         assert(isLive());
         return t_;
     }
-    bool sameHash(uint32_t hash) const {
+    bool sameHash(uintptr_t hash) const {
         return hash_ == hash;
     }
 
@@ -613,7 +613,7 @@ HashInt32(int32_t a)
 }
 
 // From http://www.cris.com/~Ttwang/tech/inthash.htm
-static inline uint32_t
+static inline uintptr_t
 HashInt64(int64_t key)
 {
     key = (~key) + (key << 18); // key = (key << 18) - key - 1;
@@ -622,27 +622,21 @@ HashInt64(int64_t key)
     key = key ^ (uint64_t(key) >> 11);
     key = key + (key << 6);
     key = key ^ (uint64_t(key) >> 22);
-    return uint32_t(key);
+    return uintptr_t(key);
 }
 
 template <size_t Size>
-static inline uint32_t HashInteger(uintptr_t value);
+static inline uintptr_t HashInteger(uintptr_t value);
 
-template <>
-inline uint32_t
-HashInteger<4>(uintptr_t value)
-{
+template <> inline uintptr_t HashInteger<4>(uintptr_t value) {
     return HashInt32(uint32_t(value));
 }
 
-template <>
-inline uint32_t
-HashInteger<8>(uintptr_t value)
-{
+template <> inline uintptr_t HashInteger<8>(uintptr_t value) {
     return HashInt64(value);
 }
 
-static inline uint32_t
+static inline uintptr_t
 HashPointer(const void* ptr)
 {
     return HashInteger<sizeof(ptr)>(reinterpret_cast<uintptr_t>(ptr));

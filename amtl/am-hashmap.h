@@ -41,7 +41,7 @@ namespace ke {
 // K - Key type.
 // V - Value type.
 // HashPolicy - A struct with a hash and comparator function for each lookup type:
-//     static uint32_t hash(const Type& value);
+//     static uintptr_t hash(const Type& value);
 //     static bool matches(const Type& value, const K& key);
 //
 // All types that match a given key, must compute the same hash.
@@ -77,7 +77,7 @@ class HashMap : private AllocPolicy
         typedef Entry Payload;
 
         template <typename Lookup>
-        static uint32_t hash(const Lookup& key) {
+        static uintptr_t hash(const Lookup& key) {
             return HashPolicy::hash(key);
         }
 
@@ -175,7 +175,7 @@ class HashMap : private AllocPolicy
 
 template <typename T>
 struct PointerPolicy {
-    static inline uint32_t hash(T* p) {
+    static inline uintptr_t hash(T* p) {
         return HashPointer(p);
     }
     static inline bool matches(T* p1, T* p2) {
