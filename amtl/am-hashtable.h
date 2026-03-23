@@ -642,8 +642,8 @@ HashPointer(const void* ptr)
     return HashInteger<sizeof(ptr)>(reinterpret_cast<uintptr_t>(ptr));
 }
 
-static inline uint32_t
-HashCombine(uint32_t first, uint32_t second) {
+static inline uintptr_t
+HashCombine(uintptr_t first, uintptr_t second) {
     return first ^ (second + 0x9e3779b9 + (first << 6) + (second >> 2));
 }
 
