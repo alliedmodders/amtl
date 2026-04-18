@@ -92,6 +92,12 @@ namespace ke {
 #    define KE_CXX_LIKE_GCC
 #endif
 
+#if defined(_WIN64) || defined(__LP64__) || defined(_LP64)
+#    define KE_64BIT
+#else
+#    define KE_32BIT
+#endif
+
 } // namespace ke
 
 #endif // _include_amtl_platform_h_
