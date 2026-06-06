@@ -43,7 +43,7 @@
 # include <locale>
 # include <string>
 
-# include <Windows.h>
+# include <windows.h>
 # include <processthreadsapi.h>
 # include <sdkddkver.h>
 #endif
