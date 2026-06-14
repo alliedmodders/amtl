@@ -137,7 +137,7 @@ FindLeftmostBit64(uint64_t number)
     return rval;
 # endif // _M_arch
 #elif __GNUC__
-    return 63 - __builtin_clzl(number);
+    return 63 - __builtin_clzll(number);
 # endif
 }
 

@@ -39,33 +39,36 @@ TEST(Bits, Multiply) {
 }
 
 TEST(Bits, MallocAlignment) {
+#if defined(KE_64BIT)
     EXPECT_GE(kMallocAlignment, (size_t)16);
+#else
+    EXPECT_GE(kMallocAlignment, (size_t)8);
+#endif
 }
 
 TEST(Bits, FindLeftmostBit) {
-    EXPECT_EQ(FindLeftmostBit32(0x7f), 6);
-    EXPECT_EQ(FindLeftmostBit64(0x7f), 6);
+    EXPECT_EQ(FindLeftmostBit32(0x7f), uint32_t(6));
+    EXPECT_EQ(FindLeftmostBit64(0x7f), uint32_t(6));
 
-    EXPECT_EQ(FindLeftmostBit32(0xffffffff), 31);
-    EXPECT_EQ(FindLeftmostBit64(0xffffffffffffffffULL), 63);
+    EXPECT_EQ(FindLeftmostBit32(0xffffffff), uint32_t(31));
+    EXPECT_EQ(FindLeftmostBit64(0xffffffffffffffffULL), uint32_t(63));
 }
 
 TEST(Bits, FindRightmostBit) {
-    EXPECT_EQ(FindRightmostBit(0x7d), 0);
-    EXPECT_EQ(FindRightmostBit(0x7d), 0);
+    EXPECT_EQ(FindRightmostBit(0x7d), size_t(0));
+    EXPECT_EQ(FindRightmostBit(0x7d), size_t(0));
 
-    EXPECT_EQ(FindRightmostBit(0xffffffc0), 6);
-    if (sizeof(size_t) == 8)
-      EXPECT_EQ(FindRightmostBit(0xfffc000000000000ULL), 50);
-    else
-      EXPECT_EQ(FindRightmostBit(0xfffc000000000000ULL), 0);
+    EXPECT_EQ(FindRightmostBit(0xffffffc0), size_t(6));
+#if defined(KE_64BIT)
+    EXPECT_EQ(FindRightmostBit(0xfffc000000000000ULL), size_t(50));
+#endif
 }
 
 TEST(Bits, PointerBits) {
     int local = 0;
     void* ptr = &local;
 
-    EXPECT_EQ(GetPointerBits<2>(ptr), 0);
+    EXPECT_EQ(GetPointerBits<2>(ptr), uintptr_t(0));
 
     void* changed = SetPointerBits(ptr, 0x3);
     void* expected = reinterpret_cast<void*>(reinterpret_cast<uintptr_t>(ptr) | uintptr_t(0x3));
