@@ -207,7 +207,7 @@ TEST(ArgParser, PassthroughArgs) {
 
     ASSERT_TRUE(parser.parsev("--stuff", "--", "crab", "ham", nullptr));
     ASSERT_TRUE(stuff.value());
-    ASSERT_EQ(parser.passthrough_args().size(), 2);
+    ASSERT_EQ(parser.passthrough_args().size(), size_t(2));
     ASSERT_EQ(parser.passthrough_args()[0], "crab");
     ASSERT_EQ(parser.passthrough_args()[1], "ham");
 }

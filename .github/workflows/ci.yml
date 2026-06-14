@@ -1,0 +1,112 @@
+name: Continuous Integration
+
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+    branches:
+      - master
+
+jobs:
+  test:
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+        build_type: [optimize, debug]
+        build_target: [x86, x64]
+        include:
+          # Linux ARM targets
+          - os: ubuntu-latest
+            build_type: optimize
+            build_target: arm-gnueabihf
+          - os: ubuntu-latest
+            build_type: debug
+            build_target: arm-gnueabihf
+
+          - os: ubuntu-24.04-arm
+            build_type: optimize
+            build_target: arm64
+          - os: ubuntu-24.04-arm
+            build_type: debug
+            build_target: arm64
+
+
+          - os: windows-11-arm
+            build_type: optimize
+            build_target: arm64
+          - os: windows-11-arm
+            build_type: debug
+            build_target: arm64
+
+          # macOS ARM target (macOS latest has only arm64 target)
+          - os: macos-latest
+            build_type: optimize
+            build_target: arm64
+          - os: macos-latest
+            build_type: debug
+            build_target: arm64
+
+      fail-fast: false
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      # Setup Python for AMBuild
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+
+      - name: Install AMBuild
+        run: |
+          python -m pip install --upgrade pip setuptools wheel
+          pip install git+https://github.com/alliedmodders/ambuild
+
+      - name: Setup MSVC
+        if: startsWith(matrix.os, 'windows')
+        uses: ilammy/msvc-dev-cmd@v1
+        with:
+          arch: ${{ matrix.msvc_arch || matrix.build_target }}
+
+      - name: Select clang compiler
+        if: matrix.os == 'macos-latest' || (startsWith(matrix.os, 'ubuntu') && matrix.build_target != 'arm-gnueabihf')
+        run: |
+          echo "CC=clang" >> $GITHUB_ENV
+          echo "CXX=clang++" >> $GITHUB_ENV
+          clang --version
+          clang++ --version
+
+      - name: Install Linux dependencies (x86)
+        if: matrix.os == 'ubuntu-latest' && matrix.build_target == 'x86'
+        run: |
+          sudo dpkg --add-architecture i386
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            gcc-multilib g++-multilib libstdc++6 lib32stdc++6 \
+            libc6-dev libc6-dev-i386 linux-libc-dev \
+            linux-libc-dev:i386
+
+      - name: Install Linux dependencies (arm-gnueabihf)
+        if: matrix.os == 'ubuntu-latest' && matrix.build_target == 'arm-gnueabihf'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y gcc-arm-linux-gnueabihf g++-arm-linux-gnueabihf
+
+      - name: Build
+        run: |
+          mkdir objdir
+          cd objdir
+          python ../configure.py --enable-${{ matrix.build_type }} --targets=${{ matrix.build_target }}
+          ambuild
+
+      - name: Test
+        if: ${{ matrix.build_target != 'arm-gnueabihf' }}
+        run: |
+          if [ "${{ runner.os }}" = "Windows" ]; then
+            ./objdir/dist/testrunner.exe
+          else
+            ./objdir/dist/testrunner
+          fi
+        shell: bash

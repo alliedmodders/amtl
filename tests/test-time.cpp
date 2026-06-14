@@ -41,7 +41,8 @@ TEST(Time, Timespec)
     ts.tv_nsec = 500000;
 
     auto tp = TimespecToTimePoint<std::chrono::system_clock>(ts);
-    auto tt = std::chrono::system_clock::to_time_t(tp);
+    auto casted = std::chrono::time_point_cast<std::chrono::system_clock::duration>(tp);
+    auto tt = std::chrono::system_clock::to_time_t(casted);
     EXPECT_EQ(tt, 100);
     EXPECT_EQ(tp.time_since_epoch(), TimespecToDuration(ts));
 }

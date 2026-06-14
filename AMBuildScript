@@ -4,20 +4,30 @@ import sys
 
 class KEConfig(object):
   def __init__(self):
-    pass
+    self.targets = []
 
   def configure(self):
-    cxx = builder.DetectCxx()
-
-    builder.cxx = cxx
     builder.dist_folder = builder.AddFolder('dist')
 
+    if getattr(builder.options, 'targets', None):
+      targets = builder.options.targets.split(',')
+      dupes = set()
+      for target in targets:
+        if target in dupes:
+          continue
+        dupes.add(target)
+        cxx = builder.DetectCxx(target=target)
+        self.configure_cxx(cxx)
+        self.targets.append(cxx)
+    else:
+      cxx = builder.DetectCxx()
+      self.configure_cxx(cxx)
+      self.targets.append(cxx)
+
+  def configure_cxx(self, cxx):
     if cxx.like('gcc'):
       if cxx.target.platform != 'windows':
-        if cxx.version >= 'gcc-8.0' or cxx.version >= 'clang-5.0':
-            cxx.cxxflags += ['-std=c++17']
-        else:
-            cxx.cxxflags += ['-std=c++14']
+        cxx.cxxflags += ['-std=c++17']
 
         cxx.defines += [
           'stricmp=strcasecmp',
@@ -30,7 +40,7 @@ class KEConfig(object):
           cxx.linkflags += ['-lrt']
       else:
         cxx.cxxflags += [
-          '-std=c++14',
+          '-std=c++17',
           '-fms-compatibility-version=19',
         ]
 
@@ -54,7 +64,10 @@ class KEConfig(object):
         '-fno-threadsafe-statics',
       ]
 
-      cxx.cflags += ['-mfpmath=sse']
+      if cxx.target.arch in ['x86', 'x86_64']:
+        cxx.cflags += ['-mfpmath=sse']
+        if cxx.target.arch == 'x86':
+          cxx.cflags += ['-msse', '-msse2']
     elif cxx.like('msvc'):
       if builder.options.debug == '1':
         cxx.cflags += ['/MTd']
@@ -71,12 +84,18 @@ class KEConfig(object):
         '/W3',
       ]
       cxx.cxxflags += [
+        '/std:c++17',
         '/EHsc',
         '/GR-',
         '/TP',
       ]
       cxx.linkflags += [
-        '/MACHINE:X86',
+        '/MACHINE:' + {
+          'x86': 'X86',
+          'x86_64': 'X64',
+          'arm': 'ARM',
+          'arm64': 'ARM64'
+        }.get(cxx.target.arch, 'X86'),
         'kernel32.lib',
         'user32.lib',
         'gdi32.lib',
@@ -145,16 +164,21 @@ class KEConfig(object):
 KE = KEConfig()
 KE.configure()
 
-KE.libamtl = builder.Build('amtl/AMBuilder', {
-    'Configure': lambda builder, name: KE.StaticLibrary(builder, name),
-})
-KE.libamtl = KE.libamtl.binary
+for cxx in KE.targets:
+  builder.cxx = cxx
+  try:
+    libamtl = builder.Build('amtl/AMBuilder', {
+        'Configure': lambda builder, name: KE.StaticLibrary(builder, name),
+    })
+    KE.libamtl = libamtl.binary
 
-builder.Build(
-  [
-    'tests/AMBuild.tests',
-  ],
-  {
-    'KE': KE,
-  }
-)
+    builder.Build(
+      [
+        'tests/AMBuild.tests',
+      ],
+      {
+        'KE': KE,
+      }
+    )
+  finally:
+    builder.cxx = None

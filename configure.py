@@ -24,4 +24,6 @@ parser.options.add_argument('--enable-debug', action='store_const', const='1', d
 parser.options.add_argument('--enable-optimize', action='store_const', const='1', dest='opt',
                             help='Enable optimization')
 parser.options.add_argument('--std', type=str, default=None, help='Override C++ standard')
+parser.options.add_argument('--targets', type=str, default=None,
+                            help='Specify target architecture (use commas to include more than one)')
 parser.Configure()
