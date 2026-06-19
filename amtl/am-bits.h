@@ -39,6 +39,7 @@
 
 #include <algorithm>
 #include <cstddef>
+#include <type_traits>
 
 #include <amtl/am-cxx.h>
 #include <amtl/am-platform.h>
@@ -265,6 +266,32 @@ static inline uintptr_t GetPointerBits(void* ptr) {
 template <uintptr_t NumBits, typename T>
 static inline T* ClearPointerBits(T* ptr) {
   return reinterpret_cast<T*>(reinterpret_cast<uintptr_t>(ptr) & ~uintptr_t((1 << NumBits) - 1));
+}
+
+template <typename To, typename From>
+static inline To PmfCast(From pmf) {
+  static_assert(std::is_member_function_pointer<From>::value, "From must be a pointer to member function");
+#if !defined(_MSC_VER)
+  struct ItaniumMemberPointer {
+    void* ptr;
+    ptrdiff_t adj;
+  };
+  union {
+    From pmf;
+    ItaniumMemberPointer layout;
+  } u;
+  u.pmf = pmf;
+  assert(u.layout.adj == 0);
+  return static_cast<To>(u.layout.ptr);
+#else
+  union {
+    From pmf;
+    To ptr;
+  } u;
+  u.pmf = pmf;
+  static_assert(sizeof(u) == sizeof(void*), "sizeof(union) must be sizeof(void*)");
+  return u.ptr;
+#endif
 }
 
 } // namespace ke

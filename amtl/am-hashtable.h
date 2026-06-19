@@ -637,6 +637,12 @@ template <> inline uintptr_t HashInteger<8>(uintptr_t value) {
 }
 
 static inline uintptr_t
+HashIntPtr(uintptr_t int_ptr)
+{
+    return HashInteger<sizeof(int_ptr)>(int_ptr);
+}
+
+static inline uintptr_t
 HashPointer(const void* ptr)
 {
     return HashInteger<sizeof(ptr)>(reinterpret_cast<uintptr_t>(ptr));
