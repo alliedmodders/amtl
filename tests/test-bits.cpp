@@ -73,3 +73,13 @@ TEST(Bits, PointerBits) {
 
     EXPECT_EQ(ClearPointerBits<2>(changed), ptr);
 }
+
+class DummyClass {
+  public:
+    void dummy() {}
+};
+
+TEST(Bits, PmfCast) {
+    void* ptr = PmfCast<void*>(&DummyClass::dummy);
+    EXPECT_TRUE(ptr != nullptr);
+}
