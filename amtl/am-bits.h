@@ -284,13 +284,27 @@ static inline To PmfCast(From pmf) {
   assert(u.layout.adj == 0);
   return static_cast<To>(u.layout.ptr);
 #else
-  union {
-    From pmf;
-    To ptr;
-  } u;
-  u.pmf = pmf;
-  static_assert(sizeof(u) == sizeof(void*), "sizeof(union) must be sizeof(void*)");
-  return u.ptr;
+  static_assert(sizeof(From) == sizeof(void*) || sizeof(From) == 2 * sizeof(void*),
+                "unexpected MSVC pointer-to-member size");
+  if constexpr (sizeof(From) == 2 * sizeof(void*)) {
+    union {
+      From pmf;
+      struct {
+        ptrdiff_t disp;
+        To ptr;
+      } layout;
+    } u;
+    u.pmf = pmf;
+    assert(u.layout.disp == 0);
+    return u.layout.ptr;
+  } else {
+    union {
+      From pmf;
+      To ptr;
+    } u;
+    u.pmf = pmf;
+    return u.ptr;
+  }
 #endif
 }
 
