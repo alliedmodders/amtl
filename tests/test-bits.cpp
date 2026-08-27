@@ -86,3 +86,22 @@ TEST(Bits, PmfCast) {
     void* ptr = PmfCast<void*>(&DummyClass::dummy);
     EXPECT_TRUE(ptr != nullptr);
 }
+
+class DummyMultiBaseA {
+  public:
+    void methodA() {}
+};
+
+class DummyMultiBaseB {
+  public:
+    void methodB() {}
+};
+
+class DummyMultiDerived : public DummyMultiBaseA, public DummyMultiBaseB {};
+
+TEST(Bits, PmfCastMultipleInheritance) {
+    void* derived = PmfCast<void*>(&DummyMultiDerived::methodA);
+    void* base = PmfCast<void*>(&DummyMultiBaseA::methodA);
+    EXPECT_TRUE(derived != nullptr);
+    EXPECT_EQ(derived, base);
+}

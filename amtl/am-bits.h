@@ -290,8 +290,8 @@ static inline To PmfCast(From pmf) {
     union {
       From pmf;
       struct {
-        ptrdiff_t disp;
         To ptr;
+        int32_t disp;
       } layout;
     } u;
     u.pmf = pmf;
