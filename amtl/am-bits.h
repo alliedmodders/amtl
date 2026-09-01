@@ -308,6 +308,19 @@ static inline To PmfCast(From pmf) {
 #endif
 }
 
+template <typename To, typename From>
+static inline To BitCast(From from) {
+    static_assert(sizeof(To) == sizeof(From), "types must have the same size");
+    static_assert(std::is_trivially_copyable<From>::value, "From must be trivially copyable");
+    static_assert(std::is_trivially_copyable<To>::value, "To must be trivially copyable");
+    union {
+        From f;
+        To t;
+    } u;
+    u.f = from;
+    return u.t;
+}
+
 } // namespace ke
 
 #endif // _include_amtl_am_bits_h_
