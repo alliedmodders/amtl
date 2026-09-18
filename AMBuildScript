@@ -85,6 +85,7 @@ class KEConfig(object):
       ]
       cxx.cxxflags += [
         '/std:c++17',
+        '/Zc:__cplusplus',
         '/EHsc',
         '/GR-',
         '/TP',

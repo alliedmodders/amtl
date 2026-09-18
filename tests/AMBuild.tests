@@ -46,7 +46,6 @@ binary.sources += [
   'main.cpp',
   'test-argparser.cpp',
   'test-bits.cpp',
-  'test-callable.cpp',
   'test-deque.cpp',
   'test-flags.cpp',
   'test-hashmap.cpp',
