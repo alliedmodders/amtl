@@ -4,46 +4,25 @@ systems code. It is the spiritual successor to the SourceHook template library.
 
 ### Requirements:
  - C++17
- - Microsoft Visual Studio 2015 or higher.
- - Clang 3.5 or higher.
- - GNU GCC 4.9 or higher.
+ - Microsoft Visual Studio 2017 or higher.
+ - Clang 5.0 or higher.
+ - GNU GCC 8.0 or higher.
 
 # Goals
 
 * Performance Over Generality. Rather than accomodate every use case, AMTL strives to make
-  performance explicit, and does not include features which are dangerous for performance, or
-  features that make malloc() failure detection more difficult.
+  performance explicit.
 
-  For example, while STL provides copy constructors for most containers, AMTL does not, as these
-  operations are unsafe for fallible malloc(), and can cause large unintentional performance hits.
-
-  Another example is boost::shared\_ptr, which by default is atomic and threadsafe, and
-  preprocessor macros can be used to eliminate the thread safety option. AMTL opts to use distinct
-  types for threadsafe and non-threadsafe reference counting, as the cost of atomic refcounting
-  is higher.
-
-* Safety. Most code in AlliedModders does not take advantage of RAII, and does not account for
-  fallible malloc. While in general, infallible malloc is probably okay for game servers, the lack
-  of RAII leads to very complicated and bloated pointer management. A major goal of AMTL is to
-  introduce safer pointer management into its codebases, and to allow certain components to safely
-  handle malloc failures when desired.
+* Safety. Most code in AlliedModders does not take advantage of RAII due to predating C++11,
+  and AMTL provides helpers to gradually modernize codebases.
 
 * No linkage. Everything is contained within headers so that tools don't need to link additional
-  C++ files. This could be a drawback, for example, it could increase build time or codesize
-  bloat. We may evaluate this decision in the future, but for now, it fits into our "lightweight"
-  theme of usability.
-
-  (On some platforms, system libraries may be needed for certain headers.)
+  C++ files (with the exception of arg-parser).
 
 * No RTTI or EH. There are a few reasons for this:
-  + Both features require linkage to libstdc++. On Linux, this can cause problems with binary
-    distribution.
+  + RTTI greatly increases binary size and potentially linkage issues.
 
   + When using 32-bit Visual C++, try blocks are not zero-cost, as they are implemented using SEH.
-
-* Room to grow. These templates are intended to be a baseline of features needed for various
-  AlliedModders projects. They can and will grow as new features are needed, hopefully keeping the
-  above principles in mind.
 
 # Overview
 
@@ -119,36 +98,14 @@ HashTables can be iterated. If the table is mutated during iteration outside of 
 provided by the iterator, then the iterator may become corrupted. This is acceptable as long as the
 iterator is abandoned. However, the table must stay alive for as long as the iterator is active.
 
-### Functions and Lambdas (am-function.h)
-
-AMTL provides a replacement for `std::function`. `ke::Function` is roughly identical
-to `std::function` in that it represents any callable object of a given signature. It can hold a
-functor, C-style static function, a C++11-lambda, or any other callable object.
-
-Note that this makes `Function` polymorphic: its size and implementation are not known until it is
-constructed or assigned. This means it must store a locally owned copy of the given callable value.
-If copy constructed or copy assigned, `Function` will deep-copy the object into its local copy. If
-move constructed or move assigned, `Function` will still allocate a local copy, but it will be
-constructed using move semantics. GCC/Clang support moving a C++11 lambda (MSVC versions prior to
-2015 will copy lambdas even if moved).
-
-Having `Function` allocate an object with `new` is obviously not desirable for most use cases. AMTL
-tries to mitigate this in two ways. First, small callable objects (most lambdas and any C-style
-static function pointer) will be stored in an inline buffer. This buffer is currently three
-machine words (12 bytes on 32-bit systems and 24 bytes on 64-bit systems), and is specified in
-`ke::impl::kMinLambdaInlineBufferSize`. Using callable objects within this size will guarantee
-that `Function` does not use `new`.
-
-Note that like `std::function`, all captures must be copy-constructable. This means it cannot hold
-functions which capture an `std::unique_ptr` or a `ke::Vector`, for example, even if it is to be
-moved. You can work around this by using pointers (if the scope will allow it), or using
-`std::shared_ptr`.
-
 ### HashMap (am-hashmap.h)
 
 ke::HashMap is a key -> value map built upon HashTable. This saves you from having to implement all
 of a Policy and provides some more generic accessors. However it is still necessary to implement a
 hash and comparison function.
+
+Consider using std::unordered\_map or std::unordered\_set if your use case
+doesn't benefit from open addressing.
 
 ### HashSet (am-hashset.h)
 
@@ -172,13 +129,6 @@ completely avoided.
 An InlineList never claims ownership over its pointers. Its destructor is a no-op and it makes no
 attempt to destroy members of its list (though in debug builds it will unlink members in its
 destructor for assertion purposes).
-
-### LinkedList (am-linkedlist.h)
-
-LinkedList is a doubly-linked list that requires a malloc() for each entry. It is provided for
-backward compatibility, and it should be avoided in general, except in situations where it is
-absolutely necessary and allocation performance is not a factor. Otherwise, use InlineList or
-Vector.
 
 ### FixedArray (am-fixedarray.h)
 
@@ -211,9 +161,7 @@ projects. AMTL is intended to deprecate it.
 
 ### CVector (sh\_vector.h)
 
-CVector can be replaced with ke::Vector. ke::Vector does not provide an iterator (yet). A few
-method names have been changed, as CVector more closely models std::vector, however the classes are
-pretty similar. Any missing methods could be added quite easily.
+CVector can be trivially replaced with std::vector.
 
 ### String (sh\_string.h)
 
@@ -221,16 +169,11 @@ String can be replaced with std::string.
 
 ### List (sh\_list.h)
 
-List can be replaced with ke::LinkedList. A few methods have changed, similar to Vector. For
-example, push\_back() becomes append() and push\_front() becomes prepend(), and both return
-boolean.
+List can be replaced with std::list.
 
 Consider using ke::InlineList if your list contains already-allocated objects, and those objects
-are members of at most one list. LinkedList is inefficient as it will call malloc() and free() for
+are members of at most one list. std::list is inefficient as it will call malloc() and free() for
 each node.
-
-The implementation of SourceHook::List and ke::LinkedList are basically identical underneath the
-hood, however, copy construction and assignment are disallowed in the AMTL variant.
 
 ### THash<K, V> (sh\_tinyhash.h)
 
@@ -243,6 +186,8 @@ expensive as a call to malloc() is almost guaranteed. Retrieval is more expensiv
 requires more indirection and has worse cache locality. It also has no ability to resize table
 downward when its density is very low.
 
+You can also consider std::unordered\_map if you don't need open addressing.
+
 ### CStack (sh\_stack.h)
 
 SourceHook::CStack is a stable-pointer stack. That is, if an element has been pushed, the address
@@ -252,7 +197,7 @@ CStack, there is no replacement in AMTL. If your CStack entries are LIFO, and ti
 variables, you might consider simply linking objects together using RAII and avoiding CStack
 entirely (though CStack will have better cache performance if you need to walk the list of entries).
 
-If you don't need stable pointers, CStack can be replaced with ke::Vector.
+If you don't need stable pointers, CStack can be replaced with std::vector.
 
 # Compile-Time Options
 
