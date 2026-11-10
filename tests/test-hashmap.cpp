@@ -123,3 +123,56 @@ TEST(HashMap, Bug6527) {
         }
     }
 }
+
+struct Int32Policy {
+    static inline uint32_t hash(uint32_t key) {
+        return HashInt32(key);
+    }
+    static inline bool matches(uint32_t find, uint32_t key) {
+        return find == key;
+    }
+};
+
+struct Int64Policy {
+    static inline uint32_t hash(uint64_t key) {
+        return uint32_t(HashInt64(key));
+    }
+    static inline bool matches(uint64_t find, uint64_t key) {
+        return find == key;
+    }
+};
+
+// Integer keys, spread over all bits: HashInt32's and HashInt64's arithmetic overflows for them,
+// which must wrap around rather than be undefined (an optimiser may compute a hash differently where
+// the key is a constant, so that a lookup misses a key that was added).
+TEST(HashMap, IntegerKeys) {
+    HashMap<uint32_t, uint32_t, Int32Policy> map32;
+    HashMap<uint64_t, uint32_t, Int64Policy> map64;
+    ASSERT_TRUE(map32.init());
+    ASSERT_TRUE(map64.init());
+
+    for (uint32_t i = 0; i < 1000; i++) {
+        uint32_t key32 = i * 2654435761u;
+        uint64_t key64 = (uint64_t(key32) << 32) | i;
+
+        auto insert32 = map32.findForAdd(key32);
+        ASSERT_FALSE(insert32.found());
+        ASSERT_TRUE(map32.add(insert32, key32, i));
+
+        auto insert64 = map64.findForAdd(key64);
+        ASSERT_FALSE(insert64.found());
+        ASSERT_TRUE(map64.add(insert64, key64, i));
+    }
+    for (uint32_t i = 0; i < 1000; i++) {
+        uint32_t key32 = i * 2654435761u;
+        uint64_t key64 = (uint64_t(key32) << 32) | i;
+
+        auto result32 = map32.find(key32);
+        ASSERT_TRUE(result32.found());
+        EXPECT_EQ(result32->value, i);
+
+        auto result64 = map64.find(key64);
+        ASSERT_TRUE(result64.found());
+        EXPECT_EQ(result64->value, i);
+    }
+}

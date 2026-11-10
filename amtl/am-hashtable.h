@@ -602,7 +602,7 @@ FastHashCharSequence(const char* s, size_t length)
 
 // From http://burtleburtle.net/bob/hash/integer.html
 static inline uint32_t
-HashInt32(int32_t a)
+HashInt32(uint32_t a)
 {
     a = (a ^ 61) ^ (a >> 16);
     a = a + (a << 3);
@@ -614,14 +614,14 @@ HashInt32(int32_t a)
 
 // From http://www.cris.com/~Ttwang/tech/inthash.htm
 static inline uintptr_t
-HashInt64(int64_t key)
+HashInt64(uint64_t key)
 {
     key = (~key) + (key << 18); // key = (key << 18) - key - 1;
-    key = key ^ (uint64_t(key) >> 31);
+    key = key ^ (key >> 31);
     key = key * 21; // key = (key + (key << 2)) + (key << 4);
-    key = key ^ (uint64_t(key) >> 11);
+    key = key ^ (key >> 11);
     key = key + (key << 6);
-    key = key ^ (uint64_t(key) >> 22);
+    key = key ^ (key >> 22);
     return uintptr_t(key);
 }
 
