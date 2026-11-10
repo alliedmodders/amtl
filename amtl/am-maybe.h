@@ -109,11 +109,15 @@ class Maybe
     }
 
     Maybe& operator =(const Maybe& other) {
+        if (isValid())
+            t_.address()->~T();
         initialized_ = false;
         copyFrom(other);
         return *this;
     }
     Maybe& operator =(Maybe&& other) {
+        if (isValid())
+            t_.address()->~T();
         initialized_ = false;
         moveFrom(std::move(other));
         return *this;
@@ -128,6 +132,7 @@ class Maybe
     void moveFrom(Maybe&& other) {
         if (other.initialized_) {
             init(std::move(*other.t_.address()));
+            other.t_.address()->~T();
             other.initialized_ = false;
         }
     }
