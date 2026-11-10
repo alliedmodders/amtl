@@ -105,3 +105,27 @@ TEST(Bits, PmfCastMultipleInheritance) {
     EXPECT_TRUE(derived != nullptr);
     EXPECT_EQ(derived, base);
 }
+
+TEST(Bits, PeekPokeUnaligned) {
+    // Odd offsets, so that the values aren't aligned for their type
+    uint8_t buffer[32] = {};
+    Poke<int32_t>(buffer + 1, -2);
+    Poke<uint64_t>(buffer + 7, 0x0123456789abcdefULL);
+    Poke<double>(buffer + 17, 1.5);
+    EXPECT_EQ(Peek<int32_t>(buffer + 1), -2);
+    EXPECT_EQ(Peek<uint64_t>(buffer + 7), 0x0123456789abcdefULL);
+    EXPECT_EQ(Peek<double>(buffer + 17), 1.5);
+
+    // The bytes in between stay untouched
+    EXPECT_EQ(buffer[0], 0);
+    EXPECT_EQ(buffer[5], 0);
+    EXPECT_EQ(buffer[6], 0);
+    EXPECT_EQ(buffer[15], 0);
+    EXPECT_EQ(buffer[16], 0);
+    EXPECT_EQ(buffer[25], 0);
+
+    // The bytes are those of the value
+    int32_t value = 0x11223344;
+    Poke<int32_t>(buffer + 3, value);
+    EXPECT_EQ(memcmp(buffer + 3, &value, sizeof(value)), 0);
+}
