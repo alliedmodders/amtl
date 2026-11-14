@@ -33,6 +33,7 @@
 #include <assert.h>
 #include <stddef.h>
 #include <stdint.h>
+#include <string.h>
 #if defined(_MSC_VER)
 # include <intrin.h>
 #endif
@@ -319,6 +320,23 @@ static inline To BitCast(From from) {
     } u;
     u.f = from;
     return u.t;
+}
+
+// Read and write aligned data from/to potentially unaligned addresses. Poke can't deduce T, which
+// no parameter uses, so the type to write is always explicit: Poke<int32_t>(address, value).
+template <typename T>
+static inline T Peek(const uint8_t* address) {
+    static_assert(std::is_trivially_copyable<T>::value, "T must be trivially copyable");
+    T value;
+    memcpy(&value, address, sizeof(T));
+    return value;
+}
+
+template <typename T, typename U>
+static inline void Poke(uint8_t* address, const U& value) {
+    static_assert(std::is_trivially_copyable<T>::value, "T must be trivially copyable");
+    const T converted = value;
+    memcpy(address, &converted, sizeof(T));
 }
 
 } // namespace ke
